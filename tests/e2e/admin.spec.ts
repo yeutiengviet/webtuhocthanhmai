@@ -172,3 +172,31 @@ test("phiếu bài học theo tuần: tải phiếu tương tác + PDF cho mục
   expect((await request.get(`/phieu/bai/${ITEM}/pdf`)).status()).toBe(404);
   await expect.poll(async () => (await request.get(PUBLIC)).text(), { timeout: 20_000 }).not.toContain(`/phieu/bai/${ITEM}`);
 });
+
+test("tải hàng loạt: tự xếp theo tên file, báo file chưa nhận ra, lưu rồi gỡ", async ({ page, request }) => {
+  const fs = await import("node:fs");
+  const html = fs.readFileSync(FIX("phieu-thu.html"));
+  const pdf = fs.readFileSync(FIX("de-thu.pdf"));
+  await login(page);
+  await page.goto("/quan-tri/bai-hoc/toan-3-theo-tuan/tai-hang-loat");
+  await page.getByLabel("Chọn nhiều file").setInputFiles([
+    { name: "Tuan 21 - Co ban.html", mimeType: "text/html", buffer: html },
+    { name: "Tuần 21 nâng cao.pdf", mimeType: "application/pdf", buffer: pdf },
+    { name: "anh chup.html", mimeType: "text/html", buffer: html },
+  ]);
+  await expect(page.getByLabel("Xếp file Tuan 21 - Co ban.html vào")).toHaveValue("t3-w21-luyen-tap-co-ban");
+  await expect(page.getByLabel("Xếp file Tuần 21 nâng cao.pdf vào")).toHaveValue("t3-w21-luyen-tap-nang-cao");
+  await expect(page.getByText("Chưa nhận ra tuần/mục")).toBeVisible();
+  await page.getByRole("button", { name: "Bỏ file anh chup.html" }).click();
+  await page.getByRole("button", { name: /Lưu 2 file vào 2 mục/ }).click();
+  await expect(page.getByRole("status")).toContainText("Đã lưu 2 mục", { timeout: 60_000 });
+  expect((await request.get("/phieu/bai/t3-w21-luyen-tap-co-ban")).status()).toBe(200);
+  expect((await request.get("/phieu/bai/t3-w21-luyen-tap-nang-cao/pdf")).status()).toBe(200);
+  // Dọn dẹp
+  for (const id of ["t3-w21-luyen-tap-co-ban", "t3-w21-luyen-tap-nang-cao"]) {
+    await page.goto(`/quan-tri/bai-hoc/toan-3-theo-tuan/${id}`);
+    for (const box of await page.getByLabel("Gỡ file này").all()) await box.check();
+    await page.getByRole("button", { name: "Lưu phiếu" }).click();
+    await expect(page.locator("main").getByRole("status")).toContainText("Đã gỡ hết file", { timeout: 30_000 });
+  }
+});

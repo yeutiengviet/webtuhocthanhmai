@@ -22,7 +22,12 @@ export default async function AdminCourseLessons({ params }: { params: Promise<{
     <>
       <PageHero badge="Trang quản trị" title={`Phiếu ${name}`} subtitle="Bấm vào một mục để tải phiếu tương tác (.html) và phiếu PDF." />
       <Container className="max-w-3xl space-y-4 py-8">
-        <Link href="/quan-tri/bai-hoc" className="inline-block py-2 font-extrabold text-brand-700 underline">← Chọn khóa khác</Link>
+        <div className="flex flex-wrap items-center gap-3">
+          <Link href="/quan-tri/bai-hoc" className="inline-block py-2 font-extrabold text-brand-700 underline">← Chọn khóa khác</Link>
+          <Link href={`/quan-tri/bai-hoc/${course.id}/tai-hang-loat`} className="btn-toy inline-flex items-center gap-2 rounded-full bg-brand-600 px-5 py-3 font-extrabold text-white">
+            <span aria-hidden>📂</span> Tải hàng loạt
+          </Link>
+        </div>
         {error && <p role="alert" className="rounded-2xl bg-red-50 p-3 font-bold text-red-800">Chưa tải được trạng thái phiếu. Cô tải lại trang sau ít phút.</p>}
         {course.weeks.map((w) => {
           const items = w.items.filter((i) => itemAcceptsFiles(i).pdf);
