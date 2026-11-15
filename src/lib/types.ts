@@ -20,6 +20,8 @@ export interface Course {
   /** Luôn là Kết nối tri thức; giữ cột để mở rộng sau, giao diện không hiển thị lựa chọn. */
   textbook: "ket-noi-tri-thuc";
   title: string;
+  /** Khung trống: đã có đủ tuần và ô nội dung, nhưng tên bài chưa được cập nhật. */
+  isSkeleton?: boolean;
   weeks: Week[];
 }
 

@@ -19,7 +19,7 @@ test("trang chủ đủ các phần theo mục 5.2, không lỗi console", async
   await expect(page.getByText("tuần học theo sách")).toBeVisible();
   await expect(page.getByRole("heading", { name: "5 cam kết với phụ huynh" })).toBeVisible();
   await expect(page.locator("main a[href='/toan']").filter({ hasText: "Vào xem" })).toBeVisible();
-  await expect(page.locator("main a[href='/tieng-viet']").filter({ hasText: "Sắp ra mắt" })).toBeVisible();
+  await expect(page.locator("main a[href='/tieng-viet']").filter({ hasText: "Vào xem" })).toBeVisible();
   await expect(page.getByRole("heading", { name: "Con đang học lớp mấy?" })).toBeVisible();
   for (const g of ["2", "3", "4", "5"]) await expect(page.locator("main a").filter({ hasText: new RegExp(`Lớp\\s*${g}`) }).first()).toBeVisible();
   await expect(page.getByRole("heading", { name: "Hướng dẫn nộp phí" })).toBeVisible();
@@ -144,22 +144,28 @@ test("không có chữ trắng trên nền cam nhạt (tương phản thấp)", 
 test("đường dẫn đoán bừa trả về 404, tiêu đề tab không gây hiểu nhầm", async ({ request, page }) => {
   await page.goto("/van/lop-4");
   await expect(page).toHaveTitle(/Không tìm thấy trang/);
-  await page.goto("/toan/lop-2");
+  await page.goto("/toan/lop-6");
   await expect(page).toHaveTitle(/Không tìm thấy trang/);
-  for (const p of ["/toan/lop-4/constructor", "/toan/lop-4/__proto__", "/toan/lop-3", "/toan/lop-4/theo-tuan/tuan-36/video-bai-1", "/toan/lop-4/theo-tuan/tuan-1/khong-co", "/van/lop-4", "/toan/lop-4/nang-cao"]) {
+  for (const p of ["/toan/lop-4/constructor", "/toan/lop-4/__proto__", "/toan/lop-6", "/tieng-viet/lop-1", "/toan/lop-4/theo-tuan/tuan-36/video-bai-1", "/toan/lop-4/theo-tuan/tuan-1/khong-co", "/van/lop-4", "/toan/lop-4/nang-cao"]) {
     expect((await request.get(p)).status(), p).toBe(404);
   }
 });
 
-test("tất cả trang bài học (đủ 35 tuần) đều mở được", async ({ page, request }) => {
-  await page.goto("/toan/lop-4/theo-tuan");
-  const hrefs = await page.locator("details[id^=tuan-] a").evaluateAll((as) => as.map((a) => a.getAttribute("href") ?? ""));
-  const weeksCovered = new Set(hrefs.map((h) => h.match(/tuan-(\d+)/)?.[1]));
-  expect(weeksCovered.size).toBe(35);
-  expect(hrefs.length).toBeGreaterThan(150);
-  for (const h of hrefs) {
-    expect((await request.get(h)).status(), h).toBe(200);
+test("tất cả trang bài học của cả 8 khóa (Toán, Tiếng Việt lớp 2–5) đều mở được", async ({ page, request }) => {
+  test.setTimeout(240_000);
+  let total = 0;
+  for (const mon of ["toan", "tieng-viet"]) {
+    for (const lop of [2, 3, 4, 5]) {
+      const course = `/${mon}/lop-${lop}/theo-tuan`;
+      await page.goto(course);
+      await expect(page.locator("details[id^=tuan-]"), course).toHaveCount(35);
+      const hrefs = await page.locator("details[id^=tuan-] a").evaluateAll((as) => as.map((a) => a.getAttribute("href") ?? ""));
+      expect(new Set(hrefs.map((h) => h.match(/tuan-(\d+)/)?.[1])).size, course).toBe(35);
+      for (const h of hrefs) expect((await request.get(h)).status(), h).toBe(200);
+      total += hrefs.length;
+    }
   }
+  expect(total).toBeGreaterThan(1500);
 });
 
 test("các trang phụ mở được, không lỗi console", async ({ page }) => {

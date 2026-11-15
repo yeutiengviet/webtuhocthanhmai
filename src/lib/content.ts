@@ -4,6 +4,7 @@
 // "server-only": nếu file này (chứa toàn bộ dữ liệu khóa học, kể cả link video/phiếu trả phí)
 // lỡ bị import vào một component chạy trên trình duyệt ("use client"), build sẽ BÁO LỖI ngay.
 import "server-only";
+import { SKELETON_COURSES } from "@/data/khung-khoa-hoc";
 import { toanLop4TheoTuan } from "@/data/toan-lop4";
 import type { Course, Item, ItemType, Subject, SubjectSlug, Track, Week } from "@/lib/types";
 
@@ -29,7 +30,10 @@ export const ITEM_TYPE_LABELS: Record<ItemType, string> = {
   test: "Đề kiểm tra",
 };
 
-const COURSES: Course[] = [toanLop4TheoTuan];
+// Thứ tự: môn, rồi lớp.
+const COURSES: Course[] = [toanLop4TheoTuan, ...SKELETON_COURSES].sort(
+  (a, b) => a.subject.localeCompare(b.subject) || a.grade - b.grade,
+);
 
 export function getSubject(slug: string): Subject | undefined {
   return SUBJECTS.find((s) => s.slug === slug);

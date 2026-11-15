@@ -50,6 +50,11 @@ export default async function CoursePage({ params }: { params: Params }) {
 
       <Container className="py-6">
         <OpenWeekFromHash />
+        {course.isSkeleton && (
+          <p className="mb-5 rounded-3xl bg-amber-50 p-4 text-sm font-semibold text-amber-900 ring-1 ring-amber-200">
+            <span aria-hidden>🛠️</span> Khóa học này mới có <strong>khung 35 tuần</strong>. Cô Thanh Mai đang cập nhật tên bài, video và phiếu luyện tập.
+          </p>
+        )}
         <div className="mb-5 flex flex-wrap items-center gap-3 rounded-3xl bg-white p-3 text-sm font-semibold shadow-sm ring-1 ring-brand-100">
           <CurrentWeekButton weeks={weeks.map((w) => ({ number: w.number, startDate: w.startDate, endDate: w.endDate }))} />
           <span className="flex items-center gap-1"><FreeBadge /> học thử miễn phí</span>

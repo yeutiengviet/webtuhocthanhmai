@@ -104,7 +104,8 @@ describe("Toán lớp 4 – 35 tuần", () => {
     expect(s.weeks).toBe(35);
     expect(s.totalItems).toBe(weeks.reduce((a, w) => a + w.items.length, 0));
     expect(getCourses("toan", 4)).toHaveLength(1);
-    expect(getCourses("tieng-viet")).toHaveLength(0);
+    expect(getCourses("tieng-viet")).toHaveLength(4);
+    expect(getCourses("toan")).toHaveLength(4);
   });
 });
 
