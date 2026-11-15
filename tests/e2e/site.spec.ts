@@ -146,7 +146,7 @@ test("đường dẫn đoán bừa trả về 404, tiêu đề tab không gây h
   await expect(page).toHaveTitle(/Không tìm thấy trang/);
   await page.goto("/toan/lop-6");
   await expect(page).toHaveTitle(/Không tìm thấy trang/);
-  for (const p of ["/toan/lop-4/constructor", "/toan/lop-4/__proto__", "/toan/lop-6", "/tieng-viet/lop-1", "/toan/lop-4/theo-tuan/tuan-36/video-bai-1", "/toan/lop-4/theo-tuan/tuan-1/khong-co", "/van/lop-4", "/toan/lop-4/nang-cao"]) {
+  for (const p of ["/toan/lop-4/constructor", "/toan/lop-4/__proto__", "/toan/lop-6", "/tieng-viet/lop-1", "/toan/lop-4/theo-tuan/tuan-36/video-bai-1", "/toan/lop-4/theo-tuan/tuan-1/khong-co", "/van/lop-4", "/toan/lop-4/on-tap-he"]) {
     expect((await request.get(p)).status(), p).toBe(404);
   }
 });

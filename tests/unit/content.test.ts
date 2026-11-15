@@ -89,7 +89,7 @@ describe("Toán lớp 4 – 35 tuần", () => {
   it("đường dẫn hướng học lạ (kể cả tên thuộc tính hệ thống) không được coi là hợp lệ", () => {
     expect(isTrack("theo-tuan")).toBe(true);
     for (const t of ["constructor", "__proto__", "toString", "hasOwnProperty", "abc"]) expect(isTrack(t)).toBe(false);
-    expect(getCourse("toan", 4, "nang-cao")).toBeUndefined();
+    expect(getCourse("toan", 4, "on-tap-he")).toBeUndefined();
   });
 
   it("bản dùng thử: mục trả phí không xem được, mục Free xem được", () => {
@@ -103,9 +103,9 @@ describe("Toán lớp 4 – 35 tuần", () => {
     const s = courseStats(toanLop4TheoTuan);
     expect(s.weeks).toBe(35);
     expect(s.totalItems).toBe(weeks.reduce((a, w) => a + w.items.length, 0));
-    expect(getCourses("toan", 4)).toHaveLength(1);
+    expect(getCourses("toan", 4)).toHaveLength(2);
     expect(getCourses("tieng-viet")).toHaveLength(4);
-    expect(getCourses("toan")).toHaveLength(4);
+    expect(getCourses("toan")).toHaveLength(8);
   });
 });
 

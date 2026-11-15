@@ -3,7 +3,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { CurrentWeekButton, OpenWeekFromHash } from "@/components/CurrentWeekButton";
 import { Breadcrumbs, Container, FreeBadge, ItemIcon, LevelBadge, LockBadge, PageHero } from "@/components/ui";
-import { allCourses, canViewItem, getCourse, getSubject, gradeSlug, isReady, isTrack, itemHref, parseGradeSlug, publishedWeeks, TRACK_LABELS } from "@/lib/content";
+import { allCourses, canViewItem, getCourse, getSubject, gradeSlug, isReady, isTrack, itemHref, parseGradeSlug, publishedWeeks, TRACK_LABELS, unitName } from "@/lib/content";
 import { formatRange } from "@/lib/dates";
 import { getPublishedLessonFiles } from "@/lib/lesson-files";
 import type { Week } from "@/lib/types";
@@ -44,10 +44,12 @@ export default async function CoursePage({ params }: { params: Params }) {
   const { subject, grade, course } = d;
   const files = await getPublishedLessonFiles(publishedWeeks(course).flatMap((w) => w.items.map((i) => i.id)));
   const weeks = publishedWeeks(course);
+  const unit = unitName(course);
+  const isTopics = course.track === "nang-cao";
 
   return (
     <>
-      <PageHero badge={`📚 ${weeks.length} tuần học`} title={`${subject.name} lớp ${grade} – ${TRACK_LABELS[course.track].name}`} subtitle={`${weeks.length} tuần · Sách Kết nối tri thức với cuộc sống · Lịch tuần là dự kiến.`}>
+      <PageHero badge={`📚 ${weeks.length} ${unit.toLowerCase()}`} title={`${subject.name} lớp ${grade} – ${TRACK_LABELS[course.track].name}`} subtitle={isTopics ? `${weeks.length} chuyên đề · Toán tư duy nâng cao, học theo thứ tự hoặc chọn chuyên đề con cần.` : `${weeks.length} tuần · Sách Kết nối tri thức với cuộc sống · Lịch tuần là dự kiến.`}>
         <div className="mb-2">
           <Breadcrumbs items={[{ href: `/${subject.slug}`, label: subject.name }, { href: `/${subject.slug}/${lop}`, label: `Lớp ${grade}` }, { label: TRACK_LABELS[course.track].name }]} />
         </div>
@@ -55,13 +57,13 @@ export default async function CoursePage({ params }: { params: Params }) {
 
       <Container className="py-6">
         <OpenWeekFromHash />
-        {course.isSkeleton && (
+        {course.isSkeleton && !isTopics && (
           <p className="mb-5 rounded-3xl bg-amber-50 p-4 text-sm font-semibold text-amber-900 ring-1 ring-amber-200">
             <span aria-hidden>🛠️</span> Khóa học này mới có <strong>khung 35 tuần</strong>. Cô Thanh Mai đang cập nhật tên bài, video và phiếu luyện tập.
           </p>
         )}
         <div className="mb-5 flex flex-wrap items-center gap-3 rounded-3xl bg-white p-3 text-sm font-semibold shadow-sm ring-1 ring-brand-100">
-          <CurrentWeekButton weeks={weeks.map((w) => ({ number: w.number, startDate: w.startDate, endDate: w.endDate }))} />
+          {!isTopics && <CurrentWeekButton weeks={weeks.map((w) => ({ number: w.number, startDate: w.startDate, endDate: w.endDate }))} />}
           <span className="flex items-center gap-1"><FreeBadge /> học thử miễn phí</span>
           <span className="flex items-center gap-1"><LockBadge /> cần đăng ký gói</span>
         </div>
@@ -72,10 +74,10 @@ export default async function CoursePage({ params }: { params: Params }) {
               <details id={`tuan-${w.number}`} className="relative scroll-mt-28 overflow-hidden rounded-3xl bg-white shadow-sm ring-1 ring-brand-100 open:shadow-md open:ring-2 open:ring-brand-300" open={w.number === 1}>
                 <summary className="flex cursor-pointer items-start gap-3 p-4">
                   <span className={`grid h-14 w-14 shrink-0 place-items-center rounded-2xl text-center text-[11px] font-extrabold leading-none text-white shadow ${w.kind === "hoc" ? "bg-brand-600" : "bg-violet-700"}`}>
-                    <span>TUẦN<span className="block font-display text-2xl leading-none">{w.number}</span></span>
+                    <span>{isTopics ? "CHUYÊN ĐỀ" : "TUẦN"}<span className="block font-display text-2xl leading-none">{w.number}</span></span>
                   </span>
                   <span className="min-w-0 flex-1">
-                    <span className="block text-sm font-bold text-brand-700">{formatRange(w.startDate, w.endDate)}</span>
+                    {isTopics ? null : <span className="block text-sm font-bold text-brand-700">{formatRange(w.startDate, w.endDate)}</span>}
                     <span className="block font-bold leading-snug text-gray-900">{w.title}</span>
                     {KIND_LABEL[w.kind] && (
                       <span className="mt-1.5 inline-block rounded-full bg-violet-700 px-2.5 py-0.5 text-xs font-extrabold text-white"><span aria-hidden>📝</span> {KIND_LABEL[w.kind]}</span>

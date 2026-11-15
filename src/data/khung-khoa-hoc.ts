@@ -6,6 +6,7 @@
 import "server-only";
 import { HOLIDAY_MONDAYS, SCHOOL_YEAR_START } from "@/data/toan-lop4";
 import { buildWeekCalendar } from "@/lib/dates";
+import { distributeLessons, LESSON_TITLES, NANG_CAO_TOPICS } from "@/data/toan-muc-luc";
 import type { Course, Item, SubjectSlug, Week, WeekKind } from "@/lib/types";
 
 const TOTAL_WEEKS = 35;
@@ -64,6 +65,8 @@ function buildItems(subject: SubjectSlug, grade: number, n: number): Item[] {
 }
 
 export function buildSkeletonCourse(subject: SubjectSlug, grade: 2 | 3 | 4 | 5): Course {
+  const titles = subject === "toan" && (grade === 2 || grade === 3 || grade === 5) ? LESSON_TITLES[grade] : null;
+  const perWeek = titles ? distributeLessons(titles, TOTAL_WEEKS, new Set(Object.keys(REVIEW_WEEKS).map(Number))) : null;
   const calendar = buildWeekCalendar(SCHOOL_YEAR_START, TOTAL_WEEKS, HOLIDAY_MONDAYS);
   const subjectName = subject === "toan" ? "Toán" : "Tiếng Việt";
   const weeks: Week[] = calendar.map((c, i) => {
@@ -74,10 +77,14 @@ export function buildSkeletonCourse(subject: SubjectSlug, grade: 2 | 3 | 4 | 5):
       number: n,
       startDate: c.startDate,
       endDate: c.endDate,
-      title: review ? `Ôn tập và kiểm tra ${review.label}` : `Bài học tuần ${n} (tên bài đang cập nhật)`,
+      title: review ? `Ôn tập và kiểm tra ${review.label}` : perWeek ? perWeek[i].join("; ") : `Bài học tuần ${n} (tên bài đang cập nhật)`,
       kind: review?.kind ?? "hoc",
       published: true,
-      items: buildItems(subject, grade, n),
+      items: buildItems(subject, grade, n).map((it, k) => {
+        // Video bài giảng mang tên bài của tuần (giữ nguyên mã/đường dẫn để không mất file đã tải lên)
+        const lesson = perWeek?.[i][k];
+        return !review && lesson && it.type === "video" ? { ...it, title: `Video: ${lesson}` } : it;
+      }),
     };
   });
   return {
@@ -87,7 +94,7 @@ export function buildSkeletonCourse(subject: SubjectSlug, grade: 2 | 3 | 4 | 5):
     track: "theo-tuan",
     textbook: "ket-noi-tri-thuc",
     title: `${subjectName} lớp ${grade} – Học theo tuần`,
-    isSkeleton: true,
+    isSkeleton: !titles,
     weeks,
   };
 }
@@ -101,3 +108,33 @@ export const SKELETON_COURSES: Course[] = [
   buildSkeletonCourse("tieng-viet", 4),
   buildSkeletonCourse("tieng-viet", 5),
 ];
+
+/** Toán nâng cao theo chuyên đề: mỗi "tuần" là một chuyên đề (không gắn lịch tuần). */
+export function buildNangCaoCourse(grade: 2 | 3 | 4 | 5): Course {
+  const topics = NANG_CAO_TOPICS[grade];
+  const calendar = buildWeekCalendar(SCHOOL_YEAR_START, topics.length, []);
+  const weeks: Week[] = topics.map((topic, i) => {
+    const n = i + 1;
+    const free = n <= 2;
+    const id = (slug: string) => `t${grade}-nc${n}-${slug}`;
+    const base = { videoProvider: null, videoRef: null, url: null } as const;
+    const items: Item[] = [
+      { ...base, id: id("video-chuyen-de"), slug: "video-chuyen-de", type: "video", title: `Video chuyên đề: ${topic}`, level: "nang-cao", order: 1, isFree: free, videoProvider: "youtube" },
+      { ...base, id: id("bai-tap-nang-cao"), slug: "bai-tap-nang-cao", type: "worksheet", title: "Bài tập chuyên đề", level: "nang-cao", order: 2, isFree: free },
+      { ...base, id: id("kiem-tra-chuyen-de"), slug: "kiem-tra-chuyen-de", type: "test", title: "Đề kiểm tra chuyên đề", level: "nang-cao", order: 3, isFree: free, durationMinutes: 20 },
+      { ...base, id: id("tai-lieu"), slug: "tai-lieu-chuyen-de", type: "document", title: "Tài liệu chuyên đề (PDF)", level: null, order: 4, isFree: free },
+    ];
+    return { id: `t${grade}-nc${n}`, number: n, startDate: calendar[i].startDate, endDate: calendar[i].endDate, title: topic, kind: "hoc", published: true, items };
+  });
+  return {
+    id: `toan-${grade}-nang-cao`,
+    subject: "toan",
+    grade,
+    track: "nang-cao",
+    textbook: "ket-noi-tri-thuc",
+    title: `Toán lớp ${grade} – Nâng cao theo chuyên đề`,
+    weeks,
+  };
+}
+
+export const NANG_CAO_COURSES: Course[] = ([2, 3, 4, 5] as const).map(buildNangCaoCourse);
