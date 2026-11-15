@@ -20,6 +20,18 @@ Nội dung theo sách **Kết nối tri thức với cuộc sống**.
 Trong bản dùng thử, **chỉ các bài có nhãn Free** xem được (tuần 1–2 và Phiếu đánh giá tháng 10).
 Các bài khác hiện thông báo khóa "Bài này dành cho học sinh đã đăng ký gói học".
 
+## Bản dùng thử trên mạng
+
+- Địa chỉ: **https://hocgioithanhmai.vercel.app**
+- Nơi đặt: Vercel, nhóm "Trung tâm Thanh Mai", **dự án riêng `hocgioithanhmai`** — tách biệt hoàn toàn với phần mềm quản lý trung tâm (khác dự án, khác mã nguồn, không dùng chung dữ liệu).
+- Gói: Hobby (miễn phí). **Gói Hobby chỉ cho dùng phi thương mại** — trước khi bắt đầu thu tiền phải chuyển sang Vercel Pro (~20 USD/tháng) hoặc Cloudflare (sẽ đề xuất lại kèm chi phí).
+- Tự động cập nhật: mỗi lần mã mới được đẩy lên nhánh chính trên GitHub, Vercel tự build và đưa bản mới lên.
+- Bảo vệ: bản chính thức ai có link cũng xem được; các bản nháp xem trước cần đăng nhập Vercel.
+- Tên miền `hocgioithanhmai.com`: đã chọn, **chưa mua**. Sẽ gắn khi chuẩn bị mở bán.
+
+### Quay về bản trước khi có sự cố
+Vào vercel.com → nhóm Trung tâm Thanh Mai → dự án hocgioithanhmai → Deployments → chọn bản cũ đang chạy tốt → nút "…" → **Promote to Production** (hoặc "Instant Rollback").
+
 ## Chạy trên máy (dành cho người kỹ thuật)
 
 Cần Node.js 22.
@@ -55,6 +67,11 @@ Phiếu HTML được coi là nội dung **không đáng tin** (có thể chứa
 
 Ở Giai đoạn 2, phiếu trả phí sẽ được cất trong kho riêng tư (Supabase Storage) và chỉ trả về khi học sinh có quyền.
 **Giới hạn cần biết:** khi một học sinh đã có quyền mở phiếu, trình duyệt của em đó tải được nội dung phiếu — không có cách nào giữ bí mật tuyệt đối với người đã có quyền xem.
+
+### Phiếu hiện có (đã đọc 2 file mẫu)
+- Phiếu tự chấm trong trình duyệt, rồi gửi `bai, hoten, lop, diem, causai` về Google Sheet qua Google Apps Script (`fetch` POST). Dùng font Google và hộp `confirm()`.
+- **Rủi ro riêng tư:** phiếu tải danh sách tên học sinh của lớp qua `GAS_URL?action=roster&lop=…`; ai có link phiếu đều xem được mã phiếu và gọi được đường dẫn này. Giai đoạn 4 thay bằng lưu điểm theo học sinh đăng nhập (không cần danh sách tên).
+- Đáp án nằm trong mã phiếu (chấm ở trình duyệt) — học sinh rành máy tính có thể xem. Chấm ở máy chủ là phương án sau nếu cần.
 
 ## Bảo mật đã có ở Giai đoạn 1
 - Header bảo mật: chống trang khác nhúng website (clickjacking), CSP giới hạn nguồn nhúng, `nosniff`.
