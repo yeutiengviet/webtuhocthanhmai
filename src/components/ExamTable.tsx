@@ -1,14 +1,21 @@
 import Link from "next/link";
 import { Icon } from "@/components/art";
 import { FreeBadge, LockBadge } from "@/components/ui";
-import { EXAM_CATEGORY_LABELS, examHref, isReady } from "@/lib/content";
+import { EXAM_CATEGORY_LABELS, examHref } from "@/lib/exam-meta";
 import type { Exam } from "@/lib/types";
 
 /**
  * Bảng đề thi: trên điện thoại hiện dạng thẻ (dễ bấm), trên máy tính hiện dạng bảng.
  * "Điểm của con" và "Điểm cao nhất" sẽ có từ Giai đoạn 4 (khi học sinh đăng nhập) — không hiện số giả.
  */
-export function ExamTable({ exams }: { exams: Exam[] }) {
+export function ExamTable({ exams, error = false }: { exams: Exam[]; error?: boolean }) {
+  if (error) {
+    return (
+      <p role="alert" className="rounded-3xl bg-amber-50 p-5 text-center font-semibold text-amber-900 ring-1 ring-amber-200">
+        Chưa tải được danh sách đề. Cô/phụ huynh vui lòng tải lại trang sau ít phút.
+      </p>
+    );
+  }
   if (exams.length === 0) {
     return (
       <p className="rounded-3xl border-2 border-dashed border-brand-200 bg-white p-5 text-center font-semibold text-gray-700">
@@ -32,7 +39,7 @@ export function ExamTable({ exams }: { exams: Exam[] }) {
                   {e.isFree ? <FreeBadge /> : <LockBadge />}
                   <span className="rounded-full bg-violet-50 px-2 py-0.5 text-violet-800 ring-1 ring-violet-200">{EXAM_CATEGORY_LABELS[e.category]}</span>
                   {e.durationMinutes && <span>⏱ {e.durationMinutes} phút</span>}
-                  {!isReady(e) && <span className="text-gray-600">· đang cập nhật</span>}
+                  {!(e.hasFile || e.externalUrl) && <span className="text-gray-600">· đang cập nhật</span>}
                 </span>
               </span>
             </Link>
@@ -58,7 +65,7 @@ export function ExamTable({ exams }: { exams: Exam[] }) {
                 <td className="px-4 py-3">
                   <Link href={examHref(e)} className="font-bold text-brand-700 hover:underline">{e.title}</Link>{" "}
                   {e.isFree ? <FreeBadge /> : <LockBadge />}
-                  {!isReady(e) && <span className="ml-1 text-xs text-gray-600">đang cập nhật</span>}
+                  {!(e.hasFile || e.externalUrl) && <span className="ml-1 text-xs text-gray-600">đang cập nhật</span>}
                 </td>
                 <td className="px-4 py-3 text-sm font-semibold text-violet-800">{EXAM_CATEGORY_LABELS[e.category]}</td>
                 <td className="px-4 py-3 text-sm">{e.durationMinutes ? `${e.durationMinutes} phút` : "—"}</td>

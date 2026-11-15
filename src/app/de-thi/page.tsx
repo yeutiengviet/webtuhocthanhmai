@@ -1,18 +1,22 @@
 import Link from "next/link";
 import { MathArt, VietArt } from "@/components/art";
 import { Container, PageHero } from "@/components/ui";
-import { getExams, SUBJECTS } from "@/lib/content";
+import { SUBJECTS } from "@/lib/content";
+import { countPublishedExams } from "@/lib/exams";
 
 export const metadata = { title: "Đề thi" };
+// Lưu sẵn trang, tự làm mới mỗi 60 giây; quản trị thêm/sửa/xóa đề thì làm mới ngay (revalidatePath).
+export const revalidate = 60;
 
-export default function ExamsHome() {
+export default async function ExamsHome() {
+  const counts = await countPublishedExams();
   return (
     <>
       <PageHero badge="⏱ Đề thi" title="Đề thi" subtitle="Đề kiểm tra giữa kì, cuối kì, đánh giá tháng và luyện thi — chọn môn để xem đề theo từng lớp." />
       <Container className="grid gap-4 py-8 sm:grid-cols-2">
         {SUBJECTS.map((s) => {
           const isMath = s.slug === "toan";
-          const n = getExams(s.slug).length;
+          const n = counts?.[s.slug] ?? 0;
           return (
             <Link
               key={s.slug}

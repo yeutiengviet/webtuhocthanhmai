@@ -1,37 +1,43 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { WorksheetFrame } from "@/components/LessonMedia";
+import { UploadedPdf, UploadedWorksheetFrame, WorksheetFrame } from "@/components/LessonMedia";
 import { PrintButton } from "@/components/PrintButton";
 import { Breadcrumbs, Container, FreeBadge, ItemIcon, LockBadge } from "@/components/ui";
-import { allExams, EXAM_CATEGORY_LABELS, examHref, findExam, getExams, getSubject, gradeSlug, lessonMedia, parseGradeSlug } from "@/lib/content";
+import { getSubject, gradeSlug, parseGradeSlug } from "@/lib/content";
+import { EXAM_CATEGORY_LABELS, examHref, examMedia } from "@/lib/exam-meta";
+import { findPublishedExam, listPublishedExams } from "@/lib/exams";
 
-// LƯU Ý GIAI ĐOẠN 3: giống trang bài học — khi có đăng nhập phải chuyển sang render động + Cache-Control: private.
+// GIAI ĐOẠN 3: khi kiểm tra gói học theo người đăng nhập, trang này phải chuyển về render động + Cache-Control: private.
+// Lưu sẵn trang, tự làm mới mỗi 60 giây; quản trị thêm/sửa/xóa đề thì làm mới ngay (revalidatePath).
+export const revalidate = 60;
+
+// Không dựng sẵn lúc build: mỗi đề được dựng ở lần mở đầu tiên rồi lưu sẵn.
 export function generateStaticParams() {
-  return allExams().map((e) => ({ mon: e.subject, lop: gradeSlug(e.grade), de: e.slug }));
+  return [];
 }
 
 type Params = Promise<{ mon: string; lop: string; de: string }>;
 
-function load(p: Awaited<Params>) {
+async function load(p: Awaited<Params>) {
   const subject = getSubject(p.mon);
   const grade = parseGradeSlug(p.lop);
-  const exam = subject && grade ? findExam(subject.slug, grade, p.de) : undefined;
-  return subject && grade && exam ? { subject, grade, exam } : null;
+  if (!subject || !grade) return null;
+  const exam = await findPublishedExam(subject.slug, grade, p.de);
+  return exam ? { subject, grade, exam } : null;
 }
 
 export async function generateMetadata({ params }: { params: Params }): Promise<Metadata> {
-  const d = load(await params);
+  const d = await load(await params);
   return { title: d ? d.exam.title : "Không tìm thấy trang" };
 }
 
 export default async function ExamPage({ params }: { params: Params }) {
-  const d = load(await params);
+  const d = await load(await params);
   if (!d) notFound();
   const { subject, grade, exam } = d;
-  // Cổng kiểm tra quyền dùng chung với bài học: đề bị khóa không đưa link phiếu ra trang.
-  const media = lessonMedia(exam);
-  const others = getExams(subject.slug, grade).filter((e) => e.id !== exam.id);
+  const media = examMedia(exam);
+  const others = (await listPublishedExams(subject.slug, grade)).exams.filter((e) => e.id !== exam.id);
 
   return (
     <Container className="py-5">
@@ -55,9 +61,7 @@ export default async function ExamPage({ params }: { params: Params }) {
               <span className="text-gray-600">· Điểm của con: hiện khi con đăng nhập</span>
             </div>
             <div className="no-print mt-5 flex flex-wrap gap-3">
-              <a href="#bai-lam" className="btn-toy inline-flex items-center gap-2 rounded-full bg-brand-600 px-6 py-3 font-extrabold text-white">
-                Làm bài
-              </a>
+              <a href="#bai-lam" className="btn-toy inline-flex items-center gap-2 rounded-full bg-brand-600 px-6 py-3 font-extrabold text-white">Làm bài</a>
               <PrintButton />
             </div>
           </header>
@@ -69,8 +73,14 @@ export default async function ExamPage({ params }: { params: Params }) {
                 <p className="mt-3 font-display text-2xl font-extrabold text-brand-700">Đề này dành cho học sinh đã đăng ký gói học</p>
                 <Link href="/thanh-toan" className="btn-toy mt-4 inline-block rounded-full bg-brand-600 px-6 py-3 font-extrabold text-white">Đăng ký gói học</Link>
               </div>
+            ) : media.kind === "external" ? (
+              <WorksheetFrame url={media.url} title={exam.title} />
+            ) : media.kind === "file-html" ? (
+              <UploadedWorksheetFrame src={media.src} title={exam.title} />
+            ) : media.kind === "file-pdf" ? (
+              <UploadedPdf src={media.src} title={exam.title} />
             ) : (
-              <WorksheetFrame url={media.kind === "worksheet" ? media.url : null} title={exam.title} />
+              <WorksheetFrame url={null} title={exam.title} />
             )}
           </section>
         </article>
@@ -92,9 +102,7 @@ export default async function ExamPage({ params }: { params: Params }) {
                 ))}
               </ul>
             )}
-            <Link href={`/de-thi/${subject.slug}`} className="mt-2 inline-block py-2 text-sm font-extrabold text-brand-700 underline">
-              Tất cả đề {subject.name}
-            </Link>
+            <Link href={`/de-thi/${subject.slug}`} className="mt-2 inline-block py-2 text-sm font-extrabold text-brand-700 underline">Tất cả đề {subject.name}</Link>
           </div>
         </aside>
       </div>

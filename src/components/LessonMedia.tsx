@@ -80,3 +80,42 @@ export function WorksheetFrame({ url, title }: { url: string | null; title: stri
     </div>
   );
 }
+
+/**
+ * Phiếu HTML do cô tải lên kho riêng tư, phục vụ qua /phieu/[id] (cùng tên miền website).
+ * Vì cùng tên miền nên TUYỆT ĐỐI KHÔNG có allow-same-origin: phiếu chạy ở "nguồn gốc rỗng" (opaque origin),
+ * không đọc được cookie/phiên đăng nhập. Máy chủ còn gửi kèm header "CSP: sandbox" nên kể cả mở trực tiếp
+ * (không qua khung) phiếu vẫn bị cách ly.
+ */
+export function UploadedWorksheetFrame({ src, title }: { src: string; title: string }) {
+  if (!/^\/phieu\/[0-9a-f-]{36}$/.test(src)) return null;
+  return (
+    <div>
+      <iframe
+        src={src}
+        title={title}
+        className="h-[80vh] min-h-[520px] w-full rounded-2xl border border-gray-200 bg-white"
+        sandbox="allow-scripts allow-forms allow-popups allow-modals"
+        referrerPolicy="no-referrer"
+        loading="lazy"
+      />
+      <p className="no-print mt-2 text-sm text-gray-600">
+        Nếu phiếu hiển thị chưa vừa màn hình,{" "}
+        <a href={src} target="_blank" rel="noopener noreferrer" className="font-semibold text-brand-700 underline">mở phiếu ở cửa sổ riêng</a>.
+      </p>
+    </div>
+  );
+}
+
+/** Đề PDF do cô tải lên. */
+export function UploadedPdf({ src, title }: { src: string; title: string }) {
+  if (!/^\/phieu\/[0-9a-f-]{36}$/.test(src)) return null;
+  return (
+    <div>
+      <iframe src={src} title={title} className="h-[80vh] min-h-[520px] w-full rounded-2xl border border-gray-200 bg-white" loading="lazy" />
+      <a href={src} target="_blank" rel="noopener noreferrer" className="btn-toy no-print mt-3 inline-block rounded-full bg-brand-600 px-6 py-3 font-extrabold text-white">
+        Mở / tải file PDF
+      </a>
+    </div>
+  );
+}

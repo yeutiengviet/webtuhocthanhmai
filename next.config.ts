@@ -14,8 +14,9 @@ const csp = [
   "style-src 'self' 'unsafe-inline'",
   "img-src 'self' data: https:",
   "font-src 'self' data:",
-  "connect-src 'self'" + (isDev ? " ws:" : ""),
-  `frame-src https://www.youtube-nocookie.com ${WORKSHEET_HOSTS.map((h) => `https://${h}`).join(" ")}`,
+  // Trình duyệt chỉ nói chuyện trực tiếp với Supabase (đăng nhập quản trị, tải file đề lên kho)
+  `connect-src 'self' ${process.env.NEXT_PUBLIC_SUPABASE_URL ?? ""}${isDev ? " ws:" : ""}`,
+  `frame-src 'self' https://www.youtube-nocookie.com ${WORKSHEET_HOSTS.map((h) => `https://${h}`).join(" ")}`,
   "frame-ancestors 'none'",
   "base-uri 'self'",
   "form-action 'self'",
@@ -27,7 +28,8 @@ const nextConfig: NextConfig = {
   async headers() {
     return [
       {
-        source: "/:path*",
+        // Mọi trang TRỪ /phieu/* (file đề tự gửi header riêng: cho phép nhúng trong website + CSP sandbox)
+        source: "/((?!phieu/).*)",
         headers: [
           { key: "Content-Security-Policy", value: csp },
           { key: "X-Content-Type-Options", value: "nosniff" },

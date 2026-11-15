@@ -3,10 +3,14 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { ExamTable } from "@/components/ExamTable";
 import { Breadcrumbs, Container, GRADE_THEME, PageHero } from "@/components/ui";
-import { getExams, getSubject, GRADES, gradeSlug, SUBJECTS } from "@/lib/content";
+import { getSubject, GRADES, gradeSlug, SUBJECTS } from "@/lib/content";
+import { listPublishedExams } from "@/lib/exams";
 
 /** Số đề hiện ở mỗi lớp trên trang tổng hợp; xem thêm bằng nút "Xem tất cả". */
 const PREVIEW = 5;
+
+// Lưu sẵn trang, tự làm mới mỗi 60 giây; quản trị thêm/sửa/xóa đề thì làm mới ngay (revalidatePath).
+export const revalidate = 60;
 
 export function generateStaticParams() {
   return SUBJECTS.map((s) => ({ mon: s.slug }));
@@ -20,6 +24,7 @@ export async function generateMetadata({ params }: { params: Promise<{ mon: stri
 export default async function ExamsBySubject({ params }: { params: Promise<{ mon: string }> }) {
   const subject = getSubject((await params).mon);
   if (!subject) notFound();
+  const { exams: all, error } = await listPublishedExams(subject.slug);
 
   return (
     <>
@@ -42,7 +47,7 @@ export default async function ExamsBySubject({ params }: { params: Promise<{ mon
           ))}
         </nav>
         {GRADES.map((g) => {
-          const exams = getExams(subject.slug, g);
+          const exams = all.filter((e) => e.grade === g);
           const t = GRADE_THEME[g];
           return (
             <section key={g} aria-labelledby={`lop-${g}`}>
@@ -57,7 +62,7 @@ export default async function ExamsBySubject({ params }: { params: Promise<{ mon
                   </Link>
                 )}
               </div>
-              <ExamTable exams={exams.slice(0, PREVIEW)} />
+              <ExamTable exams={exams.slice(0, PREVIEW)} error={error} />
             </section>
           );
         })}

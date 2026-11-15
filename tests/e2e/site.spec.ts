@@ -185,8 +185,9 @@ test("có các header bảo mật", async ({ request }) => {
   expect(h["x-content-type-options"]).toBe("nosniff");
   expect(h["x-powered-by"]).toBeUndefined();
   expect(h["strict-transport-security"]).toContain("max-age=");
-  // Chỉ cho nhúng YouTube và tên miền phiếu — không còn "https:" chung chung
-  expect(h["content-security-policy"]).toMatch(/frame-src https:\/\/www\.youtube-nocookie\.com https:\/\/toantieuhoccothanhmai\.github\.io;/);
+  // Chỉ cho nhúng: chính website ('self' — để nhúng phiếu cô tải lên qua /phieu, vốn bị cách ly bằng sandbox
+  // không có allow-same-origin + header CSP sandbox), YouTube và tên miền phiếu — không có "https:" chung chung.
+  expect(h["content-security-policy"]).toMatch(/frame-src 'self' https:\/\/www\.youtube-nocookie\.com https:\/\/toantieuhoccothanhmai\.github\.io;/);
 });
 
 test("mạng chậm (giả lập 3G): trang chủ và trang khóa học vẫn tải được", async ({ page }) => {
@@ -209,13 +210,14 @@ test("mạng chậm (giả lập 3G): trang chủ và trang khóa học vẫn t�
 
 test("đo tương phản màu thật bằng axe (chuẩn WCAG AA) trên các trang chính", async ({ page }) => {
   const { default: AxeBuilder } = await import("@axe-core/playwright");
-  for (const p of ["/", "/toan", "/toan/lop-4", "/toan/lop-4/theo-tuan", "/toan/lop-4/theo-tuan/tuan-5/video-bai-10", "/hoc-thu", "/ky-thi", "/de-thi", "/de-thi/toan", "/de-thi/toan/lop-4/danh-gia-nang-luc-thang-10", "/quan-tri/tai-de"]) {
+  for (const p of ["/", "/toan", "/toan/lop-4", "/toan/lop-4/theo-tuan", "/toan/lop-4/theo-tuan/tuan-5/video-bai-10", "/hoc-thu", "/ky-thi", "/de-thi", "/de-thi/toan", "/de-thi/toan/lop-4/danh-gia-nang-luc-thang-10", "/quan-tri/dang-nhap"]) {
     await page.goto(p);
     await page.getByRole("button", { name: "Tạm dừng" }).click({ timeout: 1000 }).catch(() => {});
     // Tắt nền chấm bi (rất mờ) và đầu trang dính, vì chúng khiến axe không xác định được màu nền
     // và bỏ qua phép đo (đã thử: khi không tắt, axe KHÔNG phát hiện chữ khó đọc cố ý chèn vào).
     await page.addStyleTag({ content: "body{background-image:none!important} header{position:static!important}" });
-    const r = await new AxeBuilder({ page }).withRules(["color-contrast"]).analyze();
+    // Chỉ đo giao diện website; nội dung BÊN TRONG khung phiếu (file của cô) không thuộc phạm vi này.
+    const r = await new AxeBuilder({ page }).withRules(["color-contrast"]).exclude("iframe").analyze();
     const issues = r.violations.flatMap((v) => v.nodes.map((n) => `${p}: ${n.target.join(" ")} — ${n.failureSummary?.split("\n")[1] ?? ""}`));
     expect(issues, issues.join("\n")).toEqual([]);
   }
@@ -241,12 +243,22 @@ test("khu Đề thi: theo môn → lớp → làm đề Free trong khung cách l
   expect(errors).toEqual([]);
 });
 
-test("khu Đề thi: đường dẫn sai trả 404; màn hình tải đề là bản xem trước bị khóa", async ({ page, request }) => {
+test("khu Đề thi: đường dẫn sai trả 404; trang quản trị bắt đăng nhập", async ({ page, request }) => {
   for (const p of ["/de-thi/van", "/de-thi/toan/lop-6", "/de-thi/toan/lop-4/khong-co", "/de-thi/toan/lop-5/danh-gia-nang-luc-thang-10"]) {
     expect((await request.get(p)).status(), p).toBe(404);
   }
-  await page.goto("/quan-tri/tai-de");
-  await expect(page.getByRole("status")).toContainText("Chưa hoạt động");
-  await expect(page.getByRole("button", { name: "Tải đề lên" })).toBeDisabled();
+  for (const p of ["/quan-tri", "/quan-tri/tai-de", "/quan-tri/de/5644eb66-6ca4-466e-92dc-c1b58e7ee6de"]) {
+    await page.goto(p);
+    await expect(page, p).toHaveURL(/\/quan-tri\/dang-nhap$/);
+  }
+  await expect(page.getByRole("heading", { level: 1 })).toHaveText("Đăng nhập quản trị");
   await expect(page.locator('meta[name="robots"]')).toHaveAttribute("content", /noindex/);
+});
+
+test("file đề /phieu: mã sai hoặc đề không có file → 404, không lộ thông tin", async ({ request }) => {
+  for (const p of ["/phieu/abc", "/phieu/00000000-0000-0000-0000-000000000000", "/phieu/5644eb66-6ca4-466e-92dc-c1b58e7ee6de", "/phieu/bf08aa1f-dd74-497e-8d5f-1c38a30345bf"]) {
+    const r = await request.get(p);
+    expect(r.status(), p).toBe(404);
+    expect(r.headers()["cache-control"]).toContain("no-store");
+  }
 });

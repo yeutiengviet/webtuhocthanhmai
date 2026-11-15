@@ -2,7 +2,11 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { ExamTable } from "@/components/ExamTable";
 import { Breadcrumbs, Container, PageHero } from "@/components/ui";
-import { getExams, getSubject, GRADES, gradeSlug, parseGradeSlug, SUBJECTS } from "@/lib/content";
+import { getSubject, GRADES, gradeSlug, parseGradeSlug, SUBJECTS } from "@/lib/content";
+import { listPublishedExams } from "@/lib/exams";
+
+// Lưu sẵn trang, tự làm mới mỗi 60 giây; quản trị thêm/sửa/xóa đề thì làm mới ngay (revalidatePath).
+export const revalidate = 60;
 
 export function generateStaticParams() {
   return SUBJECTS.flatMap((s) => GRADES.map((g) => ({ mon: s.slug, lop: gradeSlug(g) })));
@@ -22,7 +26,7 @@ export default async function ExamsByGrade({ params }: { params: Params }) {
   const subject = getSubject(mon);
   const grade = parseGradeSlug(lop);
   if (!subject || !grade) notFound();
-  const exams = getExams(subject.slug, grade);
+  const { exams, error } = await listPublishedExams(subject.slug, grade);
 
   return (
     <>
@@ -32,7 +36,7 @@ export default async function ExamsByGrade({ params }: { params: Params }) {
         </div>
       </PageHero>
       <Container className="py-8">
-        <ExamTable exams={exams} />
+        <ExamTable exams={exams} error={error} />
       </Container>
     </>
   );

@@ -3,7 +3,35 @@
 Website độc lập (không dùng chung mã/cơ sở dữ liệu với phần mềm quản lý trung tâm).
 Nội dung theo sách **Kết nối tri thức với cuộc sống**.
 
-## Tình trạng hiện tại: Giai đoạn 1 — bản dùng thử (miễn phí, chưa thu tiền)
+## Trang quản trị — tải đề lên (Giai đoạn 2, đã chạy)
+
+Địa chỉ: **https://hocgioithanhmai.vercel.app/quan-tri**
+
+### Lần đầu (chỉ làm một lần)
+1. Mở `/quan-tri/dang-nhap` → bấm **Tạo tài khoản** → nhập email + mật khẩu (ít nhất 8 ký tự).
+2. Mở hộp thư, bấm link xác nhận của Supabase. Nếu sau khi bấm thấy trang lỗi "localhost" thì **không sao** — tài khoản đã được xác nhận; quay lại `/quan-tri/dang-nhap` đăng nhập.
+3. Nhắn Claude "đã tạo tài khoản quản trị" để được cấp quyền (hoặc tự chạy lệnh SQL trong `supabase/README.md`).
+4. (Nên làm) Supabase → Authentication → URL Configuration → **Site URL** = `https://hocgioithanhmai.vercel.app` để link xác nhận email về đúng website.
+
+### Tải một đề
+`/quan-tri` → **Tải đề mới** → chọn môn, lớp, tên đề, loại đề, thời gian (có thể để trống) → chọn file `.html` (phiếu tương tác) hoặc `.pdf` → chọn Free/hiện ngay → **Tải đề lên**. Đề hiện ở `/de-thi` trong vòng vài giây.
+
+### Sửa, ẩn, đổi Free, xóa
+Trong danh sách ở `/quan-tri`, mỗi đề có nút **Sửa** (đổi thông tin hoặc thay file), **Ẩn/Hiện**, **Đặt Free/Bỏ Free**, **Xóa** (xóa cả file). Mọi thao tác được ghi vào nhật ký (`audit_log`).
+
+### An toàn
+- File đề nằm trong **kho riêng tư**; chỉ đề *đã công khai + Free* mới tải được. Đề trả phí: khách không tải được file (đã kiểm thử).
+- Phiếu `.html` là nội dung không đáng tin → chạy trong khung cách ly, không đọc được tài khoản/cookie (đã kiểm thử bằng phiếu "xấu").
+- Website **không dùng khóa bí mật** của Supabase; mọi quyền do Row Level Security trong cơ sở dữ liệu quyết định (kiểm thử: `supabase/tests/rls_de_thi.sql`).
+- Ai cũng tạo được tài khoản (cần cho phụ huynh ở Giai đoạn 3), nhưng tài khoản mới **không có quyền gì** cho tới khi được cấp.
+
+### Chạy kiểm thử trên máy làm việc có cổng mạng (proxy)
+```bash
+NODE_USE_ENV_PROXY=1 npm run check
+```
+Kiểm thử trọn luồng quản trị (`tests/e2e/admin.spec.ts`) cần tài khoản quản trị thử qua `E2E_ADMIN_EMAIL`, `E2E_ADMIN_PASSWORD`; không có thì được **bỏ qua** (báo "skipped").
+
+## Tình trạng Giai đoạn 1 — bản dùng thử (miễn phí, chưa thu tiền)
 
 | Phần | Trạng thái |
 |---|---|
@@ -12,7 +40,8 @@ Nội dung theo sách **Kết nối tri thức với cuộc sống**.
 | Trang bài giảng (video + phiếu + cột "Cùng bài học / Cùng lớp học") | Đã có |
 | Nhúng phiếu bài tập HTML (khung cách ly `sandbox`) | Đã có — mới có 1 phiếu thật (Đánh giá tháng 10) |
 | Video YouTube | Khung đã có — **chưa gắn video thật** |
-| Trang quản trị, nhập CSV | Giai đoạn 2 |
+| Trang quản trị: tải đề thi (html/pdf), sửa, ẩn, xóa | **Đã có** (Supabase) |
+| Quản trị bài học theo tuần, nhập CSV | Giai đoạn 2 — tiếp theo |
 | Đăng ký/đăng nhập, gói học, chuyển khoản, xác nhận | Giai đoạn 3 |
 | Lưu điểm, tiến độ, báo cáo | Giai đoạn 4 |
 | Tự động đối soát (SePay), Kỳ thi, Thi thử, Thảo luận | Giai đoạn 5 |

@@ -4,10 +4,9 @@
 // "server-only": nếu file này (chứa toàn bộ dữ liệu khóa học, kể cả link video/phiếu trả phí)
 // lỡ bị import vào một component chạy trên trình duyệt ("use client"), build sẽ BÁO LỖI ngay.
 import "server-only";
-import { EXAMS } from "@/data/de-thi";
 import { SKELETON_COURSES } from "@/data/khung-khoa-hoc";
 import { toanLop4TheoTuan } from "@/data/toan-lop4";
-import type { Course, Exam, ExamCategory, Item, ItemType, Subject, SubjectSlug, Track, Week } from "@/lib/types";
+import type { Course, Item, ItemType, Subject, SubjectSlug, Track, Week } from "@/lib/types";
 
 export const SUBJECTS: Subject[] = [
   { slug: "toan", name: "Toán", shortDescription: "Số học, hình học, đo lường, giải toán có lời văn" },
@@ -153,33 +152,5 @@ export function courseStats(course: Course) {
   };
 }
 
-// ===== Khu "Đề thi" =====
-
-export const EXAM_CATEGORY_LABELS: Record<ExamCategory, string> = {
-  "danh-gia-thang": "Đánh giá tháng",
-  "giua-ki-1": "Giữa học kì I",
-  "cuoi-ki-1": "Cuối học kì I",
-  "giua-ki-2": "Giữa học kì II",
-  "cuoi-nam": "Cuối năm",
-  "luyen-thi": "Luyện thi",
-};
-
-const CATEGORY_ORDER: ExamCategory[] = ["danh-gia-thang", "giua-ki-1", "cuoi-ki-1", "giua-ki-2", "cuoi-nam", "luyen-thi"];
-
-export function getExams(subject: SubjectSlug, grade?: number): Exam[] {
-  return EXAMS.filter((e) => e.subject === subject && (grade === undefined || e.grade === grade)).sort(
-    (a, b) => a.grade - b.grade || CATEGORY_ORDER.indexOf(a.category) - CATEGORY_ORDER.indexOf(b.category) || a.order - b.order,
-  );
-}
-
-export function allExams(): Exam[] {
-  return EXAMS;
-}
-
-export function findExam(subject: string, grade: number, slug: string): Exam | undefined {
-  return EXAMS.find((e) => e.subject === subject && e.grade === grade && e.slug === slug);
-}
-
-export function examHref(e: Exam): string {
-  return `/de-thi/${e.subject}/${gradeSlug(e.grade)}/${e.slug}`;
-}
+// ===== Khu "Đề thi": xem src/lib/exam-meta.ts (thông tin chung) và src/lib/exams.ts (đọc từ Supabase) =====
+export { EXAM_CATEGORIES, EXAM_CATEGORY_LABELS } from "@/lib/exam-meta";

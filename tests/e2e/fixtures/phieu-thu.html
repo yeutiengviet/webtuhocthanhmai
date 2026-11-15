@@ -1,0 +1,15 @@
+<!DOCTYPE html>
+<html lang="vi"><head><meta charset="utf-8"><title>Phiếu thử</title></head>
+<body>
+<h1>Phiếu thử nghiệm tự động</h1>
+<p id="ket-qua">đang kiểm tra…</p>
+<script>
+  // Phiếu "xấu" cố đọc trang chính và cookie — phải bị chặn bởi khung cách ly.
+  var r = [];
+  try { r.push("parent:" + (window.parent.document ? "DOC_READ" : "no")); } catch (e) { r.push("parent:blocked"); }
+  try { r.push("cookie:" + (document.cookie === "" ? "empty" : "READ")); } catch (e) { r.push("cookie:blocked"); }
+  try { localStorage.setItem("x", "1"); r.push("storage:ok"); } catch (e) { r.push("storage:blocked"); }
+  try { r.push("origin:" + window.origin); } catch (e) { r.push("origin:?"); }
+  document.getElementById("ket-qua").textContent = r.join(" | ");
+</script>
+</body></html>
