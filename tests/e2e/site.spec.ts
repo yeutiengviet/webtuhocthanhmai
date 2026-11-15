@@ -152,7 +152,7 @@ test("đường dẫn đoán bừa trả về 404, tiêu đề tab không gây h
 });
 
 test("tất cả trang bài học của cả 8 khóa (Toán, Tiếng Việt lớp 2–5) đều mở được", async ({ page, request }) => {
-  test.setTimeout(240_000);
+  test.setTimeout(600_000);
   let total = 0;
   for (const mon of ["toan", "tieng-viet"]) {
     for (const lop of [2, 3, 4, 5]) {
@@ -161,7 +161,12 @@ test("tất cả trang bài học của cả 8 khóa (Toán, Tiếng Việt lớ
       await expect(page.locator("details[id^=tuan-]"), course).toHaveCount(35);
       const hrefs = await page.locator("details[id^=tuan-] a").evaluateAll((as) => as.map((a) => a.getAttribute("href") ?? ""));
       expect(new Set(hrefs.map((h) => h.match(/tuan-(\d+)/)?.[1])).size, course).toBe(35);
-      for (const h of hrefs) expect((await request.get(h)).status(), h).toBe(200);
+      // Trang bài học dựng ở lần mở đầu (có đọc phiếu từ kho) → hỏi song song từng nhóm 12 trang
+      for (let i = 0; i < hrefs.length; i += 12) {
+        const batch = hrefs.slice(i, i + 12);
+        const codes = await Promise.all(batch.map(async (h) => [h, (await request.get(h)).status()] as const));
+        for (const [h, code] of codes) expect(code, h).toBe(200);
+      }
       total += hrefs.length;
     }
   }
@@ -247,7 +252,7 @@ test("khu Đề thi: đường dẫn sai trả 404; trang quản trị bắt đ�
   for (const p of ["/de-thi/van", "/de-thi/toan/lop-6", "/de-thi/toan/lop-4/khong-co", "/de-thi/toan/lop-5/danh-gia-nang-luc-thang-10"]) {
     expect((await request.get(p)).status(), p).toBe(404);
   }
-  for (const p of ["/quan-tri", "/quan-tri/tai-de", "/quan-tri/de/5644eb66-6ca4-466e-92dc-c1b58e7ee6de"]) {
+  for (const p of ["/quan-tri", "/quan-tri/tai-de", "/quan-tri/de/5644eb66-6ca4-466e-92dc-c1b58e7ee6de", "/quan-tri/bai-hoc", "/quan-tri/bai-hoc/toan-4-theo-tuan/t4-w5-luyen-tap-co-ban"]) {
     await page.goto(p);
     await expect(page, p).toHaveURL(/\/quan-tri\/dang-nhap$/);
   }
@@ -256,7 +261,8 @@ test("khu Đề thi: đường dẫn sai trả 404; trang quản trị bắt đ�
 });
 
 test("file đề /phieu: mã sai hoặc đề không có file → 404, không lộ thông tin", async ({ request }) => {
-  for (const p of ["/phieu/abc", "/phieu/00000000-0000-0000-0000-000000000000", "/phieu/5644eb66-6ca4-466e-92dc-c1b58e7ee6de", "/phieu/bf08aa1f-dd74-497e-8d5f-1c38a30345bf"]) {
+  for (const p of ["/phieu/abc", "/phieu/00000000-0000-0000-0000-000000000000", "/phieu/5644eb66-6ca4-466e-92dc-c1b58e7ee6de", "/phieu/bf08aa1f-dd74-497e-8d5f-1c38a30345bf",
+    "/phieu/5644eb66-6ca4-466e-92dc-c1b58e7ee6de/pdf", "/phieu/bai/t4-w5-luyen-tap-co-ban", "/phieu/bai/t4-w5-luyen-tap-co-ban/pdf", "/phieu/bai/..%2Fx", "/phieu/bai/T4"]) {
     const r = await request.get(p);
     expect(r.status(), p).toBe(404);
     expect(r.headers()["cache-control"]).toContain("no-store");

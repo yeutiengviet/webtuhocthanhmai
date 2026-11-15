@@ -5,7 +5,11 @@ import { CurrentWeekButton, OpenWeekFromHash } from "@/components/CurrentWeekBut
 import { Breadcrumbs, Container, FreeBadge, ItemIcon, LevelBadge, LockBadge, PageHero } from "@/components/ui";
 import { allCourses, canViewItem, getCourse, getSubject, gradeSlug, isReady, isTrack, itemHref, parseGradeSlug, publishedWeeks, TRACK_LABELS } from "@/lib/content";
 import { formatRange } from "@/lib/dates";
+import { getPublishedLessonFiles } from "@/lib/lesson-files";
 import type { Week } from "@/lib/types";
+
+// Tự làm mới mỗi 60 giây (cô tải phiếu lên thì làm mới ngay) để hiện đúng mục đã có phiếu.
+export const revalidate = 60;
 
 export function generateStaticParams() {
   return allCourses().map((c) => ({ mon: c.subject, lop: gradeSlug(c.grade), track: c.track }));
@@ -38,6 +42,7 @@ export default async function CoursePage({ params }: { params: Params }) {
   const d = load(mon, lop, track);
   if (!d) notFound();
   const { subject, grade, course } = d;
+  const files = await getPublishedLessonFiles(publishedWeeks(course).flatMap((w) => w.items.map((i) => i.id)));
   const weeks = publishedWeeks(course);
 
   return (
@@ -81,6 +86,9 @@ export default async function CoursePage({ params }: { params: Params }) {
                 <ul className="grid gap-2 border-t-2 border-dashed border-brand-100 bg-brand-50/40 p-3 sm:grid-cols-2">
                   {w.items.map((it) => {
                     const scored = it.type === "worksheet" || it.type === "test";
+                    const f = files.get(it.id);
+                    const open = canViewItem(it) || Boolean(f?.isFree);
+                    const ready = isReady(it) || Boolean(f && (f.hasHtml || f.hasPdf));
                     return (
                       <li key={it.id}>
                         <Link href={itemHref(course, w, it)} className="card-lift flex h-full items-start gap-3 rounded-2xl bg-white p-3 ring-1 ring-gray-100">
@@ -88,11 +96,11 @@ export default async function CoursePage({ params }: { params: Params }) {
                           <span className="min-w-0 flex-1">
                             <span className="block font-bold leading-snug text-gray-900">{it.title}</span>
                             <span className="mt-1 flex flex-wrap items-center gap-1.5">
-                              {it.isFree ? <FreeBadge /> : <LockBadge />}
+                              {open ? <FreeBadge /> : <LockBadge />}
                               <LevelBadge level={it.level} />
                               {it.isExtension && <span className="rounded-full bg-violet-100 px-2.5 py-0.5 text-xs font-bold text-violet-800"><span aria-hidden>💡</span> Mở rộng</span>}
                               {it.durationMinutes && <span className="text-xs text-gray-600">{it.durationMinutes} phút</span>}
-                              {!isReady(it) && <span className="text-xs text-gray-500">· đang cập nhật</span>}
+                              {!ready && <span className="text-xs text-gray-500">· đang cập nhật</span>}
                             </span>
                             {scored && (
                               <span className="mt-1.5 block rounded-lg bg-amber-50 px-2 py-1 text-xs font-semibold text-amber-900">
@@ -101,7 +109,7 @@ export default async function CoursePage({ params }: { params: Params }) {
                               </span>
                             )}
                           </span>
-                          <span className="sr-only">{canViewItem(it) ? "Xem được" : "Cần đăng ký gói"}</span>
+                          <span className="sr-only">{open ? "Xem được" : "Cần đăng ký gói"}</span>
                         </Link>
                       </li>
                     );

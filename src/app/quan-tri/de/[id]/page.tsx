@@ -32,7 +32,9 @@ export default async function EditExamPage({ params }: { params: Promise<{ id: s
             durationMinutes: e.durationMinutes,
             isFree: e.isFree,
             published: e.published,
-            fileLabel: e.hasFile ? `File ${e.fileKind?.toUpperCase()} đã tải lên` : e.externalUrl ? `Link ngoài: ${e.externalUrl}` : null,
+            hasHtml: e.hasFile && e.fileKind === "html",
+            hasPdf: e.hasPdf || (e.hasFile && e.fileKind === "pdf"),
+            externalUrl: e.externalUrl,
           }}
         />
       </Container>

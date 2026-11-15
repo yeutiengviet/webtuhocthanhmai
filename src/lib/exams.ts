@@ -6,7 +6,7 @@ import { EXAM_CATEGORIES } from "@/lib/exam-meta";
 // Đọc đề thi từ Supabase cho trang công khai: kết nối KHÔNG kèm phiên đăng nhập và LUÔN lọc published = true,
 // nên đề nháp không bao giờ lộ ra trang công khai.
 
-export const EXAM_COLUMNS = "id, slug, subject, grade, category, title, duration_minutes, is_free, published, file_kind, file_path, external_url, sort_order";
+export const EXAM_COLUMNS = "id, slug, subject, grade, category, title, duration_minutes, is_free, published, file_kind, file_path, pdf_path, external_url, sort_order";
 
 export interface ExamRow {
   id: string;
@@ -20,6 +20,7 @@ export interface ExamRow {
   published: boolean;
   file_kind: "html" | "pdf" | null;
   file_path: string | null;
+  pdf_path: string | null;
   external_url: string | null;
   sort_order: number;
 }
@@ -37,6 +38,7 @@ export function toExam(r: ExamRow): Exam {
     published: r.published,
     fileKind: r.file_kind,
     hasFile: Boolean(r.file_path),
+    hasPdf: Boolean(r.pdf_path),
     externalUrl: r.external_url,
     sortOrder: r.sort_order,
   };

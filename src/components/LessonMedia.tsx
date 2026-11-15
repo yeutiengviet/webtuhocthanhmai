@@ -1,3 +1,4 @@
+import { isOwnFileHref } from "@/lib/exam-meta";
 import { safeWorksheetUrl, youtubeId } from "@/lib/urls";
 
 /**
@@ -88,7 +89,7 @@ export function WorksheetFrame({ url, title }: { url: string | null; title: stri
  * (không qua khung) phiếu vẫn bị cách ly.
  */
 export function UploadedWorksheetFrame({ src, title }: { src: string; title: string }) {
-  if (!/^\/phieu\/[0-9a-f-]{36}$/.test(src)) return null;
+  if (!isOwnFileHref(src)) return null;
   return (
     <div>
       <iframe
@@ -107,15 +108,21 @@ export function UploadedWorksheetFrame({ src, title }: { src: string; title: str
   );
 }
 
-/** Đề PDF do cô tải lên. */
+/** PDF do cô tải lên, xem ngay trong trang (khi chưa có phiếu tương tác). */
 export function UploadedPdf({ src, title }: { src: string; title: string }) {
-  if (!/^\/phieu\/[0-9a-f-]{36}$/.test(src)) return null;
+  if (!isOwnFileHref(src)) return null;
+  return <iframe src={src} title={title} className="h-[80vh] min-h-[520px] w-full rounded-2xl border border-gray-200 bg-white" loading="lazy" />;
+}
+
+/** Nút tải phiếu PDF về máy để in. */
+export function PdfDownloadButton({ src, fileName, label = "Tải phiếu PDF" }: { src: string; fileName: string; label?: string }) {
+  if (!isOwnFileHref(src)) return null;
   return (
-    <div>
-      <iframe src={src} title={title} className="h-[80vh] min-h-[520px] w-full rounded-2xl border border-gray-200 bg-white" loading="lazy" />
-      <a href={src} target="_blank" rel="noopener noreferrer" className="btn-toy no-print mt-3 inline-block rounded-full bg-brand-600 px-6 py-3 font-extrabold text-white">
-        Mở / tải file PDF
+    <span className="no-print inline-flex flex-wrap items-center gap-2">
+      <a href={src} download={fileName} className="btn-toy inline-flex items-center gap-2 rounded-full bg-accent-600 px-6 py-3 font-extrabold text-white">
+        <span aria-hidden>⬇️</span> {label}
       </a>
-    </div>
+      <a href={src} target="_blank" rel="noopener noreferrer" className="py-2 text-sm font-semibold text-brand-700 underline">Xem PDF</a>
+    </span>
   );
 }

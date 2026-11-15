@@ -1,0 +1,62 @@
+import "server-only";
+import { STORAGE_BUCKET } from "@/lib/supabase/env";
+import type { createSupabaseServer } from "@/lib/supabase/server";
+
+// Phục vụ file phiếu/đề từ kho riêng tư. Quyền do Row Level Security quyết định (đọc dòng + tải file);
+// mọi trường hợp không có quyền đều trả 404 để không lộ file nào tồn tại.
+
+export const notFoundResponse = () =>
+  new Response("Không tìm thấy", { status: 404, headers: { "Cache-Control": "no-store", "Content-Type": "text/plain; charset=utf-8" } });
+
+const COMMON = {
+  "Cache-Control": "private, no-store",
+  "X-Content-Type-Options": "nosniff",
+  "Referrer-Policy": "no-referrer",
+  "Cross-Origin-Resource-Policy": "same-origin",
+};
+
+/**
+ * Phiếu chạy ở "nguồn gốc rỗng" nên trình duyệt chặn localStorage/sessionStorage — phiếu nào dùng mà không bắt lỗi sẽ dừng hẳn.
+ * Đoạn này thay bằng bộ nhớ tạm trong trang (mất khi đóng phiếu), KHÔNG chạm vào dữ liệu thật của website.
+ */
+const STORAGE_SHIM =
+  "<script>(function(){function M(){var d={};return{getItem:function(k){k=String(k);return Object.prototype.hasOwnProperty.call(d,k)?d[k]:null},setItem:function(k,v){d[String(k)]=String(v)},removeItem:function(k){delete d[String(k)]},clear:function(){d={}},key:function(i){return Object.keys(d)[i]||null},get length(){return Object.keys(d).length}}}" +
+  '["localStorage","sessionStorage"].forEach(function(n){try{void window[n].length}catch(e){try{Object.defineProperty(window,n,{value:M(),configurable:true})}catch(_){}}})})();</script>';
+
+export function injectStorageShim(html: string): string {
+  for (const re of [/<head\b[^>]*>/i, /<html\b[^>]*>/i, /<!doctype[^>]*>/i]) {
+    const m = re.exec(html);
+    if (m) return html.slice(0, m.index + m[0].length) + STORAGE_SHIM + html.slice(m.index + m[0].length);
+  }
+  return STORAGE_SHIM + html;
+}
+
+export async function serveStoredFile(
+  supabase: Awaited<ReturnType<typeof createSupabaseServer>>,
+  path: string | null | undefined,
+  pdfName = "phieu.pdf",
+): Promise<Response> {
+  if (!path) return notFoundResponse();
+  const kind = path.endsWith(".html") ? "html" : path.endsWith(".pdf") ? "pdf" : null;
+  if (!kind) return notFoundResponse();
+  const { data: blob, error } = await supabase.storage.from(STORAGE_BUCKET).download(path);
+  if (error || !blob) return notFoundResponse();
+  if (kind === "html") {
+    return new Response(injectStorageShim(await blob.text()), {
+      headers: {
+        ...COMMON,
+        "Content-Type": "text/html; charset=utf-8",
+        // Cách ly phiếu kể cả khi mở trực tiếp: không có allow-same-origin → nguồn gốc rỗng, không đọc được cookie.
+        "Content-Security-Policy": "sandbox allow-scripts allow-forms allow-modals allow-popups; frame-ancestors 'self'",
+      },
+    });
+  }
+  return new Response(blob, {
+    headers: {
+      ...COMMON,
+      "Content-Type": "application/pdf",
+      "Content-Disposition": `inline; filename="${pdfName.replace(/[^a-z0-9.-]/gi, "-")}"`,
+      "Content-Security-Policy": "frame-ancestors 'self'",
+    },
+  });
+}

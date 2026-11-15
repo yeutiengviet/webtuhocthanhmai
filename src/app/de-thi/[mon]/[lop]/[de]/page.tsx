@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { UploadedPdf, UploadedWorksheetFrame, WorksheetFrame } from "@/components/LessonMedia";
+import { PdfDownloadButton, UploadedPdf, UploadedWorksheetFrame, WorksheetFrame } from "@/components/LessonMedia";
 import { PrintButton } from "@/components/PrintButton";
 import { Breadcrumbs, Container, FreeBadge, ItemIcon, LockBadge } from "@/components/ui";
 import { getSubject, gradeSlug, parseGradeSlug } from "@/lib/content";
@@ -61,8 +61,11 @@ export default async function ExamPage({ params }: { params: Params }) {
               <span className="text-gray-600">· Điểm của con: hiện khi con đăng nhập</span>
             </div>
             <div className="no-print mt-5 flex flex-wrap gap-3">
-              <a href="#bai-lam" className="btn-toy inline-flex items-center gap-2 rounded-full bg-brand-600 px-6 py-3 font-extrabold text-white">Làm bài</a>
-              <PrintButton />
+              {media.kind === "open" && media.main && media.main.type !== "pdf" && (
+                <a href="#bai-lam" className="btn-toy inline-flex items-center gap-2 rounded-full bg-brand-600 px-6 py-3 font-extrabold text-white"><span aria-hidden>✏️</span> Làm bài trực tuyến</a>
+              )}
+              {media.kind === "open" && media.pdf && <PdfDownloadButton src={media.pdf} fileName={`${exam.slug}.pdf`} />}
+              {!(media.kind === "open" && media.pdf) && <PrintButton />}
             </div>
           </header>
 
@@ -73,12 +76,12 @@ export default async function ExamPage({ params }: { params: Params }) {
                 <p className="mt-3 font-display text-2xl font-extrabold text-brand-700">Đề này dành cho học sinh đã đăng ký gói học</p>
                 <Link href="/thanh-toan" className="btn-toy mt-4 inline-block rounded-full bg-brand-600 px-6 py-3 font-extrabold text-white">Đăng ký gói học</Link>
               </div>
-            ) : media.kind === "external" ? (
-              <WorksheetFrame url={media.url} title={exam.title} />
-            ) : media.kind === "file-html" ? (
-              <UploadedWorksheetFrame src={media.src} title={exam.title} />
-            ) : media.kind === "file-pdf" ? (
-              <UploadedPdf src={media.src} title={exam.title} />
+            ) : media.main?.type === "external" ? (
+              <WorksheetFrame url={media.main.url} title={exam.title} />
+            ) : media.main?.type === "html" ? (
+              <UploadedWorksheetFrame src={media.main.src} title={exam.title} />
+            ) : media.main?.type === "pdf" ? (
+              <UploadedPdf src={media.main.src} title={exam.title} />
             ) : (
               <WorksheetFrame url={null} title={exam.title} />
             )}

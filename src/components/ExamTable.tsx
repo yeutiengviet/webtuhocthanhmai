@@ -39,7 +39,7 @@ export function ExamTable({ exams, error = false }: { exams: Exam[]; error?: boo
                   {e.isFree ? <FreeBadge /> : <LockBadge />}
                   <span className="rounded-full bg-violet-50 px-2 py-0.5 text-violet-800 ring-1 ring-violet-200">{EXAM_CATEGORY_LABELS[e.category]}</span>
                   {e.durationMinutes && <span>⏱ {e.durationMinutes} phút</span>}
-                  {!(e.hasFile || e.externalUrl) && <span className="text-gray-600">· đang cập nhật</span>}
+                  {!(e.hasFile || e.hasPdf || e.externalUrl) && <span className="text-gray-600">· đang cập nhật</span>}
                 </span>
               </span>
             </Link>
@@ -65,7 +65,7 @@ export function ExamTable({ exams, error = false }: { exams: Exam[]; error?: boo
                 <td className="px-4 py-3">
                   <Link href={examHref(e)} className="font-bold text-brand-700 hover:underline">{e.title}</Link>{" "}
                   {e.isFree ? <FreeBadge /> : <LockBadge />}
-                  {!(e.hasFile || e.externalUrl) && <span className="ml-1 text-xs text-gray-600">đang cập nhật</span>}
+                  {!(e.hasFile || e.hasPdf || e.externalUrl) && <span className="ml-1 text-xs text-gray-600">đang cập nhật</span>}
                 </td>
                 <td className="px-4 py-3 text-sm font-semibold text-violet-800">{EXAM_CATEGORY_LABELS[e.category]}</td>
                 <td className="px-4 py-3 text-sm">{e.durationMinutes ? `${e.durationMinutes} phút` : "—"}</td>

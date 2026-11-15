@@ -6,6 +6,7 @@
 import "server-only";
 import { SKELETON_COURSES } from "@/data/khung-khoa-hoc";
 import { toanLop4TheoTuan } from "@/data/toan-lop4";
+import { lessonFileHref } from "@/lib/exam-meta";
 import type { Course, Item, ItemType, Subject, SubjectSlug, Track, Week } from "@/lib/types";
 
 export const SUBJECTS: Subject[] = [
@@ -96,27 +97,59 @@ export function canViewItem(item: Item): boolean {
   return item.isFree;
 }
 
+/** File cô tải lên cho một mục (bảng lesson_files) — chỉ cờ, không kèm đường dẫn kho. */
+export interface LessonFileInfo {
+  hasHtml: boolean;
+  hasPdf: boolean;
+  isFree: boolean;
+}
+
+/** Các loại mục được gắn file phiếu: phiếu luyện tập, đề kiểm tra (tương tác + PDF), tài liệu (chỉ PDF). */
+export function itemAcceptsFiles(item: Item): { html: boolean; pdf: boolean } {
+  if (item.type === "worksheet" || item.type === "test") return { html: true, pdf: true };
+  if (item.type === "document") return { html: false, pdf: true };
+  return { html: false, pdf: false };
+}
+
 /**
  * Quyết định trang bài học được phép đưa gì xuống trình duyệt.
  * Mục KHÔNG có quyền xem: chỉ trả { kind: "locked" } — tuyệt đối không kèm mã video hay link phiếu.
+ * Mục có file cô tải lên và đặt Miễn phí thì mở được (kể cả ngoài tuần học thử).
  * Mọi trang hiển thị nội dung bài học phải đi qua hàm này.
  */
 export type LessonMedia =
   | { kind: "locked" }
   | { kind: "video"; videoRef: string | null }
-  | { kind: "worksheet"; url: string | null }
-  | { kind: "document"; url: string | null };
+  | { kind: "worksheet"; url: string | null; htmlSrc?: string; pdf?: string }
+  | { kind: "document"; url: string | null; pdf?: string };
 
-export function lessonMedia(item: Item, canView: (it: Item) => boolean = canViewItem): LessonMedia {
-  if (!canView(item)) return { kind: "locked" };
+export function lessonMedia(item: Item, canView: (it: Item) => boolean = canViewItem, file?: LessonFileInfo | null): LessonMedia {
+  const accepts = itemAcceptsFiles(item);
+  const uploaded = file && (file.hasHtml || file.hasPdf) ? file : null;
+  if (!canView(item) && !uploaded?.isFree) return { kind: "locked" };
+  const extra: { htmlSrc?: string; pdf?: string } = {};
+  if (uploaded?.hasHtml && accepts.html) extra.htmlSrc = lessonFileHref(item.id, "html");
+  if (uploaded?.hasPdf && accepts.pdf) extra.pdf = lessonFileHref(item.id, "pdf");
   switch (item.type) {
     case "video":
       return { kind: "video", videoRef: item.videoRef };
     case "document":
-      return { kind: "document", url: item.url };
+      return extra.pdf ? { kind: "document", url: item.url, pdf: extra.pdf } : { kind: "document", url: item.url };
     default:
-      return { kind: "worksheet", url: item.url };
+      return { kind: "worksheet", url: item.url, ...extra };
   }
+}
+
+/** Tìm mục theo mã (dùng cho trang quản trị). */
+export function findItemById(itemId: string): { course: Course; week: Week; item: Item } | null {
+  for (const course of COURSES)
+    for (const week of course.weeks)
+      for (const item of week.items) if (item.id === itemId) return { course, week, item };
+  return null;
+}
+
+export function getCourseById(id: string): Course | undefined {
+  return COURSES.find((c) => c.id === id);
 }
 
 export function itemHref(course: Course, week: Week, item: Item): string {

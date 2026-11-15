@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { checkFileContent, examFileHref, examHref, examMedia, isUuid, kindFromFileName, MAX_FILE_BYTES, slugify, storagePath, validateExamInput } from "@/lib/exam-meta";
+import { checkFileContent, examFileHref, examHref, examMedia, isItemId, isOwnFileHref, isUuid, kindFromFileName, lessonFileHref, MAX_FILE_BYTES, slugify, storagePath, validateExamInput } from "@/lib/exam-meta";
 
 const enc = (s: string) => new TextEncoder().encode(s);
 const ID = "5644eb66-6ca4-466e-92dc-c1b58e7ee6de";
@@ -37,6 +37,9 @@ describe("kiểm tra file đề theo NỘI DUNG (không tin đuôi file)", () =>
   });
   it("đường dẫn trong kho luôn do hệ thống đặt", () => {
     expect(storagePath(ID, "html")).toBe(`exams/${ID}.html`);
+    expect(storagePath(ID, "pdf", "lessons")).toBe(`lessons/${ID}.pdf`);
+    // @ts-expect-error thư mục lạ bị từ chối
+    expect(() => storagePath(ID, "pdf", "../x")).toThrow();
     expect(() => storagePath("../../x", "html")).toThrow();
     expect(isUuid(ID)).toBe(true);
     expect(isUuid("abc")).toBe(false);
@@ -69,17 +72,35 @@ describe("kiểm tra form đề thi", () => {
 });
 
 describe("trang làm đề được đưa gì ra trình duyệt", () => {
-  const base = { id: ID, isFree: true, externalUrl: null, hasFile: true, fileKind: "html" as const };
+  const base = { id: ID, isFree: true, externalUrl: null, hasFile: true, fileKind: "html" as const, hasPdf: false };
   it("đề trả phí: chỉ báo khóa, không có đường dẫn file", () => {
     const m = examMedia({ ...base, isFree: false });
     expect(m).toEqual({ kind: "locked" });
     expect(JSON.stringify(m)).not.toContain("/phieu/");
   });
-  it("đề Free: file html/pdf qua /phieu/[id], link ngoài giữ nguyên, chưa có file thì 'none'", () => {
-    expect(examMedia(base)).toEqual({ kind: "file-html", src: examFileHref(ID) });
-    expect(examMedia({ ...base, fileKind: "pdf" })).toEqual({ kind: "file-pdf", src: `/phieu/${ID}` });
-    expect(examMedia({ ...base, hasFile: false, fileKind: null, externalUrl: "https://toantieuhoccothanhmai.github.io/a.html" }).kind).toBe("external");
-    expect(examMedia({ ...base, hasFile: false, fileKind: null })).toEqual({ kind: "none" });
+  it("đề Free: phiếu tương tác + PDF tải về; đề cũ chỉ có PDF; link ngoài; chưa có file", () => {
+    expect(examMedia(base)).toEqual({ kind: "open", main: { type: "html", src: examFileHref(ID) }, pdf: null });
+    expect(examMedia({ ...base, hasPdf: true })).toEqual({ kind: "open", main: { type: "html", src: `/phieu/${ID}` }, pdf: `/phieu/${ID}/pdf` });
+    // chỉ có PDF (ô riêng): xem PDF ngay trong trang + nút tải
+    expect(examMedia({ ...base, hasFile: false, fileKind: null, hasPdf: true })).toEqual({ kind: "open", main: { type: "pdf", src: `/phieu/${ID}/pdf` }, pdf: `/phieu/${ID}/pdf` });
+    // đề cũ: 1 file PDF ở ô chính
+    expect(examMedia({ ...base, fileKind: "pdf" })).toEqual({ kind: "open", main: { type: "pdf", src: `/phieu/${ID}` }, pdf: `/phieu/${ID}` });
+    expect(examMedia({ ...base, hasFile: false, fileKind: null, externalUrl: "https://toantieuhoccothanhmai.github.io/a.html" })).toMatchObject({ kind: "open", main: { type: "external" } });
+    expect(examMedia({ ...base, hasFile: false, fileKind: null })).toEqual({ kind: "open", main: null, pdf: null });
+  });
+  it("đề trả phí có PDF: vẫn chỉ báo khóa", () => {
+    expect(JSON.stringify(examMedia({ ...base, isFree: false, hasPdf: true }))).not.toContain("/phieu/");
+  });
+  it("đường dẫn file của chính website (khung phiếu chỉ nhận các đường này)", () => {
+    expect(isOwnFileHref(`/phieu/${ID}`)).toBe(true);
+    expect(isOwnFileHref(`/phieu/${ID}/pdf`)).toBe(true);
+    expect(isOwnFileHref(lessonFileHref("t4-w5-luyen-tap-co-ban", "html"))).toBe(true);
+    expect(isOwnFileHref(lessonFileHref("tv3-w12-tai-lieu-tuan", "pdf"))).toBe(true);
+    for (const bad of ["https://x.com/phieu/a", "/phieu/../quan-tri", "/phieu/bai/A-B", "/phieu/bai/x/pdf/y", `//evil.com/phieu/${ID}`, "javascript:alert(1)"]) {
+      expect(isOwnFileHref(bad)).toBe(false);
+    }
+    expect(isItemId("t4-w5-luyen-tap-co-ban")).toBe(true);
+    for (const bad of ["", "T4", "a--b", "-a", "a/b", "a".repeat(81), "../x"]) expect(isItemId(bad)).toBe(false);
   });
   it("đường dẫn đề", () => {
     expect(examHref({ subject: "tieng-viet", grade: 5, slug: "de-1" })).toBe("/de-thi/tieng-viet/lop-5/de-1");

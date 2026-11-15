@@ -156,3 +156,30 @@ describe("kiểm tra đường dẫn an toàn", () => {
     expect(telHref("12")).toBeNull();
   });
 });
+
+describe("phiếu cô tải lên cho bài học theo tuần", () => {
+  it("mã mục là duy nhất trên toàn bộ các khóa (dùng làm khóa của bảng lesson_files)", async () => {
+    const { allCourses } = await import("@/lib/content");
+    const ids = allCourses().flatMap((c) => c.weeks.flatMap((w) => w.items.map((i) => i.id)));
+    expect(new Set(ids).size).toBe(ids.length);
+    for (const id of ids) expect(id).toMatch(/^[a-z0-9]+(-[a-z0-9]+)*$/);
+  });
+  it("mục trả phí có phiếu đặt Free thì mở; không có file hoặc file trả phí thì vẫn khóa", () => {
+    const sheet: Item = { ...weeks[10].items[0], id: "t4-w11-luyen-tap-co-ban", isFree: false, type: "worksheet", videoRef: null, url: null };
+    expect(lessonMedia(sheet, canViewItem, null)).toEqual({ kind: "locked" });
+    expect(lessonMedia(sheet, canViewItem, { hasHtml: true, hasPdf: true, isFree: false })).toEqual({ kind: "locked" });
+    expect(lessonMedia(sheet, canViewItem, { hasHtml: false, hasPdf: false, isFree: true })).toEqual({ kind: "locked" });
+    expect(lessonMedia(sheet, canViewItem, { hasHtml: true, hasPdf: true, isFree: true })).toEqual({
+      kind: "worksheet",
+      url: null,
+      htmlSrc: "/phieu/bai/t4-w11-luyen-tap-co-ban",
+      pdf: "/phieu/bai/t4-w11-luyen-tap-co-ban/pdf",
+    });
+  });
+  it("tài liệu chỉ nhận PDF; video không nhận file", () => {
+    const doc: Item = { ...weeks[0].items[0], id: "t4-w1-tai-lieu", type: "document", isFree: true, url: null };
+    expect(lessonMedia(doc, canViewItem, { hasHtml: true, hasPdf: true, isFree: true })).toEqual({ kind: "document", url: null, pdf: "/phieu/bai/t4-w1-tai-lieu/pdf" });
+    const vid: Item = { ...weeks[0].items[0], type: "video", isFree: true, videoRef: null };
+    expect(lessonMedia(vid, canViewItem, { hasHtml: true, hasPdf: true, isFree: true })).toEqual({ kind: "video", videoRef: null });
+  });
+});

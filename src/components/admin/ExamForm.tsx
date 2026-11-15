@@ -2,11 +2,10 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useRef, useState } from "react";
-import { createExam, discardUpload, updateExam, type ActionResult } from "@/app/quan-tri/actions";
-import { checkFileContent, EXAM_CATEGORIES, EXAM_CATEGORY_LABELS, kindFromFileName, MAX_FILE_BYTES, storagePath, validateExamInput, type FileKind } from "@/lib/exam-meta";
-import { STORAGE_BUCKET } from "@/lib/supabase/env";
-import { createSupabaseBrowser } from "@/lib/supabase/browser";
+import { useState } from "react";
+import { createExam, updateExam, type ActionResult } from "@/app/quan-tri/actions";
+import { discardPair, FileSlot, uploadPair, useFilePair, type UploadedIds } from "@/components/admin/FileSlot";
+import { EXAM_CATEGORIES, EXAM_CATEGORY_LABELS, validateExamInput } from "@/lib/exam-meta";
 import type { ExamCategory, SubjectSlug } from "@/lib/types";
 
 export interface ExamFormInitial {
@@ -18,7 +17,11 @@ export interface ExamFormInitial {
   durationMinutes: number | null;
   isFree: boolean;
   published: boolean;
-  fileLabel: string | null;
+  /** Đã có phiếu tương tác (.html) */
+  hasHtml: boolean;
+  /** Đã có phiếu PDF (ô riêng, hoặc đề cũ chỉ có 1 file PDF) */
+  hasPdf: boolean;
+  externalUrl: string | null;
 }
 
 const field = "mt-1 block w-full rounded-2xl border-2 bg-white px-4 py-3 font-semibold text-gray-900 focus:border-brand-500";
@@ -27,24 +30,10 @@ const label = "block font-extrabold text-gray-800";
 export function ExamForm({ initial }: { initial?: ExamFormInitial }) {
   const router = useRouter();
   const editing = Boolean(initial);
-  const fileRef = useRef<HTMLInputElement>(null);
-  const [file, setFile] = useState<File | null>(null);
-  const [fileError, setFileError] = useState<string | null>(null);
+  const pair = useFilePair();
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [busy, setBusy] = useState<string | null>(null);
   const [result, setResult] = useState<ActionResult | null>(null);
-
-  async function onPickFile(f: File | null) {
-    setFileError(null);
-    setFile(null);
-    if (!f) return;
-    const kind = kindFromFileName(f.name);
-    if (!kind) return setFileError("Chỉ nhận file .html (phiếu tương tác) hoặc .pdf.");
-    if (f.size > MAX_FILE_BYTES) return setFileError("File quá lớn (tối đa 10 MB).");
-    const problem = checkFileContent(new Uint8Array(await f.slice(0, 8192).arrayBuffer()), kind);
-    if (problem) return setFileError(problem);
-    setFile(f);
-  }
 
   async function submit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -57,43 +46,38 @@ export function ExamForm({ initial }: { initial?: ExamFormInitial }) {
     const v = validateExamInput(raw);
     if (!v.ok) return setErrors(v.errors);
     setErrors({});
-    if (!editing && !file) return setFileError("Cô chọn file đề trước nhé.");
-    if (fileError) return;
+    if (!editing && !pair.html && !pair.pdf) {
+      setResult({ ok: false, message: "Cô chọn ít nhất một file: phiếu tương tác hoặc phiếu PDF." });
+      return;
+    }
+    if (pair.htmlError || pair.pdfError) return;
 
-    let fileId: string | undefined;
-    let fileKind: FileKind | undefined;
+    let ids: UploadedIds = {};
     try {
-      if (file) {
-        fileKind = kindFromFileName(file.name)!;
-        fileId = crypto.randomUUID();
+      if (pair.html || pair.pdf) {
         setBusy("Đang tải file lên kho…");
-        const supabase = createSupabaseBrowser();
-        const { error } = await supabase.storage
-          .from(STORAGE_BUCKET)
-          .upload(storagePath(fileId, fileKind), file, { contentType: fileKind === "html" ? "text/html" : "application/pdf", upsert: false });
-        if (error) {
+        const up = await uploadPair({ html: pair.html, pdf: pair.pdf }, "exams");
+        if (!up) {
           setResult({ ok: false, message: "Chưa tải được file lên. Cô kiểm tra mạng rồi thử lại." });
           return;
         }
+        ids = up;
       }
       setBusy("Đang kiểm tra file và lưu đề…");
-      const payload = { ...raw, fileId, fileKind };
+      const payload = { ...raw, ...ids, removeHtml: pair.removeHtml, removePdf: pair.removePdf };
       const res = editing ? await updateExam(initial!.id, payload) : await createExam(payload);
       setResult(res);
       if (!res.ok) {
         if (res.errors) setErrors(res.errors);
-        if (fileId && fileKind) await discardUpload(fileId, fileKind);
+        await discardPair(ids, "exams");
         return;
       }
-      if (!editing) {
-        form.reset();
-        setFile(null);
-        if (fileRef.current) fileRef.current.value = "";
-      }
+      pair.clear();
+      if (!editing) form.reset();
       router.refresh();
     } catch {
       setResult({ ok: false, message: "Có lỗi khi gửi. Cô thử lại sau ít phút." });
-      if (fileId && fileKind) await discardUpload(fileId, fileKind);
+      await discardPair(ids, "exams");
     } finally {
       setBusy(null);
     }
@@ -143,21 +127,16 @@ export function ExamForm({ initial }: { initial?: ExamFormInitial }) {
         </label>
       </div>
 
-      <div>
-        <p className={label}>{editing ? "Thay file đề (không bắt buộc)" : "File đề"}</p>
-        {editing && initial?.fileLabel && <p className="mt-1 text-sm text-gray-700">File hiện tại: {initial.fileLabel}</p>}
-        <label className={`mt-1 block cursor-pointer rounded-2xl border-2 border-dashed p-6 text-center ${fileError ? "border-red-400 bg-red-50" : "border-brand-300 bg-brand-50"}`}>
-          <span className="text-4xl" aria-hidden>📤</span>
-          <span className="mt-2 block font-extrabold text-brand-700">{file ? `Đã chọn: ${file.name}` : "Bấm để chọn file đề từ điện thoại hoặc máy tính"}</span>
-          <span className="mt-1 block text-sm text-gray-700">Nhận: phiếu tương tác <strong>.html</strong> hoặc đề in <strong>.pdf</strong>. Tối đa 10 MB.</span>
-          <input ref={fileRef} type="file" accept=".html,.htm,.pdf,text/html,application/pdf" className="sr-only" onChange={(e) => onPickFile(e.target.files?.[0] ?? null)} aria-label="Chọn file đề" />
-        </label>
-        {fileError && <span role="alert" className="mt-1 block text-sm font-bold text-red-700">{fileError}</span>}
-      </div>
+      <fieldset className="space-y-3">
+        <legend className={label}>File đề {editing ? "(chọn file mới để thay)" : "(chọn 1 hoặc cả 2)"}</legend>
+        {editing && initial?.externalUrl && !initial.hasHtml && <p className="text-sm text-gray-700">Đang dùng link ngoài: {initial.externalUrl}</p>}
+        <FileSlot key={`html-${pair.generation}`} {...pair.slot("html", Boolean(initial?.hasHtml))} />
+        <FileSlot key={`pdf-${pair.generation}`} {...pair.slot("pdf", Boolean(initial?.hasPdf))} />
+      </fieldset>
 
       <div className="space-y-1 rounded-2xl bg-gray-50 p-4">
         <label className="flex items-center gap-3 py-2 font-semibold">
-          <input type="checkbox" name="isFree" defaultChecked={initial?.isFree ?? false} className="h-5 w-5 accent-brand-600" />
+          <input type="checkbox" name="isFree" defaultChecked={initial?.isFree ?? true} className="h-5 w-5 accent-brand-600" />
           Miễn phí cho mọi người (nhãn Free)
         </label>
         <p className="pl-8 text-sm text-gray-600">Không chọn: chỉ học sinh đã đăng ký gói mới làm được (khi có chức năng gói học).</p>

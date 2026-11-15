@@ -21,10 +21,18 @@ export function isUuid(v: unknown): v is string {
   return typeof v === "string" && UUID.test(v);
 }
 
+export type StorageFolder = "exams" | "lessons";
+
 /** Đường dẫn file trong kho — luôn do hệ thống đặt (mã ngẫu nhiên), không dùng tên file của người tải lên. */
-export function storagePath(fileId: string, kind: FileKind): string {
+export function storagePath(fileId: string, kind: FileKind, folder: StorageFolder = "exams"): string {
   if (!isUuid(fileId)) throw new Error("Mã file không hợp lệ");
-  return `exams/${fileId}.${kind}`;
+  if (folder !== "exams" && folder !== "lessons") throw new Error("Thư mục không hợp lệ");
+  return `${folder}/${fileId}.${kind}`;
+}
+
+/** Mã mục bài học theo tuần, vd "t4-w5-luyen-tap-co-ban". */
+export function isItemId(v: unknown): v is string {
+  return typeof v === "string" && v.length <= 80 && /^[a-z0-9]+(-[a-z0-9]+)*$/.test(v);
 }
 
 /** "Đề 1: Bài ca về Trái Đất – Giữa kì 1" → "de-1-bai-ca-ve-trai-dat-giua-ki-1" */
@@ -106,26 +114,37 @@ export function examHref(e: { subject: SubjectSlug; grade: number; slug: string 
   return `/de-thi/${e.subject}/lop-${e.grade}/${e.slug}`;
 }
 
-/** Đường dẫn phục vụ file đề tải lên (route /phieu/[id] — kiểm tra quyền ở máy chủ trước khi trả file). */
-export function examFileHref(id: string): string {
-  return `/phieu/${id}`;
+/** Đường dẫn phục vụ file đề tải lên (route /phieu/... — kiểm tra quyền ở máy chủ trước khi trả file). */
+export function examFileHref(id: string, which: "main" | "pdf" = "main"): string {
+  return which === "pdf" ? `/phieu/${id}/pdf` : `/phieu/${id}`;
 }
 
-export type ExamMedia =
-  | { kind: "locked" }
-  | { kind: "external"; url: string }
-  | { kind: "file-html"; src: string }
-  | { kind: "file-pdf"; src: string }
-  | { kind: "none" };
+/** File phiếu của một mục trong bài học theo tuần. */
+export function lessonFileHref(itemId: string, which: "html" | "pdf"): string {
+  return which === "pdf" ? `/phieu/bai/${itemId}/pdf` : `/phieu/bai/${itemId}`;
+}
+
+/** Đường dẫn file mà khung phiếu / nút PDF được phép dùng (chỉ file của chính website). */
+export function isOwnFileHref(src: string): boolean {
+  return /^\/phieu\/(?:[0-9a-f-]{36}(?:\/pdf)?|bai\/[a-z0-9]+(?:-[a-z0-9]+)*(?:\/pdf)?)$/.test(src);
+}
+
+/** Phần làm bài chính: phiếu tương tác (link ngoài hoặc file .html), hoặc chỉ có PDF thì xem PDF. */
+export type MainMedia = { type: "external"; url: string } | { type: "html"; src: string } | { type: "pdf"; src: string } | null;
+
+export type ExamMedia = { kind: "locked" } | { kind: "open"; main: MainMedia; pdf: string | null };
 
 /**
  * Trang làm đề được đưa gì ra trình duyệt. Đề trả phí: chỉ { kind: "locked" } (Giai đoạn 3 sẽ thêm kiểm tra gói).
  * Kể cả khi trang lỡ đưa đường dẫn /phieu/..., máy chủ và kho file vẫn chặn đề trả phí (Row Level Security).
  */
-export function examMedia(e: { id: string; isFree: boolean; externalUrl: string | null; hasFile: boolean; fileKind: FileKind | null }): ExamMedia {
+export function examMedia(e: { id: string; isFree: boolean; externalUrl: string | null; hasFile: boolean; fileKind: FileKind | null; hasPdf: boolean }): ExamMedia {
   if (!e.isFree) return { kind: "locked" };
-  if (e.externalUrl) return { kind: "external", url: e.externalUrl };
-  if (e.hasFile && e.fileKind === "html") return { kind: "file-html", src: examFileHref(e.id) };
-  if (e.hasFile && e.fileKind === "pdf") return { kind: "file-pdf", src: examFileHref(e.id) };
-  return { kind: "none" };
+  // PDF tải về: ô PDF riêng; đề cũ chỉ có 1 file PDF thì dùng luôn file đó.
+  const pdf = e.hasPdf ? examFileHref(e.id, "pdf") : e.hasFile && e.fileKind === "pdf" ? examFileHref(e.id) : null;
+  let main: MainMedia = null;
+  if (e.hasFile && e.fileKind === "html") main = { type: "html", src: examFileHref(e.id) };
+  else if (e.externalUrl) main = { type: "external", url: e.externalUrl };
+  else if (pdf) main = { type: "pdf", src: pdf };
+  return { kind: "open", main, pdf };
 }

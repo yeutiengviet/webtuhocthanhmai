@@ -79,6 +79,8 @@ export interface Exam {
   /** Đề tải lên kho riêng tư: html (phiếu tương tác) hoặc pdf. */
   fileKind: "html" | "pdf" | null;
   hasFile: boolean;
+  /** Có phiếu PDF riêng để tải về. */
+  hasPdf: boolean;
   /** Đề đặt ở trang ngoài (vd github.io) — phải thuộc WORKSHEET_HOSTS. */
   externalUrl: string | null;
   sortOrder: number;

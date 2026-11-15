@@ -1,11 +1,11 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { VideoEmbed, WorksheetFrame } from "@/components/LessonMedia";
+import { PdfDownloadButton, UploadedPdf, UploadedWorksheetFrame, VideoEmbed, WorksheetFrame } from "@/components/LessonMedia";
 import { PrintButton } from "@/components/PrintButton";
 import { Breadcrumbs, Container, FreeBadge, ItemIcon, LevelBadge, LockBadge } from "@/components/ui";
 import {
-  allCourses,
+  canViewItem,
   courseHref,
   findItem,
   findWeek,
@@ -18,21 +18,20 @@ import {
   isTrack,
   lessonMedia,
   publishedWeeks,
-  weekSlug,
 } from "@/lib/content";
 import { formatRange } from "@/lib/dates";
+import { getPublishedLessonFiles } from "@/lib/lesson-files";
+import type { LessonFileInfo, LessonMedia } from "@/lib/content";
 import type { Item } from "@/lib/types";
 import { safeDocumentUrl } from "@/lib/urls";
 
-// LƯU Ý GIAI ĐOẠN 3: trang này hiện được dựng sẵn (tĩnh) vì chưa có đăng nhập và chỉ mục Free có nội dung.
-// Khi kiểm tra gói học theo người đăng nhập, BẮT BUỘC chuyển sang render động (dynamic) + Cache-Control: private, no-store,
-// để trang của người đã trả phí không bao giờ bị lưu đệm rồi phát cho người khác.
+// LƯU Ý GIAI ĐOẠN 3: khi kiểm tra gói học theo người đăng nhập, BẮT BUỘC chuyển sang render động (dynamic)
+// + Cache-Control: private, no-store, để trang của người đã trả phí không bao giờ bị lưu đệm rồi phát cho người khác.
+// Hiện tại: trang dựng ở lần mở đầu rồi lưu sẵn, tự làm mới mỗi 60 giây; cô tải phiếu lên thì làm mới ngay (revalidatePath).
+export const revalidate = 60;
+
 export function generateStaticParams() {
-  return allCourses().flatMap((c) =>
-    publishedWeeks(c).flatMap((w) =>
-      w.items.map((it) => ({ mon: c.subject, lop: gradeSlug(c.grade), track: c.track, tuan: weekSlug(w), bai: it.slug })),
-    ),
-  );
+  return [];
 }
 
 type Params = Promise<{ mon: string; lop: string; track: string; tuan: string; bai: string }>;
@@ -57,7 +56,8 @@ export default async function LessonPage({ params }: { params: Params }) {
   if (!d) notFound();
   const { subject, grade, course, week, item } = d;
   // Mọi nội dung (mã video, link phiếu) chỉ lấy qua lessonMedia() — mục bị khóa không có dữ liệu này.
-  const media = lessonMedia(item);
+  const files = await getPublishedLessonFiles(week.items.map((i) => i.id));
+  const media = lessonMedia(item, canViewItem, files.get(item.id));
 
   // Phiếu luyện tập gắn với bài giảng video: phiếu cơ bản của tuần
   const practice: Item | undefined =
@@ -86,7 +86,7 @@ export default async function LessonPage({ params }: { params: Params }) {
             </p>
             <h1 className="relative mt-1 text-3xl text-gray-900 sm:text-4xl">{item.title}</h1>
             <div className="relative mt-3 flex flex-wrap items-center gap-2 text-sm font-semibold">
-              {item.isFree ? <FreeBadge /> : <LockBadge />}
+              {media.kind !== "locked" ? <FreeBadge /> : <LockBadge />}
               <LevelBadge level={item.level} />
               {item.durationMinutes && <span className="text-gray-700">Thời gian: {item.durationMinutes} phút</span>}
               {/* Lượt học sẽ đếm thật từ Giai đoạn 4 */}
@@ -97,12 +97,16 @@ export default async function LessonPage({ params }: { params: Params }) {
                 <Link href={itemHref(course, week, practice)} className="btn-toy inline-flex items-center gap-2 rounded-full bg-brand-600 px-6 py-3 font-extrabold text-white">
                   <span aria-hidden>✏️</span> Luyện tập
                 </Link>
-              ) : item.type !== "document" ? (
+              ) : item.type !== "document" && !(media.kind === "worksheet" && !media.htmlSrc && !media.url && media.pdf) ? (
                 <a href="#bai-lam" className="btn-toy inline-flex items-center gap-2 rounded-full bg-brand-600 px-6 py-3 font-extrabold text-white">
                   <span aria-hidden>✏️</span> Luyện tập
                 </a>
               ) : null}
-              <PrintButton />
+              {(media.kind === "worksheet" || media.kind === "document") && media.pdf ? (
+                <PdfDownloadButton src={media.pdf} fileName={`${item.id}.pdf`} />
+              ) : (
+                <PrintButton />
+              )}
             </div>
           </header>
 
@@ -112,9 +116,9 @@ export default async function LessonPage({ params }: { params: Params }) {
             ) : media.kind === "video" ? (
               <VideoEmbed videoRef={media.videoRef} title={item.title} />
             ) : media.kind === "document" ? (
-              <DocumentBox url={media.url} />
+              <DocumentBox url={media.url} pdf={media.pdf} />
             ) : (
-              <WorksheetFrame url={media.url} title={item.title} />
+              <WorksheetView media={media} title={item.title} />
             )}
           </section>
 
@@ -123,7 +127,7 @@ export default async function LessonPage({ params }: { params: Params }) {
             <section className="mt-8">
               <h2 className="text-2xl text-gray-900"><span aria-hidden>✏️</span> Luyện tập sau bài giảng</h2>
               <p className="mb-3 text-sm text-gray-600">{practice.title}</p>
-              <PracticeBlock item={practice} />
+              <PracticeBlock item={practice} file={files.get(practice.id)} />
             </section>
           )}
 
@@ -146,7 +150,7 @@ export default async function LessonPage({ params }: { params: Params }) {
                   >
                     <ItemIcon type={it.type} />
                     <span className="min-w-0 flex-1">{it.title}</span>
-                    {it.isFree && <FreeBadge />}
+                    {(it.isFree || files.get(it.id)?.isFree) && <FreeBadge />}
                   </Link>
                 </li>
               ))}
@@ -173,9 +177,23 @@ export default async function LessonPage({ params }: { params: Params }) {
   );
 }
 
-function PracticeBlock({ item }: { item: Item }) {
-  const m = lessonMedia(item);
-  return m.kind === "worksheet" ? <WorksheetFrame url={m.url} title={item.title} /> : <LockedNotice />;
+function PracticeBlock({ item, file }: { item: Item; file?: LessonFileInfo }) {
+  const m = lessonMedia(item, canViewItem, file);
+  if (m.kind !== "worksheet") return <LockedNotice />;
+  return (
+    <div className="space-y-3">
+      <WorksheetView media={m} title={item.title} />
+      {m.pdf && (m.htmlSrc || m.url) && <PdfDownloadButton src={m.pdf} fileName={`${item.id}.pdf`} />}
+    </div>
+  );
+}
+
+/** Phiếu: ưu tiên phiếu tương tác cô tải lên → link phiếu cũ → chỉ có PDF thì xem PDF. */
+function WorksheetView({ media, title }: { media: Extract<LessonMedia, { kind: "worksheet" }>; title: string }) {
+  if (media.htmlSrc) return <UploadedWorksheetFrame src={media.htmlSrc} title={title} />;
+  if (media.url) return <WorksheetFrame url={media.url} title={title} />;
+  if (media.pdf) return <UploadedPdf src={media.pdf} title={title} />;
+  return <WorksheetFrame url={null} title={title} />;
 }
 
 function LockedNotice() {
@@ -192,7 +210,14 @@ function LockedNotice() {
   );
 }
 
-function DocumentBox({ url: raw }: { url: string | null }) {
+function DocumentBox({ url: raw, pdf }: { url: string | null; pdf?: string }) {
+  if (pdf) {
+    return (
+      <div className="space-y-3">
+        <UploadedPdf src={pdf} title="Tài liệu PDF" />
+      </div>
+    );
+  }
   const url = safeDocumentUrl(raw);
   return (
     <div className="rounded-[2rem] bg-white p-8 text-center ring-1 ring-gray-100">

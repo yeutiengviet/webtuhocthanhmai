@@ -23,6 +23,9 @@ export default async function AdminHome() {
           <Link href="/quan-tri/tai-de" className="btn-toy inline-flex items-center gap-2 rounded-full bg-brand-600 px-6 py-3 text-lg font-extrabold text-white">
             <span aria-hidden>📤</span> Tải đề mới
           </Link>
+          <Link href="/quan-tri/bai-hoc" className="btn-toy inline-flex items-center gap-2 rounded-full bg-accent-600 px-6 py-3 text-lg font-extrabold text-white">
+            <span aria-hidden>📚</span> Phiếu bài học theo tuần
+          </Link>
           <SignOutButton />
         </div>
         {error && <p role="alert" className="rounded-2xl bg-red-50 p-3 font-bold text-red-800">Chưa tải được danh sách đề. Cô tải lại trang sau ít phút.</p>}
@@ -40,7 +43,7 @@ export default async function AdminHome() {
                 <span className={`rounded-full px-2.5 py-0.5 text-xs font-extrabold ${e.published ? "bg-emerald-50 text-emerald-800 ring-1 ring-emerald-200" : "bg-gray-100 text-gray-700"}`}>
                   {e.published ? "Đang hiện" : "Đang ẩn (nháp)"}
                 </span>
-                <span className="text-gray-600">{e.hasFile ? `File ${e.fileKind?.toUpperCase()}` : e.externalUrl ? "Link ngoài" : "Chưa có file"}</span>
+                <span className="text-gray-600">{[e.hasFile && e.fileKind === "html" ? "✏️ Tương tác" : e.externalUrl ? "✏️ Link ngoài" : null, e.hasPdf || (e.hasFile && e.fileKind === "pdf") ? "⬇️ PDF" : null].filter(Boolean).join(" · ") || "Chưa có file"}</span>
                 {e.published && <Link href={examHref(e)} className="font-bold text-brand-700 underline">Xem trên website</Link>}
               </p>
               <ExamRowActions id={e.id} title={e.title} published={e.published} isFree={e.isFree} />
