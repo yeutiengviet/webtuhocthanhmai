@@ -69,3 +69,14 @@ export function todayInVietnam(now: Date = new Date()): string {
     day: "2-digit",
   }).format(now);
 }
+
+/**
+ * Chọn tuần "hiện tại" để mở: tuần chứa hôm nay; nếu hôm nay rơi vào tuần nghỉ thì chọn tuần học kế tiếp;
+ * trước năm học → tuần đầu; sau năm học → tuần cuối. Danh sách rỗng → null.
+ */
+export function pickCurrentWeek<T extends { startDate: string; endDate: string }>(weeks: T[], today: string): T | null {
+  if (weeks.length === 0) return null;
+  const inside = weeks.find((w) => w.startDate <= today && today <= w.endDate);
+  if (inside) return inside;
+  return weeks.find((w) => w.startDate > today) ?? weeks[weeks.length - 1];
+}

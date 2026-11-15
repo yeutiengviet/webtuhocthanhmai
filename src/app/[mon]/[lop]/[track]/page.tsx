@@ -1,11 +1,11 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { CurrentWeekButton } from "@/components/CurrentWeekButton";
+import { CurrentWeekButton, OpenWeekFromHash } from "@/components/CurrentWeekButton";
 import { Breadcrumbs, Container, FreeBadge, ItemIcon, LevelBadge, LockBadge, PageHero } from "@/components/ui";
-import { allCourses, canViewItem, getCourse, getSubject, gradeSlug, isReady, itemHref, parseGradeSlug, publishedWeeks, TRACK_LABELS } from "@/lib/content";
+import { allCourses, canViewItem, getCourse, getSubject, gradeSlug, isReady, isTrack, itemHref, parseGradeSlug, publishedWeeks, TRACK_LABELS } from "@/lib/content";
 import { formatRange } from "@/lib/dates";
-import type { Track, Week } from "@/lib/types";
+import type { Week } from "@/lib/types";
 
 export function generateStaticParams() {
   return allCourses().map((c) => ({ mon: c.subject, lop: gradeSlug(c.grade), track: c.track }));
@@ -16,15 +16,15 @@ type Params = Promise<{ mon: string; lop: string; track: string }>;
 function load(mon: string, lop: string, track: string) {
   const subject = getSubject(mon);
   const grade = parseGradeSlug(lop);
-  if (!subject || !grade || !(track in TRACK_LABELS)) return null;
-  const course = getCourse(mon, grade, track as Track);
+  if (!subject || !grade || !isTrack(track)) return null;
+  const course = getCourse(mon, grade, track);
   return course ? { subject, grade, course } : null;
 }
 
 export async function generateMetadata({ params }: { params: Params }): Promise<Metadata> {
   const { mon, lop, track } = await params;
   const d = load(mon, lop, track);
-  return { title: d ? `${d.subject.name} lớp ${d.grade} – ${TRACK_LABELS[d.course.track].name}` : undefined };
+  return { title: d ? `${d.subject.name} lớp ${d.grade} – ${TRACK_LABELS[d.course.track].name}` : "Không tìm thấy trang" };
 }
 
 const KIND_LABEL: Record<Week["kind"], string | null> = {
@@ -49,6 +49,7 @@ export default async function CoursePage({ params }: { params: Params }) {
       </PageHero>
 
       <Container className="py-6">
+        <OpenWeekFromHash />
         <div className="mb-4 flex flex-wrap items-center gap-3 rounded-2xl bg-accent-50 p-3 text-sm">
           <CurrentWeekButton weeks={weeks.map((w) => ({ number: w.number, startDate: w.startDate, endDate: w.endDate }))} />
           <span className="flex items-center gap-1"><FreeBadge /> học thử miễn phí</span>
@@ -67,7 +68,7 @@ export default async function CoursePage({ params }: { params: Params }) {
                     <span className="block text-sm text-gray-600">{formatRange(w.startDate, w.endDate)}</span>
                     <span className="block font-semibold text-gray-900">{w.title}</span>
                     {KIND_LABEL[w.kind] && (
-                      <span className="mt-1 inline-block rounded-full bg-accent-500 px-2 py-0.5 text-xs font-bold text-white">{KIND_LABEL[w.kind]}</span>
+                      <span className="mt-1 inline-block rounded-full bg-accent-700 px-2 py-0.5 text-xs font-bold text-white">{KIND_LABEL[w.kind]}</span>
                     )}
                   </span>
                   <span aria-hidden className="chevron mt-3 text-gray-500 transition-transform">▼</span>
@@ -91,7 +92,7 @@ export default async function CoursePage({ params }: { params: Params }) {
                             {scored && (
                               <span className="mt-1 block text-xs text-gray-600">
                                 {/* Giai đoạn 4 sẽ lấy từ bảng attempts theo học sinh đăng nhập */}
-                                Điểm cao nhất: — · Đã làm: 0 lần
+                                Điểm cao nhất · Số lần làm: hiện khi con đăng nhập
                               </span>
                             )}
                           </span>

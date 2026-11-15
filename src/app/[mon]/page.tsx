@@ -10,7 +10,7 @@ export function generateStaticParams() {
 
 export async function generateMetadata({ params }: { params: Promise<{ mon: string }> }): Promise<Metadata> {
   const { mon } = await params;
-  return { title: getSubject(mon)?.name };
+  return { title: getSubject(mon)?.name ?? "Không tìm thấy trang" };
 }
 
 export default async function SubjectPage({ params }: { params: Promise<{ mon: string }> }) {

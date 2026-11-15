@@ -5,7 +5,7 @@ import { site } from "@/data/site";
 export function Logo() {
   return (
     <Link href="/" className="flex items-center gap-2 font-bold text-brand-700" aria-label={`${site.name} – Trang chủ`}>
-      <span className="grid h-10 w-10 place-items-center rounded-full bg-gradient-to-br from-brand-600 to-accent-500 text-lg text-white">
+      <span className="grid h-10 w-10 place-items-center rounded-full bg-gradient-to-br from-brand-700 to-accent-700 text-lg text-white">
         TM
       </span>
       <span className="leading-tight">

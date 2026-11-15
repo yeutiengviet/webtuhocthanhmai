@@ -3,6 +3,7 @@
 // chủ dự án cần đối chiếu lại với kế hoạch dạy học thực tế.
 // Ở Giai đoạn 2, dữ liệu này sẽ chuyển vào cơ sở dữ liệu và sửa bằng trang quản trị / file CSV.
 
+import "server-only";
 import { buildWeekCalendar } from "@/lib/dates";
 import type { Course, Item, Week, WeekKind } from "@/lib/types";
 
@@ -154,7 +155,7 @@ function weekTitle(n: number, plan: WeekPlan): string {
   if (plan.kind === "on-tap-cuoi-ky") {
     const hk = n <= 18 ? "học kì I" : "cuối năm";
     return plan.lessons.length
-      ? `Bài ${plan.lessons.join(", ")} và ôn tập, kiểm tra ${hk}`
+      ? `Bài ${plan.lessons.join(", ")}: ${plan.lessons.map((b) => LESSONS[b]).join("; ")} – Ôn tập, kiểm tra ${hk}`
       : `Ôn tập và kiểm tra ${hk}`;
   }
   const prefix = `Bài ${plan.lessons.join(", ")}`;

@@ -23,7 +23,7 @@ export default function HomePage() {
   return (
     <>
       {/* 1. Câu nói truyền cảm hứng + video giới thiệu */}
-      <section className="bg-gradient-to-r from-brand-700 to-accent-600 text-white">
+      <section className="bg-gradient-to-r from-brand-700 to-accent-700 text-white">
         <Container className="flex flex-col items-start gap-4 py-8 sm:flex-row sm:items-center sm:justify-between">
           <div>
             <p className="text-sm font-semibold uppercase tracking-wide text-accent-100">{site.name}</p>
@@ -59,7 +59,7 @@ export default function HomePage() {
         <ol className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-5">
           {site.commitments.map((c, i) => (
             <li key={c.title} className="rounded-2xl border border-accent-200 bg-white p-4">
-              <span className="grid h-8 w-8 place-items-center rounded-full bg-accent-500 font-bold text-white">{i + 1}</span>
+              <span className="grid h-8 w-8 place-items-center rounded-full bg-accent-700 font-bold text-white">{i + 1}</span>
               <p className="mt-2 font-semibold text-gray-900">{c.title}</p>
               <p className="mt-1 text-sm text-gray-700">{c.text}</p>
             </li>
@@ -76,12 +76,12 @@ export default function HomePage() {
               <Link
                 key={s.slug}
                 href={`/${s.slug}`}
-                className={`rounded-3xl p-6 text-white shadow-md transition hover:scale-[1.01] sm:p-8 ${s.slug === "toan" ? "bg-gradient-to-br from-brand-700 to-brand-500" : "bg-gradient-to-br from-accent-700 to-accent-500"}`}
+                className={`rounded-3xl p-6 text-white shadow-md transition hover:scale-[1.01] sm:p-8 ${s.slug === "toan" ? "bg-gradient-to-br from-brand-800 to-brand-600" : "bg-gradient-to-br from-accent-700 to-brand-700"}`}
               >
                 <p className="text-3xl font-extrabold sm:text-4xl">{s.name}</p>
                 <p className="mt-2 text-white/95">{s.shortDescription}</p>
-                <p className="mt-4 inline-block rounded-full bg-white/20 px-3 py-1 text-sm font-semibold">
-                  {has ? "Vào học →" : "Sắp ra mắt"}
+                <p className="mt-4 inline-block rounded-full bg-white px-3 py-1 text-sm font-semibold text-brand-800">
+                  {has ? "Vào xem →" : "Sắp ra mắt"}
                 </p>
               </Link>
             );
@@ -103,7 +103,7 @@ export default function HomePage() {
               >
                 <p className="text-sm text-gray-600">Lớp</p>
                 <p className={`text-4xl font-extrabold ${has ? "text-brand-700" : "text-gray-400"}`}>{g}</p>
-                <p className={`mt-1 text-sm font-medium ${has ? "text-green-700" : "text-gray-500"}`}>{has ? "Đã có bài học" : "Sắp ra mắt"}</p>
+                <p className={`mt-1 text-sm font-medium ${has ? "text-green-700" : "text-gray-500"}`}>{has ? "Bản dùng thử" : "Sắp ra mắt"}</p>
               </Link>
             );
           })}
@@ -135,17 +135,18 @@ export default function HomePage() {
               <li>Xem video bài giảng, rồi làm phiếu luyện tập.</li>
               <li>Làm lại phiếu để đạt điểm cao hơn.</li>
             </ol>
-            <Link href="/huong-dan" className="mt-3 inline-block font-semibold text-brand-700 underline">Xem chi tiết</Link>
+            <Link href="/huong-dan" className="mt-3 inline-block py-2 font-semibold text-brand-700 underline">Xem chi tiết</Link>
           </div>
           <div className="rounded-2xl bg-white p-5 shadow-sm">
             <h2 className="text-lg font-bold text-gray-900">Hướng dẫn nộp phí</h2>
+            <p className="mt-2 rounded-lg bg-accent-50 p-2 text-sm font-semibold text-accent-700">Bản dùng thử: chưa mở đăng ký gói, vui lòng chưa chuyển khoản.</p>
             <ol className="mt-3 list-decimal space-y-1 pl-5 text-gray-800">
               <li>Đăng ký tài khoản phụ huynh, thêm hồ sơ của con.</li>
               <li>Chọn gói học (môn + lớp + số tháng).</li>
               <li>Chuyển khoản đúng số tiền và nội dung website đưa ra.</li>
               <li>Cô xác nhận, bài học được mở cho con.</li>
             </ol>
-            <Link href="/thanh-toan" className="mt-3 inline-block font-semibold text-brand-700 underline">Xem chi tiết</Link>
+            <Link href="/thanh-toan" className="mt-3 inline-block py-2 font-semibold text-brand-700 underline">Xem chi tiết</Link>
           </div>
         </div>
       </Container>

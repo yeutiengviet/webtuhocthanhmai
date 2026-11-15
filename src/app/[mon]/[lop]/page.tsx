@@ -13,7 +13,10 @@ export function generateStaticParams() {
 
 export async function generateMetadata({ params }: { params: Promise<{ mon: string; lop: string }> }): Promise<Metadata> {
   const { mon, lop } = await params;
-  return { title: `${getSubject(mon)?.name} lớp ${parseGradeSlug(lop)}` };
+  const subject = getSubject(mon);
+  const grade = parseGradeSlug(lop);
+  const ok = subject && grade && getCourses(subject.slug, grade).length > 0;
+  return { title: ok ? `${subject.name} lớp ${grade}` : "Không tìm thấy trang" };
 }
 
 export default async function GradePage({ params }: { params: Promise<{ mon: string; lop: string }> }) {

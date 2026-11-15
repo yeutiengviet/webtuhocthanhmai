@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { addDays, buildWeekCalendar, formatRange, parseDate, todayInVietnam, weekday } from "@/lib/dates";
+import { addDays, buildWeekCalendar, formatRange, parseDate, pickCurrentWeek, todayInVietnam, weekday } from "@/lib/dates";
 
 describe("dates", () => {
   it("cộng ngày qua cuối tháng, cuối năm, năm nhuận", () => {
@@ -39,5 +39,20 @@ describe("dates", () => {
     expect(todayInVietnam(new Date("2026-11-15T16:59:59Z"))).toBe("2026-11-15");
     // 17:00 UTC = 00:00 giờ VN ngày hôm sau
     expect(todayInVietnam(new Date("2026-11-15T17:00:00Z"))).toBe("2026-11-16");
+  });
+
+  it("chọn tuần hiện tại: trong tuần, sát nửa đêm, tuần nghỉ, trước/sau năm học, danh sách rỗng", () => {
+    const cal = buildWeekCalendar("2027-01-25", 3, ["2027-02-08"]).map((w, i) => ({ ...w, number: i + 1 }));
+    // tuần 1: 25/01–31/01, tuần 2: 01/02–07/02, (nghỉ 08/02–14/02), tuần 3: 15/02–21/02
+    expect(pickCurrentWeek(cal, "2027-01-27")?.number).toBe(1);
+    expect(pickCurrentWeek(cal, "2027-01-31")?.number).toBe(1); // Chủ nhật cuối tuần
+    expect(pickCurrentWeek(cal, "2027-02-01")?.number).toBe(2); // thứ Hai sau nửa đêm
+    expect(pickCurrentWeek(cal, "2027-02-10")?.number).toBe(3); // tuần nghỉ Tết → tuần học kế tiếp
+    expect(pickCurrentWeek(cal, "2026-12-01")?.number).toBe(1); // trước năm học
+    expect(pickCurrentWeek(cal, "2027-06-01")?.number).toBe(3); // sau năm học
+    expect(pickCurrentWeek([], "2027-01-27")).toBeNull();
+    // Kết hợp giờ VN: 23:59 Chủ nhật 31/01 (16:59 UTC) vẫn là tuần 1; 00:00 thứ Hai là tuần 2
+    expect(pickCurrentWeek(cal, todayInVietnam(new Date("2027-01-31T16:59:00Z")))?.number).toBe(1);
+    expect(pickCurrentWeek(cal, todayInVietnam(new Date("2027-01-31T17:00:00Z")))?.number).toBe(2);
   });
 });

@@ -30,7 +30,7 @@ const ICONS: Record<Item["type"], string> = { video: "▶", worksheet: "✎", do
 
 export function ItemIcon({ type }: { type: Item["type"] }) {
   const color =
-    type === "video" ? "bg-brand-600" : type === "worksheet" ? "bg-accent-600" : type === "test" ? "bg-brand-800" : "bg-gray-600";
+    type === "video" ? "bg-brand-600" : type === "worksheet" ? "bg-accent-700" : type === "test" ? "bg-brand-800" : "bg-gray-600";
   return (
     <span aria-hidden className={`grid h-9 w-9 shrink-0 place-items-center rounded-lg text-white ${color}`}>
       {ICONS[type]}
@@ -46,7 +46,7 @@ export function Breadcrumbs({ items }: { items: { href?: string; label: string }
           <li key={i} className="flex items-center gap-1">
             {i > 0 && <span aria-hidden>›</span>}
             {it.href ? (
-              <Link href={it.href} className="text-brand-700 hover:underline">{it.label}</Link>
+              <Link href={it.href} className="inline-block py-2 text-brand-700 hover:underline">{it.label}</Link>
             ) : (
               <span aria-current="page" className="font-medium text-gray-800">{it.label}</span>
             )}
@@ -59,7 +59,7 @@ export function Breadcrumbs({ items }: { items: { href?: string; label: string }
 
 export function PageHero({ title, subtitle, children }: { title: string; subtitle?: string; children?: React.ReactNode }) {
   return (
-    <section className="bg-gradient-to-r from-brand-700 to-accent-600 text-white">
+    <section className="bg-gradient-to-r from-brand-700 to-accent-700 text-white">
       <Container className="py-8 sm:py-10">
         {children}
         <h1 className="text-2xl font-bold sm:text-3xl">{title}</h1>

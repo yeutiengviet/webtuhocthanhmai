@@ -4,7 +4,8 @@
 export const site = {
   name: "Học giỏi cùng cô Thanh Mai",
   shortName: "Cô Thanh Mai",
-  domain: "hocgioithanhmai.com", // cần chủ dự án xác nhận (tin nhắn ghi "hocgioithanhmai.cm")
+  /** Tên miền đã được chủ dự án xác nhận (chưa mua). */
+  domain: "hocgioithanhmai.com" as string | null,
   quote: "Mỗi ngày một bài nhỏ — cả năm vững vàng.",
   /** Số điện thoại/Zalo hiển thị. null = chưa cung cấp, sẽ ẩn. */
   hotline: null as string | null,
@@ -18,15 +19,15 @@ export const site = {
     { title: "Bám sát sách Kết nối tri thức", text: "Bài học theo đúng từng tuần trên lớp." },
     { title: "Cô giáo tự soạn, tự giảng", text: "Video và phiếu bài tập do cô Thanh Mai biên soạn." },
     { title: "Luyện tập có chấm điểm", text: "Phiếu tương tác chấm điểm ngay, con biết đúng sai." },
-    { title: "Phụ huynh theo dõi được", text: "Xem điểm và số lần làm bài của con." },
-    { title: "Học thử trước khi đăng ký", text: "Nhiều bài miễn phí để phụ huynh trải nghiệm." },
+    { title: "Phụ huynh theo dõi được", text: "Xem điểm và số lần làm bài của con (sắp có)." },
+    { title: "Học thử trước khi đăng ký", text: "Có bài học thử miễn phí để phụ huynh trải nghiệm." },
   ],
   /** Phản hồi phụ huynh — chỉ đưa phản hồi thật, có sự đồng ý. Rỗng = ẩn mục. */
   testimonials: [] as { name: string; text: string }[],
   banners: [
     { title: "Toán lớp 4 theo tuần", text: "35 tuần bám sát sách Kết nối tri thức", href: "/toan/lop-4/theo-tuan" },
     { title: "Học thử miễn phí", text: "Vào học ngay các bài có nhãn Free", href: "/hoc-thu" },
-    { title: "Phiếu bài tập tương tác", text: "Làm bài trên điện thoại, chấm điểm tức thì", href: "/toan/lop-4/theo-tuan#tuan-8" },
+    { title: "Phiếu bài tập tương tác", text: "Làm thử Phiếu đánh giá tháng 10 – Toán lớp 4", href: "/toan/lop-4/theo-tuan/tuan-8/danh-gia-thang-10" },
   ],
   refundPolicy: "Không hoàn tiền sau khi gói học đã được kích hoạt.",
 };

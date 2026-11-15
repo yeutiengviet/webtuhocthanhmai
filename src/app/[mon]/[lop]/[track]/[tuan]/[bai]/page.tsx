@@ -6,7 +6,6 @@ import { PrintButton } from "@/components/PrintButton";
 import { Breadcrumbs, Container, FreeBadge, ItemIcon, LevelBadge, LockBadge } from "@/components/ui";
 import {
   allCourses,
-  canViewItem,
   courseHref,
   findItem,
   findWeek,
@@ -16,14 +15,18 @@ import {
   ITEM_TYPE_LABELS,
   itemHref,
   parseGradeSlug,
+  isTrack,
+  lessonMedia,
   publishedWeeks,
-  safeWorksheetUrl,
-  TRACK_LABELS,
   weekSlug,
 } from "@/lib/content";
 import { formatRange } from "@/lib/dates";
-import type { Item, Track } from "@/lib/types";
+import type { Item } from "@/lib/types";
+import { safeDocumentUrl } from "@/lib/urls";
 
+// LƯU Ý GIAI ĐOẠN 3: trang này hiện được dựng sẵn (tĩnh) vì chưa có đăng nhập và chỉ mục Free có nội dung.
+// Khi kiểm tra gói học theo người đăng nhập, BẮT BUỘC chuyển sang render động (dynamic) + Cache-Control: private, no-store,
+// để trang của người đã trả phí không bao giờ bị lưu đệm rồi phát cho người khác.
 export function generateStaticParams() {
   return allCourses().flatMap((c) =>
     publishedWeeks(c).flatMap((w) =>
@@ -37,8 +40,8 @@ type Params = Promise<{ mon: string; lop: string; track: string; tuan: string; b
 function load(p: Awaited<Params>) {
   const subject = getSubject(p.mon);
   const grade = parseGradeSlug(p.lop);
-  if (!subject || !grade || !(p.track in TRACK_LABELS)) return null;
-  const course = getCourse(p.mon, grade, p.track as Track);
+  if (!subject || !grade || !isTrack(p.track)) return null;
+  const course = getCourse(p.mon, grade, p.track);
   const week = course && findWeek(course, p.tuan);
   const item = week && findItem(week, p.bai);
   return course && week && item ? { subject, grade, course, week, item } : null;
@@ -46,14 +49,15 @@ function load(p: Awaited<Params>) {
 
 export async function generateMetadata({ params }: { params: Params }): Promise<Metadata> {
   const d = load(await params);
-  return { title: d ? `${d.item.title} – Tuần ${d.week.number}` : undefined };
+  return d ? { title: `${d.item.title} – Tuần ${d.week.number}` } : { title: "Không tìm thấy trang" };
 }
 
 export default async function LessonPage({ params }: { params: Params }) {
   const d = load(await params);
   if (!d) notFound();
   const { subject, grade, course, week, item } = d;
-  const allowed = canViewItem(item);
+  // Mọi nội dung (mã video, link phiếu) chỉ lấy qua lessonMedia() — mục bị khóa không có dữ liệu này.
+  const media = lessonMedia(item);
 
   // Phiếu luyện tập gắn với bài giảng video: phiếu cơ bản của tuần
   const practice: Item | undefined =
@@ -102,23 +106,23 @@ export default async function LessonPage({ params }: { params: Params }) {
           </header>
 
           <section id="bai-lam" className="mt-6 scroll-mt-28">
-            {!allowed ? (
+            {media.kind === "locked" ? (
               <LockedNotice />
-            ) : item.type === "video" ? (
-              <VideoEmbed videoRef={item.videoRef} title={item.title} />
-            ) : item.type === "document" ? (
-              <DocumentBox url={item.url} />
+            ) : media.kind === "video" ? (
+              <VideoEmbed videoRef={media.videoRef} title={item.title} />
+            ) : media.kind === "document" ? (
+              <DocumentBox url={media.url} />
             ) : (
-              <WorksheetFrame url={item.url} title={item.title} />
+              <WorksheetFrame url={media.url} title={item.title} />
             )}
           </section>
 
           {/* Bài trắc nghiệm bên dưới video */}
-          {allowed && practice && (
+          {media.kind !== "locked" && practice && (
             <section className="mt-8">
               <h2 className="text-xl font-bold text-gray-900">Luyện tập sau bài giảng</h2>
               <p className="mb-3 text-sm text-gray-600">{practice.title}</p>
-              {canViewItem(practice) ? <WorksheetFrame url={practice.url} title={practice.title} /> : <LockedNotice />}
+              <PracticeBlock item={practice} />
             </section>
           )}
 
@@ -150,7 +154,7 @@ export default async function LessonPage({ params }: { params: Params }) {
           <div className="rounded-2xl bg-white p-4 shadow-sm">
             <h2 className="font-bold text-gray-900">Cùng lớp học</h2>
             <ul className="mt-2 space-y-1">
-              {nearby.map((w) => (
+              {nearby.filter((w) => w.items.length > 0).map((w) => (
                 <li key={w.id}>
                   <Link href={itemHref(course, w, w.items[0])} className="block rounded-lg p-2 text-sm hover:bg-gray-50">
                     <span className="font-semibold text-brand-700">Tuần {w.number}:</span> {w.title}
@@ -168,6 +172,11 @@ export default async function LessonPage({ params }: { params: Params }) {
   );
 }
 
+function PracticeBlock({ item }: { item: Item }) {
+  const m = lessonMedia(item);
+  return m.kind === "worksheet" ? <WorksheetFrame url={m.url} title={item.title} /> : <LockedNotice />;
+}
+
 function LockedNotice() {
   return (
     <div className="rounded-2xl border-2 border-brand-200 bg-brand-50 p-6 text-center">
@@ -183,7 +192,7 @@ function LockedNotice() {
 }
 
 function DocumentBox({ url: raw }: { url: string | null }) {
-  const url = safeWorksheetUrl(raw);
+  const url = safeDocumentUrl(raw);
   return (
     <div className="rounded-2xl border border-gray-200 bg-white p-6 text-center">
       <p className="text-4xl" aria-hidden>📄</p>

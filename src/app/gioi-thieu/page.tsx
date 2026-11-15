@@ -12,7 +12,7 @@ export default function AboutPage() {
       <Container className="grid gap-6 py-8 lg:grid-cols-2">
         <section id="video" className="scroll-mt-28">
           <h2 className="mb-3 text-xl font-bold">Video giới thiệu</h2>
-          <VideoEmbed videoRef={site.introVideoRef} title="Video giới thiệu" />
+          <VideoEmbed videoRef={site.introVideoRef} title="Video giới thiệu" placeholder="Video giới thiệu đang được cập nhật" />
         </section>
         <section className="rounded-2xl bg-white p-5 shadow-sm">
           <h2 className="text-xl font-bold">Về cô Thanh Mai</h2>

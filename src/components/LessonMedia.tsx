@@ -1,17 +1,25 @@
-import { safeWorksheetUrl, youtubeId } from "@/lib/content";
+import { safeWorksheetUrl, youtubeId } from "@/lib/urls";
 
 /**
  * Video YouTube (chế độ không công khai). Dùng tên miền youtube-nocookie.com để hạn chế cookie theo dõi.
  * Chỉ được gọi khi người xem có quyền — trang bài giảng kiểm tra trước khi render.
  */
-export function VideoEmbed({ videoRef, title }: { videoRef: string | null; title: string }) {
+export function VideoEmbed({
+  videoRef,
+  title,
+  placeholder = "Video bài giảng đang được cập nhật",
+}: {
+  videoRef: string | null;
+  title: string;
+  placeholder?: string;
+}) {
   const id = youtubeId(videoRef);
   if (!id) {
     return (
       <div className="grid aspect-video w-full place-items-center rounded-2xl bg-gray-900 p-6 text-center text-white">
         <div>
           <p className="text-4xl" aria-hidden>▶</p>
-          <p className="mt-2 font-semibold">Video bài giảng đang được cập nhật</p>
+          <p className="mt-2 font-semibold">{placeholder}</p>
           <p className="mt-1 text-sm text-gray-300">Cô Thanh Mai sẽ gắn video vào đây.</p>
         </div>
       </div>
@@ -36,9 +44,9 @@ export function VideoEmbed({ videoRef, title }: { videoRef: string | null; title
  * Phiếu bài tập HTML tương tác — coi là nội dung KHÔNG đáng tin.
  * Nhúng trong iframe có `sandbox`:
  *  - allow-scripts, allow-forms: để phiếu chạy và nộp điểm (Google Sheet cũ).
- *  - allow-same-origin: CHỈ an toàn vì phiếu nằm ở tên miền KHÁC website (github.io);
- *    nó chỉ đọc được dữ liệu của chính tên miền đó, không đọc được phiên đăng nhập của website.
- *    Khi chuyển phiếu vào kho riêng (Giai đoạn 2), phiếu cũng sẽ được phục vụ từ một tên miền tách riêng.
+ *  - allow-same-origin: CHỈ an toàn vì phiếu nằm ở tên miền KHÁC website (github.io).
+ *    Điều này được THỰC THI bởi safeWorksheetUrl (chỉ nhận tên miền trong WORKSHEET_HOSTS, từ chối tên miền website)
+ *    và bởi CSP frame-src trong next.config.ts.
  *  - Không có allow-top-navigation: phiếu không thể chuyển hướng cả trang sang chỗ khác.
  */
 export function WorksheetFrame({ url, title }: { url: string | null; title: string }) {

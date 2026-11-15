@@ -1,5 +1,4 @@
 import { expect, test, type Page } from "@playwright/test";
-import { toanLop4TheoTuan } from "../../src/data/toan-lop4";
 
 /** Gom lỗi console/lỗi JS của trang (bỏ qua lỗi tải khung phiếu từ tên miền ngoài bị chặn mạng). */
 function trackErrors(page: Page) {
@@ -15,10 +14,11 @@ test("trang chủ đủ các phần theo mục 5.2, không lỗi console", async
   const errors = trackErrors(page);
   await page.goto("/");
   await expect(page.getByText("Xem video giới thiệu")).toBeVisible();
-  await expect(page.getByRole("region", { name: "Banner" }).or(page.locator("[aria-roledescription=carousel]"))).toBeVisible();
+  await expect(page.getByRole("region", { name: "Banner" })).toBeVisible();
+  await expect(page.getByRole("button", { name: "Tạm dừng" })).toBeVisible();
   await expect(page.getByText("tuần học theo sách")).toBeVisible();
   await expect(page.getByRole("heading", { name: "5 cam kết với phụ huynh" })).toBeVisible();
-  await expect(page.locator("main a[href='/toan']").filter({ hasText: "Vào học" })).toBeVisible();
+  await expect(page.locator("main a[href='/toan']").filter({ hasText: "Vào xem" })).toBeVisible();
   await expect(page.locator("main a[href='/tieng-viet']").filter({ hasText: "Sắp ra mắt" })).toBeVisible();
   await expect(page.getByRole("heading", { name: "Chọn lớp" })).toBeVisible();
   await expect(page.getByRole("heading", { name: "Hướng dẫn nộp phí" })).toBeVisible();
@@ -40,7 +40,7 @@ test("menu điện thoại mở được và đủ mục theo 5.1", async ({ pag
 test("đi từ trang chủ → Toán → Lớp 4 → Học theo tuần → 35 tuần", async ({ page }) => {
   const errors = trackErrors(page);
   await page.goto("/");
-  await page.locator("a[href='/toan']").filter({ hasText: "Vào học" }).click();
+  await page.locator("a[href='/toan']").filter({ hasText: "Vào xem" }).click();
   await expect(page).toHaveURL(/\/toan$/);
   await page.getByRole("link", { name: /Lớp 4/ }).click();
   await expect(page).toHaveURL(/\/toan\/lop-4$/);
@@ -58,7 +58,8 @@ test("đi từ trang chủ → Toán → Lớp 4 → Học theo tuần → 35 tu
   const row = page.locator("#tuan-8 a", { hasText: "Phiếu đánh giá tháng 10" });
   await expect(row).toBeVisible();
   await expect(row).toContainText("Free");
-  await expect(row).toContainText("Điểm cao nhất");
+  await expect(row).toContainText("Điểm cao nhất · Số lần làm: hiện khi con đăng nhập");
+  await expect(page.getByText("0 lần")).toHaveCount(0);
   expect(errors).toEqual([]);
 });
 
@@ -72,6 +73,10 @@ test("bài Free: phiếu tương tác nhúng trong iframe sandbox an toàn", asy
   const sandbox = (await frame.getAttribute("sandbox")) ?? "";
   expect(sandbox.split(" ")).toEqual(expect.arrayContaining(["allow-scripts", "allow-forms"]));
   expect(sandbox).not.toContain("allow-top-navigation");
+  expect(sandbox).not.toContain("allow-popups-to-escape-sandbox");
+  // Phiếu phải ở tên miền KHÁC website
+  const src = new URL((await frame.getAttribute("src")) ?? "");
+  expect(src.origin).not.toBe(new URL(page.url()).origin);
   await expect(page.getByRole("button", { name: "In bài" })).toBeVisible();
   await expect(page.getByRole("link", { name: "Luyện tập", exact: true })).toBeVisible();
   await expect(page.getByRole("heading", { name: "Cùng bài học" })).toBeVisible();
@@ -93,24 +98,66 @@ test("bài trả phí: hiện khóa, KHÔNG có video/phiếu trong mã HTML tr�
   const html = await (await request.get(path)).text();
   expect(html).not.toMatch(/<iframe/i);
   expect(html).not.toContain("youtube-nocookie.com/embed");
+  // Cả dữ liệu điều hướng nội bộ (RSC) cũng không chứa link phiếu/video
+  const rsc = await (await request.get(path, { headers: { RSC: "1" } })).text();
+  expect(rsc).not.toContain("youtube-nocookie.com/embed");
+  expect(rsc).not.toContain("toantieuhoccothanhmai.github.io");
 });
 
-test("đường dẫn đoán bừa trả về 404", async ({ request }) => {
-  for (const p of ["/toan/lop-3", "/toan/lop-4/theo-tuan/tuan-36/video-bai-1", "/toan/lop-4/theo-tuan/tuan-1/khong-co", "/van/lop-4", "/toan/lop-4/nang-cao"]) {
+test("link có #tuan-N mở đúng tuần; banner phiếu dẫn thẳng tới phiếu", async ({ page }) => {
+  await page.goto("/toan/lop-4/theo-tuan#tuan-12");
+  await expect(page.locator("#tuan-12")).toHaveAttribute("open", "");
+  // Bấm đường dẫn "Tuần 5" từ trang bài học
+  await page.goto("/toan/lop-4/theo-tuan/tuan-5/video-bai-10");
+  await page.getByRole("navigation", { name: "Đường dẫn" }).getByRole("link", { name: "Tuần 5" }).click();
+  await expect(page.locator("#tuan-5")).toHaveAttribute("open", "");
+  // Banner thứ 3
+  await page.goto("/");
+  await expect(page.locator("a[href='/toan/lop-4/theo-tuan/tuan-8/danh-gia-thang-10']").first()).toHaveCount(1);
+});
+
+test("nút Đến tuần hiện tại mở đúng tuần theo giờ Việt Nam", async ({ page }) => {
+  // Giả lập đồng hồ trình duyệt: 23:30 giờ VN Chủ nhật 15/11/2026 → tuần 10 (09/11–15/11)
+  await page.clock.setFixedTime(new Date("2026-11-15T16:30:00Z"));
+  await page.goto("/toan/lop-4/theo-tuan");
+  await page.getByRole("button", { name: "Đến tuần hiện tại" }).click();
+  await expect(page.locator("#tuan-10")).toHaveAttribute("open", "");
+  // 00:30 giờ VN thứ Hai 16/11 → tuần 11
+  await page.clock.setFixedTime(new Date("2026-11-15T17:30:00Z"));
+  await page.reload();
+  await page.getByRole("button", { name: "Đến tuần hiện tại" }).click();
+  await expect(page.locator("#tuan-11")).toHaveAttribute("open", "");
+});
+
+test("không có chữ trắng trên nền cam nhạt (tương phản thấp)", async ({ page }) => {
+  for (const p of ["/", "/toan/lop-4/theo-tuan", "/hoc-thu"]) {
+    await page.goto(p);
+    const bad = await page.locator(".text-white").evaluateAll((els) =>
+      els.filter((e) => /\b(bg|from|to)-(accent-(400|500|600)|brand-500)\b/.test(e.className + " " + (e.parentElement?.className ?? ""))).length,
+    );
+    expect(bad, p).toBe(0);
+  }
+});
+
+test("đường dẫn đoán bừa trả về 404, tiêu đề tab không gây hiểu nhầm", async ({ request, page }) => {
+  await page.goto("/van/lop-4");
+  await expect(page).toHaveTitle(/Không tìm thấy trang/);
+  await page.goto("/toan/lop-2");
+  await expect(page).toHaveTitle(/Không tìm thấy trang/);
+  for (const p of ["/toan/lop-4/constructor", "/toan/lop-4/__proto__", "/toan/lop-3", "/toan/lop-4/theo-tuan/tuan-36/video-bai-1", "/toan/lop-4/theo-tuan/tuan-1/khong-co", "/van/lop-4", "/toan/lop-4/nang-cao"]) {
     expect((await request.get(p)).status(), p).toBe(404);
   }
 });
 
-test("tất cả trang bài học (đủ 35 tuần) đều mở được", async ({ request }) => {
-  let count = 0;
-  for (const w of toanLop4TheoTuan.weeks) {
-    for (const it of w.items) {
-      const res = await request.get(`/toan/lop-4/theo-tuan/tuan-${w.number}/${it.slug}`);
-      expect(res.status(), `${w.number}/${it.slug}`).toBe(200);
-      count++;
-    }
+test("tất cả trang bài học (đủ 35 tuần) đều mở được", async ({ page, request }) => {
+  await page.goto("/toan/lop-4/theo-tuan");
+  const hrefs = await page.locator("details[id^=tuan-] a").evaluateAll((as) => as.map((a) => a.getAttribute("href") ?? ""));
+  const weeksCovered = new Set(hrefs.map((h) => h.match(/tuan-(\d+)/)?.[1]));
+  expect(weeksCovered.size).toBe(35);
+  expect(hrefs.length).toBeGreaterThan(150);
+  for (const h of hrefs) {
+    expect((await request.get(h)).status(), h).toBe(200);
   }
-  expect(count).toBeGreaterThan(150);
 });
 
 test("các trang phụ mở được, không lỗi console", async ({ page }) => {
@@ -129,6 +176,9 @@ test("có các header bảo mật", async ({ request }) => {
   expect(h["x-frame-options"]).toBe("DENY");
   expect(h["x-content-type-options"]).toBe("nosniff");
   expect(h["x-powered-by"]).toBeUndefined();
+  expect(h["strict-transport-security"]).toContain("max-age=");
+  // Chỉ cho nhúng YouTube và tên miền phiếu — không còn "https:" chung chung
+  expect(h["content-security-policy"]).toMatch(/frame-src https:\/\/www\.youtube-nocookie\.com https:\/\/toantieuhoccothanhmai\.github\.io;/);
 });
 
 test("mạng chậm (giả lập 3G): trang chủ và trang khóa học vẫn tải được", async ({ page }) => {

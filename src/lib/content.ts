@@ -1,6 +1,9 @@
 // Lớp truy vấn nội dung. Giai đoạn 1 đọc từ dữ liệu mẫu trong mã;
 // Giai đoạn 2 chỉ cần thay phần thân các hàm này bằng truy vấn Supabase.
-
+//
+// "server-only": nếu file này (chứa toàn bộ dữ liệu khóa học, kể cả link video/phiếu trả phí)
+// lỡ bị import vào một component chạy trên trình duyệt ("use client"), build sẽ BÁO LỖI ngay.
+import "server-only";
 import { toanLop4TheoTuan } from "@/data/toan-lop4";
 import type { Course, Item, ItemType, Subject, SubjectSlug, Track, Week } from "@/lib/types";
 
@@ -48,8 +51,15 @@ export function getCourses(subject: SubjectSlug, grade?: number): Course[] {
   );
 }
 
+/** Khóa học theo môn + lớp + hướng học; khóa chưa có tuần công khai coi như không tồn tại. */
 export function getCourse(subject: string, grade: number, track: Track): Course | undefined {
-  return COURSES.find((c) => c.subject === subject && c.grade === grade && c.track === track);
+  return COURSES.find(
+    (c) => c.subject === subject && c.grade === grade && c.track === track && publishedWeeks(c).length > 0,
+  );
+}
+
+export function isTrack(value: string): value is Track {
+  return Object.hasOwn(TRACK_LABELS, value);
 }
 
 export function publishedWeeks(course: Course): Week[] {
@@ -80,6 +90,29 @@ export function isReady(item: Item): boolean {
  */
 export function canViewItem(item: Item): boolean {
   return item.isFree;
+}
+
+/**
+ * Quyết định trang bài học được phép đưa gì xuống trình duyệt.
+ * Mục KHÔNG có quyền xem: chỉ trả { kind: "locked" } — tuyệt đối không kèm mã video hay link phiếu.
+ * Mọi trang hiển thị nội dung bài học phải đi qua hàm này.
+ */
+export type LessonMedia =
+  | { kind: "locked" }
+  | { kind: "video"; videoRef: string | null }
+  | { kind: "worksheet"; url: string | null }
+  | { kind: "document"; url: string | null };
+
+export function lessonMedia(item: Item, canView: (it: Item) => boolean = canViewItem): LessonMedia {
+  if (!canView(item)) return { kind: "locked" };
+  switch (item.type) {
+    case "video":
+      return { kind: "video", videoRef: item.videoRef };
+    case "document":
+      return { kind: "document", url: item.url };
+    default:
+      return { kind: "worksheet", url: item.url };
+  }
 }
 
 export function itemHref(course: Course, week: Week, item: Item): string {
@@ -113,34 +146,4 @@ export function courseStats(course: Course) {
     readyItems: items.filter(isReady).length,
     totalItems: items.length,
   };
-}
-
-/** Trích mã video YouTube từ link hoặc mã trần; trả null nếu không hợp lệ. */
-export function youtubeId(ref: string | null): string | null {
-  if (!ref) return null;
-  const trimmed = ref.trim();
-  if (/^[A-Za-z0-9_-]{11}$/.test(trimmed)) return trimmed;
-  try {
-    const u = new URL(trimmed);
-    const host = u.hostname.replace(/^www\.|^m\./, "");
-    let id: string | null = null;
-    if (host === "youtu.be") id = u.pathname.slice(1);
-    else if (host === "youtube.com" || host === "youtube-nocookie.com") {
-      id = u.searchParams.get("v") ?? u.pathname.match(/^\/(?:embed|shorts|live)\/([^/]+)/)?.[1] ?? null;
-    }
-    return id && /^[A-Za-z0-9_-]{11}$/.test(id) ? id : null;
-  } catch {
-    return null;
-  }
-}
-
-/** Chỉ cho phép nhúng phiếu từ địa chỉ https (chống javascript:, data: …). */
-export function safeWorksheetUrl(url: string | null): string | null {
-  if (!url) return null;
-  try {
-    const u = new URL(url);
-    return u.protocol === "https:" ? u.toString() : null;
-  } catch {
-    return null;
-  }
 }

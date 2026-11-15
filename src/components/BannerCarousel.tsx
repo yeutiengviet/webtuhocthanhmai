@@ -9,24 +9,28 @@ interface Banner {
   href: string;
 }
 
-const BG = ["from-brand-700 to-brand-500", "from-accent-600 to-accent-400", "from-brand-600 to-accent-500"];
+// Màu nền đủ đậm để chữ trắng đạt tương phản WCAG AA (≥ 4.5:1) trên toàn dải màu.
+const BG = ["from-brand-800 to-brand-600", "from-accent-700 to-brand-700", "from-brand-700 to-accent-700"];
 
-// Banner chạy nhiều slide. Dùng cuộn ngang có "snap" của trình duyệt — vuốt được trên điện thoại,
-// tự chuyển slide mỗi 5 giây (dừng khi người dùng bật chế độ giảm chuyển động).
+// Banner chạy nhiều slide: vuốt được trên điện thoại, tự chuyển mỗi 6 giây.
+// Tự dừng khi: người dùng bấm "Tạm dừng", đang chạm/rê chuột/focus vào banner, hoặc bật chế độ giảm chuyển động.
 export function BannerCarousel({ banners }: { banners: Banner[] }) {
   const ref = useRef<HTMLDivElement>(null);
   const [index, setIndex] = useState(0);
+  const [paused, setPaused] = useState(false);
+  const [hovering, setHovering] = useState(false);
 
   useEffect(() => {
+    if (paused || hovering || banners.length < 2) return;
     if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
     const t = setInterval(() => {
       const el = ref.current;
       if (!el) return;
       const next = (Math.round(el.scrollLeft / el.clientWidth) + 1) % banners.length;
       el.scrollTo({ left: next * el.clientWidth, behavior: "smooth" });
-    }, 5000);
+    }, 6000);
     return () => clearInterval(t);
-  }, [banners.length]);
+  }, [paused, hovering, banners.length]);
 
   const onScroll = () => {
     const el = ref.current;
@@ -39,14 +43,19 @@ export function BannerCarousel({ banners }: { banners: Banner[] }) {
   };
 
   return (
-    <div className="relative">
-      <div
-        ref={ref}
-        onScroll={onScroll}
-        className="no-scrollbar flex snap-x snap-mandatory overflow-x-auto rounded-2xl"
-        aria-roledescription="carousel"
-        aria-label="Banner"
-      >
+    <section
+      className="relative"
+      role="region"
+      aria-roledescription="carousel"
+      aria-label="Banner"
+      onMouseEnter={() => setHovering(true)}
+      onMouseLeave={() => setHovering(false)}
+      onFocus={() => setHovering(true)}
+      onBlur={() => setHovering(false)}
+      onTouchStart={() => setHovering(true)}
+      onTouchEnd={() => setHovering(false)}
+    >
+      <div ref={ref} onScroll={onScroll} className="no-scrollbar flex snap-x snap-mandatory overflow-x-auto rounded-2xl">
         {banners.map((b, i) => (
           <Link
             key={b.href + i}
@@ -60,18 +69,28 @@ export function BannerCarousel({ banners }: { banners: Banner[] }) {
           </Link>
         ))}
       </div>
-      <div className="mt-3 flex justify-center gap-2">
-        {banners.map((b, i) => (
+      <div className="mt-1 flex items-center justify-center">
+        {banners.map((_, i) => (
           <button
             key={i}
             type="button"
             onClick={() => goTo(i)}
             aria-label={`Chuyển đến banner ${i + 1}`}
             aria-current={i === index}
-            className={`h-3 rounded-full transition-all ${i === index ? "w-8 bg-brand-600" : "w-3 bg-brand-200"}`}
-          />
+            className="grid h-11 w-11 place-items-center"
+          >
+            <span className={`block h-3 rounded-full border-2 border-brand-700 transition-all ${i === index ? "w-8 bg-brand-700" : "w-3 bg-white"}`} />
+          </button>
         ))}
+        <button
+          type="button"
+          onClick={() => setPaused((p) => !p)}
+          className="ml-1 min-h-11 rounded-full px-3 text-sm font-semibold text-brand-700 underline"
+          aria-pressed={paused}
+        >
+          {paused ? "Chạy tiếp" : "Tạm dừng"}
+        </button>
       </div>
-    </div>
+    </section>
   );
 }

@@ -1,6 +1,8 @@
 import { describe, expect, it } from "vitest";
 import { HOLIDAY_MONDAYS, LESSONS, PLAN, toanLop4TheoTuan } from "@/data/toan-lop4";
-import { canViewItem, courseStats, freeItems, getCourses, safeWorksheetUrl, youtubeId } from "@/lib/content";
+import { canViewItem, courseStats, freeItems, getCourse, getCourses, isTrack, lessonMedia } from "@/lib/content";
+import { safeDocumentUrl, safeWorksheetUrl, telHref, youtubeId } from "@/lib/urls";
+import type { Item } from "@/lib/types";
 import { weekday } from "@/lib/dates";
 
 const weeks = toanLop4TheoTuan.weeks;
@@ -28,6 +30,14 @@ describe("Toán lớp 4 – 35 tuần", () => {
     expect(Object.keys(LESSONS)).toHaveLength(73);
     const planned = PLAN.flatMap((p) => p.lessons);
     expect(planned).toEqual(Array.from({ length: 73 }, (_, i) => i + 1));
+  });
+
+  it("tên mỗi tuần ghi đủ tên các bài của tuần đó (kể cả tuần 35 có bài 73)", () => {
+    PLAN.forEach((plan, i) => {
+      for (const b of plan.lessons) expect(weeks[i].title, `tuần ${i + 1}`).toContain(LESSONS[b]);
+      for (const b of plan.lessons) expect(weeks[i].title).toMatch(new RegExp(`\\b${b}\\b`));
+    });
+    expect(weeks[34].title).toContain("Ôn tập chung");
   });
 
   it("mã mục duy nhất toàn khóa; slug duy nhất trong tuần", () => {
@@ -63,6 +73,25 @@ describe("Toán lớp 4 – 35 tuần", () => {
     expect(free).toContain("8/danh-gia-thang-10");
   });
 
+  it("mục bị khóa: lessonMedia KHÔNG trả về mã video / link phiếu (kể cả khi mục có link thật)", () => {
+    const paidVideo: Item = { ...weeks[10].items[0], isFree: false, type: "video", videoRef: "SECRETPAID1", url: null };
+    const paidSheet: Item = { ...weeks[10].items[0], isFree: false, type: "worksheet", videoRef: null, url: "https://toantieuhoccothanhmai.github.io/SECRET.html" };
+    for (const it of [paidVideo, paidSheet]) {
+      const m = lessonMedia(it);
+      expect(m).toEqual({ kind: "locked" });
+      expect(JSON.stringify(m)).not.toContain("SECRET");
+    }
+    // Khi có quyền thì mới trả nội dung
+    expect(lessonMedia(paidVideo, () => true)).toEqual({ kind: "video", videoRef: "SECRETPAID1" });
+    expect(lessonMedia({ ...paidSheet, isFree: true })).toEqual({ kind: "worksheet", url: paidSheet.url });
+  });
+
+  it("đường dẫn hướng học lạ (kể cả tên thuộc tính hệ thống) không được coi là hợp lệ", () => {
+    expect(isTrack("theo-tuan")).toBe(true);
+    for (const t of ["constructor", "__proto__", "toString", "hasOwnProperty", "abc"]) expect(isTrack(t)).toBe(false);
+    expect(getCourse("toan", 4, "nang-cao")).toBeUndefined();
+  });
+
   it("bản dùng thử: mục trả phí không xem được, mục Free xem được", () => {
     const paid = weeks[10].items[0];
     expect(paid.isFree).toBe(false);
@@ -91,11 +120,38 @@ describe("kiểm tra đường dẫn an toàn", () => {
     expect(youtubeId(null)).toBeNull();
   });
 
-  it("phiếu chỉ nhận https", () => {
-    expect(safeWorksheetUrl("https://a.github.io/x.html")).toBe("https://a.github.io/x.html");
-    expect(safeWorksheetUrl("http://a.github.io/x.html")).toBeNull();
+  it("phiếu chỉ nhận https và chỉ từ tên miền phiếu được phép", () => {
+    const ok = "https://toantieuhoccothanhmai.github.io/lop4/x.html";
+    expect(safeWorksheetUrl(ok)).toBe(ok);
+    expect(safeWorksheetUrl("http://toantieuhoccothanhmai.github.io/lop4/x.html")).toBeNull();
+    expect(safeWorksheetUrl("https://other.github.io/x.html")).toBeNull();
+    expect(safeWorksheetUrl("https://user:pw@toantieuhoccothanhmai.github.io/x.html")).toBeNull();
+    expect(safeWorksheetUrl("https://toantieuhoccothanhmai.github.io.evil.com/x.html")).toBeNull();
     expect(safeWorksheetUrl("javascript:alert(1)")).toBeNull();
     expect(safeWorksheetUrl("data:text/html,<script>alert(1)</script>")).toBeNull();
     expect(safeWorksheetUrl("not a url")).toBeNull();
+  });
+
+  it("phiếu KHÔNG BAO GIỜ được nằm cùng tên miền website (chống thoát sandbox)", () => {
+    for (const u of [
+      "https://hocgioithanhmai.com/uploads/phieu.html",
+      "https://www.hocgioithanhmai.com/phieu.html",
+      "https://localhost/phieu.html",
+      "https://abc.vercel.app/phieu.html",
+    ]) {
+      expect(safeWorksheetUrl(u), u).toBeNull();
+    }
+  });
+
+  it("tài liệu chỉ nhận https", () => {
+    expect(safeDocumentUrl("https://drive.google.com/x")).toBe("https://drive.google.com/x");
+    expect(safeDocumentUrl("javascript:alert(1)")).toBeNull();
+  });
+
+  it("số điện thoại cho link tel: được lọc", () => {
+    expect(telHref("0912 345 678")).toBe("tel:0912345678");
+    expect(telHref("+84 912-345-678")).toBe("tel:+84912345678");
+    expect(telHref("javascript:alert(1)")).toBeNull();
+    expect(telHref("12")).toBeNull();
   });
 });

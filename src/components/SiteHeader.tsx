@@ -5,6 +5,7 @@ import { usePathname } from "next/navigation";
 import { useState } from "react";
 import { Logo } from "@/components/Logo";
 import { site } from "@/data/site";
+import { telHref } from "@/lib/urls";
 
 export const MAIN_MENU = [
   { href: "/gioi-thieu", label: "Giới thiệu" },
@@ -27,12 +28,12 @@ export function SiteHeader() {
       <div className="bg-brand-700 text-sm text-white">
         <div className="mx-auto flex max-w-6xl items-center justify-between gap-3 px-4 py-1.5">
           <nav className="flex gap-4" aria-label="Liên kết nhanh">
-            <Link href="/huong-dan" className="hover:underline">Hướng dẫn</Link>
-            <Link href="/thanh-toan" className="hover:underline">Thanh toán</Link>
+            <Link href="/huong-dan" className="py-1 hover:underline">Hướng dẫn</Link>
+            <Link href="/thanh-toan" className="py-1 hover:underline">Thanh toán</Link>
           </nav>
           <div className="truncate">
-            {site.hotline ? (
-              <a href={`tel:${site.hotline.replace(/\s/g, "")}`} className="font-semibold hover:underline">
+            {site.hotline && telHref(site.hotline) ? (
+              <a href={telHref(site.hotline)!} className="font-semibold hover:underline">
                 Hotline/Zalo: {site.hotline}
               </a>
             ) : (

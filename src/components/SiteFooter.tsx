@@ -13,12 +13,12 @@ export function SiteFooter() {
           <p className="font-semibold text-white">Liên hệ</p>
           <ul className="mt-2 space-y-1 text-sm">
             <li>Hotline/Zalo: {site.hotline ?? "đang cập nhật"}</li>
-            <li>Website: {site.domain}</li>
+            {site.domain && <li>Website: {site.domain}</li>}
           </ul>
         </div>
         <div>
           <p className="font-semibold text-white">Chính sách</p>
-          <ul className="mt-2 space-y-1 text-sm">
+          <ul className="mt-1 text-sm [&_a]:block [&_a]:py-2">
             <li><Link className="hover:underline" href="/huong-dan">Hướng dẫn học</Link></li>
             <li><Link className="hover:underline" href="/thanh-toan">Hướng dẫn nộp phí</Link></li>
             <li><Link className="hover:underline" href="/chinh-sach-rieng-tu">Chính sách quyền riêng tư</Link></li>
@@ -27,7 +27,7 @@ export function SiteFooter() {
         </div>
       </div>
       <p className="border-t border-gray-800 py-4 text-center text-xs text-gray-400">
-        © {new Date().getFullYear()} {site.name}. Bản dùng thử.
+        © {site.name}. Bản dùng thử.
       </p>
     </footer>
   );
