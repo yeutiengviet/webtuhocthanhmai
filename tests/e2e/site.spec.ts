@@ -170,7 +170,7 @@ test("tất cả trang bài học của cả 8 khóa (Toán, Tiếng Việt lớ
 
 test("các trang phụ mở được, không lỗi console", async ({ page }) => {
   const errors = trackErrors(page);
-  for (const p of ["/gioi-thieu", "/hoc-thu", "/tieng-viet", "/ky-thi", "/tai-lieu", "/hoc-sinh", "/dang-nhap", "/huong-dan", "/thanh-toan", "/chinh-sach-rieng-tu", "/dieu-khoan"]) {
+  for (const p of ["/gioi-thieu", "/hoc-thu", "/tieng-viet", "/ky-thi", "/tai-lieu", "/hoc-sinh", "/huong-dan", "/thanh-toan", "/chinh-sach-rieng-tu", "/dieu-khoan"]) {
     const res = await page.goto(p);
     expect(res?.status(), p).toBe(200);
     await expect(page.locator("h1")).toBeVisible();
@@ -261,4 +261,15 @@ test("file đề /phieu: mã sai hoặc đề không có file → 404, không l�
     expect(r.status(), p).toBe(404);
     expect(r.headers()["cache-control"]).toContain("no-store");
   }
+});
+
+test("nút Đăng nhập trên menu mở khung đăng nhập có nút Tạo tài khoản", async ({ page }) => {
+  await page.goto("/");
+  await page.getByRole("button", { name: "Menu" }).click();
+  await page.locator("#mobile-menu").getByRole("link", { name: "Đăng nhập", exact: true }).click();
+  await expect(page).toHaveURL(/\/dang-nhap$/);
+  await expect(page.getByRole("tab", { name: "Tạo tài khoản" })).toBeVisible();
+  await page.getByRole("tab", { name: "Tạo tài khoản" }).click();
+  await expect(page.getByRole("button", { name: "Tạo tài khoản" }).last()).toBeVisible();
+  await expect(page.getByLabel("Email")).toBeVisible();
 });
