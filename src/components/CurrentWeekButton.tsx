@@ -17,7 +17,7 @@ export function CurrentWeekButton({ weeks }: { weeks: { number: number; startDat
     if (target) openAndScroll(`tuan-${target.number}`);
   };
   return (
-    <button type="button" onClick={go} className="min-h-11 rounded-full bg-white px-4 py-2 text-sm font-semibold text-brand-700 shadow hover:bg-accent-50">
+    <button type="button" onClick={go} className="btn-toy min-h-11 rounded-full bg-brand-600 px-5 py-2 text-sm font-extrabold text-white">
       Đến tuần hiện tại
     </button>
   );

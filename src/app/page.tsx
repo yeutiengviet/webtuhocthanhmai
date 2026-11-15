@@ -1,8 +1,21 @@
 import Link from "next/link";
+import { HeroArt, Icon, MathArt, VietArt } from "@/components/art";
 import { BannerCarousel } from "@/components/BannerCarousel";
-import { Container } from "@/components/ui";
+import { Container, GRADE_THEME } from "@/components/ui";
 import { site } from "@/data/site";
 import { allCourses, courseStats, getCourses, GRADES, gradeSlug, SUBJECTS } from "@/lib/content";
+
+const COMMIT_ICONS = ["📘", "👩‍🏫", "✅", "👨‍👩‍👧", "🎁"];
+const COMMIT_COLORS = ["bg-brand-50 ring-brand-200", "bg-accent-50 ring-accent-200", "bg-emerald-50 ring-emerald-200", "bg-violet-50 ring-violet-200", "bg-amber-50 ring-amber-200"];
+
+function SectionTitle({ kicker, title }: { kicker: string; title: string }) {
+  return (
+    <div className="mb-5">
+      <p className="text-sm font-extrabold uppercase tracking-wider text-brand-600">{kicker}</p>
+      <h2 className="text-2xl text-gray-900 sm:text-3xl">{title}</h2>
+    </div>
+  );
+}
 
 export default function HomePage() {
   // Con số tin cậy: chỉ dùng số đếm thật từ dữ liệu + số chủ dự án tự điền.
@@ -14,75 +27,83 @@ export default function HomePage() {
     { weeks: 0, videos: 0, worksheets: 0 },
   );
   const stats = [
-    { label: "tuần học theo sách", value: String(totals.weeks) },
-    { label: "video bài giảng (dự kiến)", value: String(totals.videos) },
-    { label: "phiếu & đề luyện tập (dự kiến)", value: String(totals.worksheets) },
-    ...site.extraStats,
+    { label: "tuần học theo sách", value: String(totals.weeks), icon: "📚" },
+    { label: "video bài giảng (dự kiến)", value: String(totals.videos), icon: "🎬" },
+    { label: "phiếu & đề luyện tập (dự kiến)", value: String(totals.worksheets), icon: "📝" },
+    ...site.extraStats.map((s) => ({ ...s, icon: "⭐" })),
   ];
 
   return (
     <>
       {/* 1. Câu nói truyền cảm hứng + video giới thiệu */}
-      <section className="bg-gradient-to-r from-brand-700 to-accent-700 text-white">
-        <Container className="flex flex-col items-start gap-4 py-8 sm:flex-row sm:items-center sm:justify-between">
+      <section className="relative overflow-hidden bg-gradient-to-br from-brand-100 via-brand-50 to-accent-50">
+        <span aria-hidden className="absolute -left-16 -top-16 h-56 w-56 rounded-full bg-brand-200/60" />
+        <span aria-hidden className="absolute -bottom-20 right-1/3 h-44 w-44 rounded-full bg-accent-200/50" />
+        <Container className="relative grid items-center gap-6 py-8 sm:py-12 md:grid-cols-[1.1fr_1fr]">
           <div>
-            <p className="text-sm font-semibold uppercase tracking-wide text-accent-100">{site.name}</p>
-            <p className="mt-1 text-2xl font-bold sm:text-3xl">“{site.quote}”</p>
+            <p className="inline-flex items-center gap-2 rounded-full bg-white px-3 py-1 text-sm font-extrabold text-brand-700 shadow-sm">
+              <Icon name="spark" className="h-4 w-4" /> Toán · Tiếng Việt lớp 2–5
+            </p>
+            <h1 className="mt-3 text-4xl text-gray-900 sm:text-5xl">
+              Mỗi ngày <span className="text-brand-600">một bài nhỏ</span>,<br />
+              cả năm <span className="text-accent-600">vững vàng</span>!
+            </h1>
+            <p className="mt-3 max-w-xl text-lg text-gray-700">
+              Video bài giảng và phiếu luyện tập tương tác, bám sát sách <strong>Kết nối tri thức</strong> từng tuần — con học vui, phụ huynh yên tâm.
+            </p>
+            <div className="mt-5 flex flex-wrap gap-3">
+              <Link href="/hoc-thu" className="btn-toy inline-flex items-center gap-2 rounded-full bg-brand-600 px-6 py-3 text-lg font-extrabold text-white">
+                Học thử miễn phí <Icon name="arrow" className="h-5 w-5" />
+              </Link>
+              <Link href="/gioi-thieu#video" className="inline-flex items-center gap-2 rounded-full bg-white px-5 py-3 font-extrabold text-accent-700 shadow ring-2 ring-accent-200">
+                <span className="grid h-8 w-8 place-items-center rounded-full bg-accent-600 text-white"><Icon name="play" className="h-4 w-4" /></span>
+                Xem video giới thiệu
+              </Link>
+            </div>
           </div>
-          <Link href="/gioi-thieu#video" className="flex items-center gap-2 rounded-full bg-white px-5 py-3 font-semibold text-brand-700 shadow hover:bg-accent-50">
-            <span aria-hidden className="grid h-7 w-7 place-items-center rounded-full bg-brand-600 text-sm text-white">▶</span>
-            Xem video giới thiệu
-          </Link>
+          <HeroArt className="mx-auto w-full max-w-[260px] sm:max-w-sm md:max-w-md" />
         </Container>
       </section>
 
-      {/* 2. Banner */}
-      <Container className="pt-6">
-        <BannerCarousel banners={site.banners} />
-      </Container>
-
       {/* 3. Con số */}
-      <Container className="pt-8">
-        <ul className="grid grid-cols-3 gap-3">
+      <Container className="relative -mt-4">
+        <ul className="grid grid-cols-3 gap-2 sm:gap-4">
           {stats.map((s) => (
-            <li key={s.label} className="rounded-2xl bg-white p-3 text-center shadow-sm sm:p-5">
-              <p className="text-2xl font-extrabold text-brand-700 sm:text-4xl">{s.value}</p>
-              <p className="mt-1 text-xs text-gray-700 sm:text-sm">{s.label}</p>
+            <li key={s.label} className="rounded-3xl bg-white p-3 text-center shadow-md ring-1 ring-brand-100 sm:p-5">
+              <p className="text-2xl" aria-hidden>{s.icon}</p>
+              <p className="font-display text-3xl font-extrabold text-brand-600 sm:text-5xl">{s.value}</p>
+              <p className="text-xs font-semibold text-gray-600 sm:text-sm">{s.label}</p>
             </li>
           ))}
         </ul>
       </Container>
 
-      {/* 4. Năm cam kết */}
-      <Container className="pt-10">
-        <h2 className="text-xl font-bold text-gray-900 sm:text-2xl">5 cam kết với phụ huynh</h2>
-        <ol className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-5">
-          {site.commitments.map((c, i) => (
-            <li key={c.title} className="rounded-2xl border border-accent-200 bg-white p-4">
-              <span className="grid h-8 w-8 place-items-center rounded-full bg-accent-700 font-bold text-white">{i + 1}</span>
-              <p className="mt-2 font-semibold text-gray-900">{c.title}</p>
-              <p className="mt-1 text-sm text-gray-700">{c.text}</p>
-            </li>
-          ))}
-        </ol>
+      {/* 2. Banner */}
+      <Container className="pt-8">
+        <BannerCarousel banners={site.banners} />
       </Container>
 
       {/* 5. Hai ô lớn Toán / Tiếng Việt */}
-      <Container className="pt-10">
+      <Container className="pt-12">
+        <SectionTitle kicker="Chọn môn học" title="Con muốn học môn gì hôm nay?" />
         <div className="grid gap-4 sm:grid-cols-2">
           {SUBJECTS.map((s) => {
             const has = getCourses(s.slug).length > 0;
+            const isMath = s.slug === "toan";
             return (
               <Link
                 key={s.slug}
                 href={`/${s.slug}`}
-                className={`rounded-3xl p-6 text-white shadow-md transition hover:scale-[1.01] sm:p-8 ${s.slug === "toan" ? "bg-gradient-to-br from-brand-800 to-brand-600" : "bg-gradient-to-br from-accent-700 to-brand-700"}`}
+                className={`card-lift relative flex items-center gap-4 overflow-hidden rounded-[2rem] p-6 text-white shadow-lg sm:p-8 ${isMath ? "bg-gradient-to-br from-brand-600 to-brand-700" : "bg-gradient-to-br from-accent-600 to-accent-700"}`}
               >
-                <p className="text-3xl font-extrabold sm:text-4xl">{s.name}</p>
-                <p className="mt-2 text-white/95">{s.shortDescription}</p>
-                <p className="mt-4 inline-block rounded-full bg-white px-3 py-1 text-sm font-semibold text-brand-800">
-                  {has ? "Vào xem →" : "Sắp ra mắt"}
-                </p>
+                <span className="min-w-0 flex-1">
+                  <span className="block font-display text-4xl font-extrabold sm:text-5xl">{s.name}</span>
+                  <span className="mt-1 block font-semibold text-white">{s.shortDescription}</span>
+                  <span className={`mt-4 inline-flex items-center gap-1 rounded-full bg-white px-4 py-1.5 text-sm font-extrabold ${isMath ? "text-brand-700" : "text-accent-700"}`}>
+                    {has ? "Vào xem →" : "Sắp ra mắt"}
+                  </span>
+                </span>
+                {isMath ? <MathArt className="h-24 w-24 shrink-0 sm:h-32 sm:w-32" /> : <VietArt className="h-24 w-24 shrink-0 sm:h-32 sm:w-32" />}
               </Link>
             );
           })}
@@ -90,63 +111,87 @@ export default function HomePage() {
       </Container>
 
       {/* 6. Lưới chọn lớp */}
-      <Container className="pt-10">
-        <h2 className="text-xl font-bold text-gray-900 sm:text-2xl">Chọn lớp</h2>
-        <div className="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-4">
+      <Container className="pt-12">
+        <SectionTitle kicker="Chọn lớp" title="Con đang học lớp mấy?" />
+        <div className="grid grid-cols-2 gap-3 sm:grid-cols-4 sm:gap-4">
           {GRADES.map((g) => {
+            const t = GRADE_THEME[g];
             const has = getCourses("toan", g).length > 0 || getCourses("tieng-viet", g).length > 0;
             return (
               <Link
                 key={g}
                 href={has ? `/toan/${gradeSlug(g)}` : "/toan"}
-                className={`rounded-2xl border-2 p-5 text-center ${has ? "border-brand-500 bg-white" : "border-gray-200 bg-gray-50"}`}
+                className={`card-lift relative overflow-hidden rounded-[2rem] bg-white p-5 text-center shadow-sm ring-2 ${has ? t.ring : "ring-gray-100"}`}
               >
-                <p className="text-sm text-gray-600">Lớp</p>
-                <p className={`text-4xl font-extrabold ${has ? "text-brand-700" : "text-gray-400"}`}>{g}</p>
-                <p className={`mt-1 text-sm font-medium ${has ? "text-green-700" : "text-gray-500"}`}>{has ? "Bản dùng thử" : "Sắp ra mắt"}</p>
+                <span aria-hidden className={`absolute -right-5 -top-5 h-16 w-16 rounded-full ${t.soft}`} />
+                <span aria-hidden className="relative text-3xl">{t.emoji}</span>
+                <p className="relative text-sm font-bold text-gray-600">Lớp</p>
+                <p className={`relative font-display text-6xl font-extrabold leading-none ${has ? t.text : "text-gray-400"}`}>{g}</p>
+                <p className={`relative mt-2 inline-block rounded-full px-3 py-1 text-xs font-extrabold ${has ? `${t.bg} text-white` : "bg-gray-100 text-gray-600"}`}>
+                  {has ? "Bản dùng thử" : "Sắp ra mắt"}
+                </p>
               </Link>
             );
           })}
         </div>
       </Container>
 
-      {/* 7. Phản hồi phụ huynh (chỉ hiện khi có phản hồi thật) + hướng dẫn */}
+      {/* 4. Năm cam kết */}
+      <Container className="pt-12">
+        <SectionTitle kicker="Vì sao chọn cô Thanh Mai" title="5 cam kết với phụ huynh" />
+        <ol className="grid gap-3 sm:grid-cols-2 lg:grid-cols-5">
+          {site.commitments.map((c, i) => (
+            <li key={c.title} className={`rounded-3xl p-5 ring-2 ${COMMIT_COLORS[i % COMMIT_COLORS.length]}`}>
+              <span aria-hidden className="grid h-12 w-12 place-items-center rounded-2xl bg-white text-2xl shadow-sm">{COMMIT_ICONS[i % COMMIT_ICONS.length]}</span>
+              <p className="mt-3 font-display text-lg font-extrabold leading-tight text-gray-900">{c.title}</p>
+              <p className="mt-1 text-sm text-gray-700">{c.text}</p>
+            </li>
+          ))}
+        </ol>
+      </Container>
+
+      {/* 7. Phản hồi phụ huynh (chỉ hiện khi có phản hồi thật) */}
       {site.testimonials.length > 0 && (
-        <Container className="pt-10">
-          <h2 className="text-xl font-bold text-gray-900 sm:text-2xl">Phụ huynh nói gì</h2>
-          <ul className="mt-4 grid gap-3 sm:grid-cols-3">
+        <Container className="pt-12">
+          <SectionTitle kicker="Phụ huynh nói gì" title="Cảm nhận của phụ huynh" />
+          <ul className="grid gap-3 sm:grid-cols-3">
             {site.testimonials.map((t) => (
-              <li key={t.name} className="rounded-2xl bg-white p-4 shadow-sm">
-                <p className="italic text-gray-800">“{t.text}”</p>
-                <p className="mt-2 text-sm font-semibold text-brand-700">{t.name}</p>
+              <li key={t.name} className="rounded-3xl bg-white p-5 shadow-sm ring-1 ring-brand-100">
+                <p className="text-gray-800">“{t.text}”</p>
+                <p className="mt-2 text-sm font-extrabold text-brand-700">{t.name}</p>
               </li>
             ))}
           </ul>
         </Container>
       )}
 
-      <Container className="pt-10">
-        <div className="grid gap-4 sm:grid-cols-2">
-          <div className="rounded-2xl bg-white p-5 shadow-sm">
-            <h2 className="text-lg font-bold text-gray-900">Hướng dẫn cách học</h2>
-            <ol className="mt-3 list-decimal space-y-1 pl-5 text-gray-800">
-              <li>Chọn môn và lớp của con.</li>
-              <li>Mở tuần học đúng với tuần trên lớp.</li>
-              <li>Xem video bài giảng, rồi làm phiếu luyện tập.</li>
-              <li>Làm lại phiếu để đạt điểm cao hơn.</li>
+      {/* 7. Hướng dẫn học + nộp phí */}
+      <Container className="pt-12">
+        <div className="grid gap-4 md:grid-cols-2">
+          <div className="rounded-[2rem] bg-white p-6 shadow-sm ring-1 ring-brand-100">
+            <h2 className="flex items-center gap-2 text-2xl text-gray-900"><span aria-hidden>🧭</span> Hướng dẫn cách học</h2>
+            <ol className="mt-4 space-y-3">
+              {["Chọn môn và lớp của con.", "Mở tuần học đúng với tuần trên lớp.", "Xem video bài giảng, rồi làm phiếu luyện tập.", "Làm lại phiếu để đạt điểm cao hơn."].map((t, i) => (
+                <li key={t} className="flex items-start gap-3">
+                  <span className="grid h-8 w-8 shrink-0 place-items-center rounded-full bg-brand-600 font-display font-extrabold text-white">{i + 1}</span>
+                  <span className="pt-1 text-gray-800">{t}</span>
+                </li>
+              ))}
             </ol>
-            <Link href="/huong-dan" className="mt-3 inline-block py-2 font-semibold text-brand-700 underline">Xem chi tiết</Link>
+            <Link href="/huong-dan" className="mt-4 inline-block py-2 font-extrabold text-brand-700 underline">Xem chi tiết</Link>
           </div>
-          <div className="rounded-2xl bg-white p-5 shadow-sm">
-            <h2 className="text-lg font-bold text-gray-900">Hướng dẫn nộp phí</h2>
-            <p className="mt-2 rounded-lg bg-accent-50 p-2 text-sm font-semibold text-accent-700">Bản dùng thử: chưa mở đăng ký gói, vui lòng chưa chuyển khoản.</p>
-            <ol className="mt-3 list-decimal space-y-1 pl-5 text-gray-800">
-              <li>Đăng ký tài khoản phụ huynh, thêm hồ sơ của con.</li>
-              <li>Chọn gói học (môn + lớp + số tháng).</li>
-              <li>Chuyển khoản đúng số tiền và nội dung website đưa ra.</li>
-              <li>Cô xác nhận, bài học được mở cho con.</li>
+          <div className="rounded-[2rem] bg-white p-6 shadow-sm ring-1 ring-accent-100">
+            <h2 className="flex items-center gap-2 text-2xl text-gray-900"><span aria-hidden>💳</span> Hướng dẫn nộp phí</h2>
+            <p className="mt-3 rounded-2xl bg-amber-50 p-3 text-sm font-bold text-amber-900 ring-1 ring-amber-200">Bản dùng thử: chưa mở đăng ký gói, vui lòng chưa chuyển khoản.</p>
+            <ol className="mt-4 space-y-3">
+              {["Đăng ký tài khoản phụ huynh, thêm hồ sơ của con.", "Chọn gói học (môn + lớp + số tháng).", "Chuyển khoản đúng số tiền và nội dung website đưa ra.", "Cô xác nhận, bài học được mở cho con."].map((t, i) => (
+                <li key={t} className="flex items-start gap-3">
+                  <span className="grid h-8 w-8 shrink-0 place-items-center rounded-full bg-accent-600 font-display font-extrabold text-white">{i + 1}</span>
+                  <span className="pt-1 text-gray-800">{t}</span>
+                </li>
+              ))}
             </ol>
-            <Link href="/thanh-toan" className="mt-3 inline-block py-2 font-semibold text-brand-700 underline">Xem chi tiết</Link>
+            <Link href="/thanh-toan" className="mt-4 inline-block py-2 font-extrabold text-accent-700 underline">Xem chi tiết</Link>
           </div>
         </div>
       </Container>

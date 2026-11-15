@@ -42,57 +42,57 @@ export default async function CoursePage({ params }: { params: Params }) {
 
   return (
     <>
-      <PageHero title={`${subject.name} lớp ${grade} – ${TRACK_LABELS[course.track].name}`} subtitle={`${weeks.length} tuần · Sách Kết nối tri thức với cuộc sống · Lịch tuần là dự kiến.`}>
-        <div className="mb-3 [&_a]:text-white [&_span]:text-white">
+      <PageHero badge={`📚 ${weeks.length} tuần học`} title={`${subject.name} lớp ${grade} – ${TRACK_LABELS[course.track].name}`} subtitle={`${weeks.length} tuần · Sách Kết nối tri thức với cuộc sống · Lịch tuần là dự kiến.`}>
+        <div className="mb-2">
           <Breadcrumbs items={[{ href: `/${subject.slug}`, label: subject.name }, { href: `/${subject.slug}/${lop}`, label: `Lớp ${grade}` }, { label: TRACK_LABELS[course.track].name }]} />
         </div>
       </PageHero>
 
       <Container className="py-6">
         <OpenWeekFromHash />
-        <div className="mb-4 flex flex-wrap items-center gap-3 rounded-2xl bg-accent-50 p-3 text-sm">
+        <div className="mb-5 flex flex-wrap items-center gap-3 rounded-3xl bg-white p-3 text-sm font-semibold shadow-sm ring-1 ring-brand-100">
           <CurrentWeekButton weeks={weeks.map((w) => ({ number: w.number, startDate: w.startDate, endDate: w.endDate }))} />
           <span className="flex items-center gap-1"><FreeBadge /> học thử miễn phí</span>
           <span className="flex items-center gap-1"><LockBadge /> cần đăng ký gói</span>
         </div>
 
-        <ol className="space-y-3">
+        <ol className="relative space-y-4 before:absolute before:bottom-4 before:left-[2.1rem] before:top-4 before:w-1 before:rounded-full before:bg-brand-200">
           {weeks.map((w) => (
             <li key={w.id}>
-              <details id={`tuan-${w.number}`} className="scroll-mt-28 rounded-2xl border border-gray-200 bg-white shadow-sm" open={w.number === 1}>
+              <details id={`tuan-${w.number}`} className="relative scroll-mt-28 overflow-hidden rounded-3xl bg-white shadow-sm ring-1 ring-brand-100 open:shadow-md open:ring-2 open:ring-brand-300" open={w.number === 1}>
                 <summary className="flex cursor-pointer items-start gap-3 p-4">
-                  <span className="grid h-12 w-12 shrink-0 place-items-center rounded-xl bg-brand-600 text-center text-xs font-bold leading-tight text-white">
-                    Tuần<br /><span className="text-lg">{w.number}</span>
+                  <span className={`grid h-14 w-14 shrink-0 place-items-center rounded-2xl text-center text-[11px] font-extrabold leading-none text-white shadow ${w.kind === "hoc" ? "bg-brand-600" : "bg-violet-700"}`}>
+                    <span>TUẦN<span className="block font-display text-2xl leading-none">{w.number}</span></span>
                   </span>
                   <span className="min-w-0 flex-1">
-                    <span className="block text-sm text-gray-600">{formatRange(w.startDate, w.endDate)}</span>
-                    <span className="block font-semibold text-gray-900">{w.title}</span>
+                    <span className="block text-sm font-bold text-brand-700">{formatRange(w.startDate, w.endDate)}</span>
+                    <span className="block font-bold leading-snug text-gray-900">{w.title}</span>
                     {KIND_LABEL[w.kind] && (
-                      <span className="mt-1 inline-block rounded-full bg-accent-700 px-2 py-0.5 text-xs font-bold text-white">{KIND_LABEL[w.kind]}</span>
+                      <span className="mt-1.5 inline-block rounded-full bg-violet-700 px-2.5 py-0.5 text-xs font-extrabold text-white"><span aria-hidden>📝</span> {KIND_LABEL[w.kind]}</span>
                     )}
                   </span>
-                  <span aria-hidden className="chevron mt-3 text-gray-500 transition-transform">▼</span>
+                  <span aria-hidden className="chevron mt-3 grid h-8 w-8 shrink-0 place-items-center rounded-full bg-brand-50 text-brand-700 transition-transform">▾</span>
                 </summary>
-                <ul className="divide-y divide-gray-100 border-t border-gray-100">
+                <ul className="grid gap-2 border-t-2 border-dashed border-brand-100 bg-brand-50/40 p-3 sm:grid-cols-2">
                   {w.items.map((it) => {
                     const scored = it.type === "worksheet" || it.type === "test";
                     return (
                       <li key={it.id}>
-                        <Link href={itemHref(course, w, it)} className="flex items-start gap-3 px-4 py-3 hover:bg-brand-50">
+                        <Link href={itemHref(course, w, it)} className="card-lift flex h-full items-start gap-3 rounded-2xl bg-white p-3 ring-1 ring-gray-100">
                           <ItemIcon type={it.type} />
                           <span className="min-w-0 flex-1">
-                            <span className="block font-medium text-gray-900">{it.title}</span>
+                            <span className="block font-bold leading-snug text-gray-900">{it.title}</span>
                             <span className="mt-1 flex flex-wrap items-center gap-1.5">
                               {it.isFree ? <FreeBadge /> : <LockBadge />}
                               <LevelBadge level={it.level} />
-                              {it.isExtension && <span className="rounded-full bg-purple-100 px-2 py-0.5 text-xs font-semibold text-purple-800">Mở rộng</span>}
+                              {it.isExtension && <span className="rounded-full bg-violet-100 px-2.5 py-0.5 text-xs font-bold text-violet-800"><span aria-hidden>💡</span> Mở rộng</span>}
                               {it.durationMinutes && <span className="text-xs text-gray-600">{it.durationMinutes} phút</span>}
                               {!isReady(it) && <span className="text-xs text-gray-500">· đang cập nhật</span>}
                             </span>
                             {scored && (
-                              <span className="mt-1 block text-xs text-gray-600">
+                              <span className="mt-1.5 block rounded-lg bg-amber-50 px-2 py-1 text-xs font-semibold text-amber-900">
                                 {/* Giai đoạn 4 sẽ lấy từ bảng attempts theo học sinh đăng nhập */}
-                                Điểm cao nhất · Số lần làm: hiện khi con đăng nhập
+                                🏆 Điểm cao nhất · Số lần làm: hiện khi con đăng nhập
                               </span>
                             )}
                           </span>

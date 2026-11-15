@@ -79,26 +79,27 @@ export default async function LessonPage({ params }: { params: Params }) {
 
       <div className="mt-4 grid gap-6 lg:grid-cols-[1fr_320px]">
         <article>
-          <header>
-            <p className="text-sm text-gray-600">
+          <header className="relative overflow-hidden rounded-[2rem] bg-gradient-to-br from-brand-100 via-brand-50 to-accent-50 p-5 ring-1 ring-brand-200 sm:p-7">
+            <span aria-hidden className="absolute -right-8 -top-8 h-32 w-32 rounded-full bg-brand-200/60" />
+            <p className="relative text-sm font-bold text-brand-700">
               Tuần {week.number} ({formatRange(week.startDate, week.endDate)}) · {ITEM_TYPE_LABELS[item.type]}
             </p>
-            <h1 className="mt-1 text-2xl font-bold text-gray-900 sm:text-3xl">{item.title}</h1>
-            <div className="mt-2 flex flex-wrap items-center gap-2 text-sm">
+            <h1 className="relative mt-1 text-3xl text-gray-900 sm:text-4xl">{item.title}</h1>
+            <div className="relative mt-3 flex flex-wrap items-center gap-2 text-sm font-semibold">
               {item.isFree ? <FreeBadge /> : <LockBadge />}
               <LevelBadge level={item.level} />
               {item.durationMinutes && <span className="text-gray-700">Thời gian: {item.durationMinutes} phút</span>}
               {/* Lượt học sẽ đếm thật từ Giai đoạn 4 */}
               <span className="text-gray-600">· Lượt học: chưa thống kê</span>
             </div>
-            <div className="no-print mt-4 flex flex-wrap gap-3">
+            <div className="no-print relative mt-5 flex flex-wrap gap-3">
               {practice ? (
-                <Link href={itemHref(course, week, practice)} className="rounded-full bg-brand-600 px-5 py-2.5 font-semibold text-white hover:bg-brand-700">
-                  Luyện tập
+                <Link href={itemHref(course, week, practice)} className="btn-toy inline-flex items-center gap-2 rounded-full bg-brand-600 px-6 py-3 font-extrabold text-white">
+                  <span aria-hidden>✏️</span> Luyện tập
                 </Link>
               ) : item.type !== "document" ? (
-                <a href="#bai-lam" className="rounded-full bg-brand-600 px-5 py-2.5 font-semibold text-white hover:bg-brand-700">
-                  Luyện tập
+                <a href="#bai-lam" className="btn-toy inline-flex items-center gap-2 rounded-full bg-brand-600 px-6 py-3 font-extrabold text-white">
+                  <span aria-hidden>✏️</span> Luyện tập
                 </a>
               ) : null}
               <PrintButton />
@@ -120,28 +121,28 @@ export default async function LessonPage({ params }: { params: Params }) {
           {/* Bài trắc nghiệm bên dưới video */}
           {media.kind !== "locked" && practice && (
             <section className="mt-8">
-              <h2 className="text-xl font-bold text-gray-900">Luyện tập sau bài giảng</h2>
+              <h2 className="text-2xl text-gray-900"><span aria-hidden>✏️</span> Luyện tập sau bài giảng</h2>
               <p className="mb-3 text-sm text-gray-600">{practice.title}</p>
               <PracticeBlock item={practice} />
             </section>
           )}
 
-          <section className="no-print mt-8 rounded-2xl border border-gray-200 bg-white p-4">
-            <h2 className="font-bold text-gray-900">Thảo luận</h2>
+          <section className="no-print mt-8 rounded-3xl bg-white p-5 ring-1 ring-gray-100">
+            <h2 className="text-xl text-gray-900"><span aria-hidden>💬</span> Thảo luận</h2>
             <p className="mt-1 text-sm text-gray-600">Mục hỏi đáp sẽ mở ở giai đoạn sau (có cô kiểm duyệt trước khi hiển thị).</p>
           </section>
         </article>
 
         <aside className="no-print space-y-6">
-          <div className="rounded-2xl bg-white p-4 shadow-sm">
-            <h2 className="font-bold text-gray-900">Cùng bài học</h2>
+          <div className="rounded-3xl bg-white p-4 shadow-sm ring-1 ring-brand-100">
+            <h2 className="text-xl text-gray-900"><span aria-hidden>📚</span> Cùng bài học</h2>
             <ul className="mt-2 space-y-1">
               {week.items.map((it) => (
                 <li key={it.id}>
                   <Link
                     href={itemHref(course, week, it)}
                     aria-current={it.id === item.id ? "page" : undefined}
-                    className={`flex items-center gap-2 rounded-lg p-2 text-sm ${it.id === item.id ? "bg-brand-50 font-semibold text-brand-800" : "hover:bg-gray-50"}`}
+                    className={`flex items-center gap-2 rounded-2xl p-2 text-sm font-semibold ${it.id === item.id ? "bg-brand-50 text-brand-800 ring-2 ring-brand-200" : "hover:bg-gray-50"}`}
                   >
                     <ItemIcon type={it.type} />
                     <span className="min-w-0 flex-1">{it.title}</span>
@@ -151,13 +152,13 @@ export default async function LessonPage({ params }: { params: Params }) {
               ))}
             </ul>
           </div>
-          <div className="rounded-2xl bg-white p-4 shadow-sm">
-            <h2 className="font-bold text-gray-900">Cùng lớp học</h2>
+          <div className="rounded-3xl bg-white p-4 shadow-sm ring-1 ring-accent-100">
+            <h2 className="text-xl text-gray-900"><span aria-hidden>🏫</span> Cùng lớp học</h2>
             <ul className="mt-2 space-y-1">
               {nearby.filter((w) => w.items.length > 0).map((w) => (
                 <li key={w.id}>
-                  <Link href={itemHref(course, w, w.items[0])} className="block rounded-lg p-2 text-sm hover:bg-gray-50">
-                    <span className="font-semibold text-brand-700">Tuần {w.number}:</span> {w.title}
+                  <Link href={itemHref(course, w, w.items[0])} className="block rounded-2xl p-2 text-sm hover:bg-accent-50">
+                    <span className="font-extrabold text-accent-700">Tuần {w.number}:</span> {w.title}
                   </Link>
                 </li>
               ))}
@@ -179,13 +180,13 @@ function PracticeBlock({ item }: { item: Item }) {
 
 function LockedNotice() {
   return (
-    <div className="rounded-2xl border-2 border-brand-200 bg-brand-50 p-6 text-center">
-      <p className="text-4xl" aria-hidden>🔒</p>
-      <p className="mt-2 text-lg font-bold text-brand-800">Bài này dành cho học sinh đã đăng ký gói học</p>
+    <div className="rounded-[2rem] border-2 border-dashed border-brand-300 bg-white p-8 text-center">
+      <p className="mx-auto grid h-16 w-16 place-items-center rounded-full bg-brand-100 text-3xl" aria-hidden>🔒</p>
+      <p className="mt-3 font-display text-2xl font-extrabold text-brand-700">Bài này dành cho học sinh đã đăng ký gói học</p>
       <p className="mt-1 text-gray-700">Phụ huynh đăng ký gói Toán lớp này để mở toàn bộ bài giảng và phiếu luyện tập.</p>
       <div className="mt-4 flex flex-wrap justify-center gap-3">
-        <Link href="/thanh-toan" className="rounded-full bg-brand-600 px-5 py-2.5 font-semibold text-white hover:bg-brand-700">Đăng ký gói học</Link>
-        <Link href="/hoc-thu" className="rounded-full border-2 border-brand-600 px-5 py-2.5 font-semibold text-brand-700">Học thử miễn phí</Link>
+        <Link href="/thanh-toan" className="btn-toy rounded-full bg-brand-600 px-6 py-3 font-extrabold text-white">Đăng ký gói học</Link>
+        <Link href="/hoc-thu" className="rounded-full bg-emerald-50 px-6 py-3 font-extrabold text-emerald-800 ring-2 ring-emerald-200"><span aria-hidden>🎁</span> Học thử miễn phí</Link>
       </div>
     </div>
   );
@@ -194,7 +195,7 @@ function LockedNotice() {
 function DocumentBox({ url: raw }: { url: string | null }) {
   const url = safeDocumentUrl(raw);
   return (
-    <div className="rounded-2xl border border-gray-200 bg-white p-6 text-center">
+    <div className="rounded-[2rem] bg-white p-8 text-center ring-1 ring-gray-100">
       <p className="text-4xl" aria-hidden>📄</p>
       {url ? (
         <a href={url} target="_blank" rel="noopener noreferrer" className="mt-3 inline-block rounded-full bg-brand-600 px-5 py-2.5 font-semibold text-white">

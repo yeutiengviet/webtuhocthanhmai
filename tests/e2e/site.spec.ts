@@ -20,7 +20,8 @@ test("trang chủ đủ các phần theo mục 5.2, không lỗi console", async
   await expect(page.getByRole("heading", { name: "5 cam kết với phụ huynh" })).toBeVisible();
   await expect(page.locator("main a[href='/toan']").filter({ hasText: "Vào xem" })).toBeVisible();
   await expect(page.locator("main a[href='/tieng-viet']").filter({ hasText: "Sắp ra mắt" })).toBeVisible();
-  await expect(page.getByRole("heading", { name: "Chọn lớp" })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Con đang học lớp mấy?" })).toBeVisible();
+  for (const g of ["2", "3", "4", "5"]) await expect(page.locator("main a").filter({ hasText: new RegExp(`Lớp\\s*${g}`) }).first()).toBeVisible();
   await expect(page.getByRole("heading", { name: "Hướng dẫn nộp phí" })).toBeVisible();
   await expect(page.locator("footer")).toContainText("Chính sách quyền riêng tư");
   expect(errors).toEqual([]);
@@ -133,7 +134,8 @@ test("không có chữ trắng trên nền cam nhạt (tương phản thấp)", 
   for (const p of ["/", "/toan/lop-4/theo-tuan", "/hoc-thu"]) {
     await page.goto(p);
     const bad = await page.locator(".text-white").evaluateAll((els) =>
-      els.filter((e) => /\b(bg|from|to)-(accent-(400|500|600)|brand-500)\b/.test(e.className + " " + (e.parentElement?.className ?? ""))).length,
+      // Bảng màu cam–xanh: nền sáng không được có chữ trắng = brand-300/400/500 và accent-400/500
+      els.filter((e) => /\b(bg|from|to)-(brand-(300|400|500)|accent-(400|500))\b/.test(e.className + " " + (e.parentElement?.className ?? ""))).length,
     );
     expect(bad, p).toBe(0);
   }
@@ -196,5 +198,19 @@ test("mạng chậm (giả lập 3G): trang chủ và trang khóa học vẫn t�
     const ms = Date.now() - t0;
     console.log(`Thời gian tải ${p} ở mạng 3G giả lập: ${ms} ms`);
     expect(ms).toBeLessThan(20_000);
+  }
+});
+
+test("đo tương phản màu thật bằng axe (chuẩn WCAG AA) trên các trang chính", async ({ page }) => {
+  const { default: AxeBuilder } = await import("@axe-core/playwright");
+  for (const p of ["/", "/toan", "/toan/lop-4", "/toan/lop-4/theo-tuan", "/toan/lop-4/theo-tuan/tuan-5/video-bai-10", "/hoc-thu", "/ky-thi"]) {
+    await page.goto(p);
+    await page.getByRole("button", { name: "Tạm dừng" }).click({ timeout: 1000 }).catch(() => {});
+    // Tắt nền chấm bi (rất mờ) và đầu trang dính, vì chúng khiến axe không xác định được màu nền
+    // và bỏ qua phép đo (đã thử: khi không tắt, axe KHÔNG phát hiện chữ khó đọc cố ý chèn vào).
+    await page.addStyleTag({ content: "body{background-image:none!important} header{position:static!important}" });
+    const r = await new AxeBuilder({ page }).withRules(["color-contrast"]).analyze();
+    const issues = r.violations.flatMap((v) => v.nodes.map((n) => `${p}: ${n.target.join(" ")} — ${n.failureSummary?.split("\n")[1] ?? ""}`));
+    expect(issues, issues.join("\n")).toEqual([]);
   }
 });
