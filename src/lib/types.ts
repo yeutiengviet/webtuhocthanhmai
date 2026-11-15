@@ -61,3 +61,16 @@ export interface Item {
   /** Thời gian làm bài (phút) với đề kiểm tra. */
   durationMinutes?: number;
 }
+
+/** Nhóm đề thi (khu "Đề thi"). */
+export type ExamCategory = "danh-gia-thang" | "giua-ki-1" | "cuoi-ki-1" | "giua-ki-2" | "cuoi-nam" | "luyen-thi";
+
+/**
+ * Một đề thi trong khu "Đề thi". Dùng chung các trường với Item (type luôn là "test")
+ * để đi qua cùng một cổng kiểm tra quyền lessonMedia().
+ */
+export interface Exam extends Item {
+  subject: SubjectSlug;
+  grade: 2 | 3 | 4 | 5;
+  category: ExamCategory;
+}

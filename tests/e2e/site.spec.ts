@@ -31,7 +31,7 @@ test("menu điện thoại mở được và đủ mục theo 5.1", async ({ pag
   await page.goto("/");
   await page.getByRole("button", { name: "Menu" }).click();
   const menu = page.locator("#mobile-menu");
-  for (const label of ["Giới thiệu", "Học thử", "Toán", "Tiếng Việt", "Kỳ thi", "Tài liệu", "Học sinh", "Đăng nhập"]) {
+  for (const label of ["Giới thiệu", "Học thử", "Toán", "Tiếng Việt", "Đề thi", "Kỳ thi", "Tài liệu", "Học sinh", "Đăng nhập"]) {
     await expect(menu.getByRole("link", { name: label, exact: true })).toBeVisible();
   }
   await expect(page.getByRole("link", { name: "Hướng dẫn", exact: true })).toBeVisible();
@@ -209,7 +209,7 @@ test("mạng chậm (giả lập 3G): trang chủ và trang khóa học vẫn t�
 
 test("đo tương phản màu thật bằng axe (chuẩn WCAG AA) trên các trang chính", async ({ page }) => {
   const { default: AxeBuilder } = await import("@axe-core/playwright");
-  for (const p of ["/", "/toan", "/toan/lop-4", "/toan/lop-4/theo-tuan", "/toan/lop-4/theo-tuan/tuan-5/video-bai-10", "/hoc-thu", "/ky-thi"]) {
+  for (const p of ["/", "/toan", "/toan/lop-4", "/toan/lop-4/theo-tuan", "/toan/lop-4/theo-tuan/tuan-5/video-bai-10", "/hoc-thu", "/ky-thi", "/de-thi", "/de-thi/toan", "/de-thi/toan/lop-4/danh-gia-nang-luc-thang-10", "/quan-tri/tai-de"]) {
     await page.goto(p);
     await page.getByRole("button", { name: "Tạm dừng" }).click({ timeout: 1000 }).catch(() => {});
     // Tắt nền chấm bi (rất mờ) và đầu trang dính, vì chúng khiến axe không xác định được màu nền
@@ -219,4 +219,34 @@ test("đo tương phản màu thật bằng axe (chuẩn WCAG AA) trên các tra
     const issues = r.violations.flatMap((v) => v.nodes.map((n) => `${p}: ${n.target.join(" ")} — ${n.failureSummary?.split("\n")[1] ?? ""}`));
     expect(issues, issues.join("\n")).toEqual([]);
   }
+});
+
+test("khu Đề thi: theo môn → lớp → làm đề Free trong khung cách ly", async ({ page }) => {
+  const errors = trackErrors(page);
+  await page.goto("/de-thi");
+  await page.getByRole("link", { name: /Đề thi Toán/ }).click();
+  await expect(page).toHaveURL(/\/de-thi\/toan$/);
+  for (const g of [2, 3, 4, 5]) await expect(page.getByRole("heading", { name: `Lớp ${g}` })).toBeVisible();
+  // Lớp chưa có đề hiện thông báo, không bịa đề
+  await expect(page.getByText("Cô Thanh Mai đang cập nhật đề cho lớp này.").first()).toBeVisible();
+  await page.getByRole("link", { name: "Toán lớp 4 – Đánh giá năng lực tháng 10" }).first().click();
+  await expect(page.getByRole("heading", { level: 1 })).toHaveText("Toán lớp 4 – Đánh giá năng lực tháng 10");
+  const frame = page.locator("iframe[title='Toán lớp 4 – Đánh giá năng lực tháng 10']");
+  await expect(frame).toHaveAttribute("sandbox", /allow-scripts/);
+  expect((await frame.getAttribute("sandbox")) ?? "").not.toContain("allow-top-navigation");
+  // Đề chưa có link: hiện "đang soạn", không có iframe
+  await page.goto("/de-thi/tieng-viet/lop-5/giua-ki-1-de-1-bai-ca-ve-trai-dat");
+  await expect(page.getByText("Phiếu bài tập đang được cô soạn")).toBeVisible();
+  await expect(page.locator("iframe")).toHaveCount(0);
+  expect(errors).toEqual([]);
+});
+
+test("khu Đề thi: đường dẫn sai trả 404; màn hình tải đề là bản xem trước bị khóa", async ({ page, request }) => {
+  for (const p of ["/de-thi/van", "/de-thi/toan/lop-6", "/de-thi/toan/lop-4/khong-co", "/de-thi/toan/lop-5/danh-gia-nang-luc-thang-10"]) {
+    expect((await request.get(p)).status(), p).toBe(404);
+  }
+  await page.goto("/quan-tri/tai-de");
+  await expect(page.getByRole("status")).toContainText("Chưa hoạt động");
+  await expect(page.getByRole("button", { name: "Tải đề lên" })).toBeDisabled();
+  await expect(page.locator('meta[name="robots"]')).toHaveAttribute("content", /noindex/);
 });

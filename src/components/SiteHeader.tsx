@@ -13,6 +13,7 @@ export const MAIN_MENU = [
   { href: "/hoc-thu", label: "Học thử", emoji: "🎁" },
   { href: "/toan", label: "Toán", emoji: "🔢" },
   { href: "/tieng-viet", label: "Tiếng Việt", emoji: "📖" },
+  { href: "/de-thi", label: "Đề thi", emoji: "📝" },
   { href: "/ky-thi", label: "Kỳ thi", emoji: "🏅" },
   { href: "/tai-lieu", label: "Tài liệu", emoji: "📚" },
   { href: "/hoc-sinh", label: "Học sinh", emoji: "🌟" },
