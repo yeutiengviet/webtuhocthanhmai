@@ -1,5 +1,20 @@
 import { describe, expect, it } from "vitest";
-import { groupByItem, guessFromFileName, guessSummerTestNumber, matchSummerSlot, matchSlot, validateMatches, type SlotInfo } from "@/lib/bulk-match";
+import {
+  courseMismatch,
+  examGroupKey,
+  groupByExam,
+  groupByItem,
+  guessExamFromFileName,
+  guessFromFileName,
+  guessGradeSubject,
+  guessSummerTestNumber,
+  matchSlot,
+  matchSummerSlot,
+  routeFile,
+  validateMatches,
+  validateTargets,
+  type SlotInfo,
+} from "@/lib/bulk-match";
 
 describe("đoán tuần và mục từ tên file", () => {
   const cases: [string, number | null, string | null][] = [
@@ -82,5 +97,81 @@ describe("đề ôn tập hè: xếp file theo số đề", () => {
   it("xếp vào đúng đề, không có đề thì để trống", () => {
     expect(matchSummerSlot("Đề 5.pdf", slots)?.id).toBe("t3-he-de-5");
     expect(matchSummerSlot("Đề 25.pdf", slots)).toBeNull();
+  });
+});
+
+describe("đề thi: nhận từ tên file", () => {
+  const cases: [string, string | null, boolean][] = [
+    ["Đề giữa kì 1.html", "giua-ki-1", true],
+    ["De giua ky 1 lop 3.pdf", "giua-ki-1", true],
+    ["Đề cuối học kỳ 1 - Toán 3.pdf", "cuoi-ki-1", true],
+    ["Lop3_CuoiKi1.html", "cuoi-ki-1", true],
+    ["Đề cuối kì I.pdf", "cuoi-ki-1", true],
+    ["Đề giữa học kì II.pdf", "giua-ki-2", true],
+    ["Đề cuối kì 2.pdf", "cuoi-nam", true],
+    ["Đề cuối năm.pdf", "cuoi-nam", true],
+    ["Ôn tập cuối học kỳ 1.pdf", "on-tap-cuoi-ki-1", true],
+    ["Đề ôn tập giữa kì 1 - đề 2.html", "on-tap-giua-ki-1", true],
+    ["On tap giua ki 2.pdf", "on-tap-giua-ki-2", true],
+    ["Ôn tập cuối năm.pdf", "on-tap-cuoi-nam", true],
+    ["GK1 lop 4.pdf", "giua-ki-1", true],
+    ["CK2.html", "cuoi-nam", true],
+    ["Đánh giá tháng 10.pdf", "danh-gia-thang", true],
+    ["Đề cuối học kỳ.pdf", null, true],
+    ["Ôn tập học kì.pdf", null, true],
+    ["Lớp 3 tuần 18 cơ bản.html", null, false],
+    ["Đề cương tuần 18.pdf", null, false],
+    ["Đề cương ôn tập cuối kì 1.pdf", null, false],
+  ];
+  for (const [name, category, isExam] of cases) {
+    it(name, () => expect(guessExamFromFileName(name)).toEqual({ isExam, category }));
+  }
+});
+
+describe("lớp và môn trong tên file", () => {
+  it("đọc lớp/môn, không ghi thì null", () => {
+    expect(guessGradeSubject("Lớp 3 Toán tuần 18.html")).toEqual({ grade: 3, subject: "toan" });
+    expect(guessGradeSubject("L4_TV_T05.pdf")).toEqual({ grade: 4, subject: "tieng-viet" });
+    expect(guessGradeSubject("Tiếng Việt lớp 2.pdf")).toEqual({ grade: 2, subject: "tieng-viet" });
+    expect(guessGradeSubject("tuan 18.pdf")).toEqual({ grade: null, subject: null });
+  });
+  it("báo khi tên file ghi khác khóa đang tải", () => {
+    const c = { grade: 3, subject: "toan" as const };
+    expect(courseMismatch("Lớp 3 tuần 18.html", c)).toBeNull();
+    expect(courseMismatch("tuần 18.html", c)).toBeNull();
+    expect(courseMismatch("Lớp 4 tuần 18.html", c)).toContain("lớp 4");
+    expect(courseMismatch("Tiếng Việt lớp 3 tuần 18.html", c)).toContain("Tiếng Việt");
+  });
+});
+
+describe("chia file: tuần hay Đề thi", () => {
+  const wk: SlotInfo[] = [{ id: "t3-w18-luyen-tap-co-ban", week: 18, slug: "luyen-tap-co-ban", title: "cb", html: true, pdf: true }];
+  it("có 'tuần 18' → xếp vào tuần 18", () => expect(routeFile("Lớp 3 - Tuần 18 - Cơ bản.html", wk)).toBe("t3-w18-luyen-tap-co-ban"));
+  it("đề giữa/cuối kì, ôn tập học kì → Đề thi", () => {
+    expect(routeFile("Lớp 3 đề cuối kì 1.pdf", wk)).toBe("exam:cuoi-ki-1");
+    expect(routeFile("Lớp 3 tuần 18 ôn tập cuối học kỳ 1.pdf", wk)).toBe("exam:on-tap-cuoi-ki-1");
+    expect(routeFile("Đề giữa kì 1.html", wk)).toBe("exam:giua-ki-1");
+  });
+  it("đề thi chưa rõ kì thì chưa xếp (để cô chọn)", () => expect(routeFile("Đề cuối học kỳ.pdf", wk)).toBeNull());
+
+  it("ghép .html + .pdf cùng tên thành một đề; trùng cùng loại thì báo", () => {
+    const m = validateTargets(
+      [
+        { name: "Đề cuối kì 1.html", target: "exam:cuoi-ki-1" },
+        { name: "Đề cuối kì 1.pdf", target: "exam:cuoi-ki-1" },
+        { name: "Đề giữa kì 1.pdf", target: "exam:giua-ki-1" },
+        { name: "Đề giữa kì 1 (2).pdf", target: "exam:giua-ki-1" },
+        { name: "Lớp 3 tuần 18 cơ bản.html", target: "t3-w18-luyen-tap-co-ban" },
+        { name: "x.html", target: null },
+      ],
+      wk,
+    );
+    expect(m.map((x) => x.problem)).toEqual([null, null, null, null, null, "khong-nhan-dien"]);
+    const g = groupByExam(m);
+    expect(g.size).toBe(3);
+    expect(g.get(examGroupKey("Đề cuối kì 1.html") ? `cuoi-ki-1|${examGroupKey("Đề cuối kì 1.html")}` : "")?.pdf?.fileName).toBe("Đề cuối kì 1.pdf");
+    expect([...groupByItem(m).keys()]).toEqual(["t3-w18-luyen-tap-co-ban"]);
+    const dup = validateTargets([{ name: "a.pdf", target: "exam:cuoi-ki-1" }, { name: "A.pdf", target: "exam:cuoi-ki-1" }], wk);
+    expect(dup.map((x) => x.problem)).toEqual(["trung", "trung"]);
   });
 });

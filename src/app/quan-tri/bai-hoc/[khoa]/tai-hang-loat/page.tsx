@@ -24,14 +24,15 @@ export default async function BulkUploadPage({ params }: { params: Promise<{ kho
       .map(({ it, a }) => ({ id: it.id, week: w.number, slug: it.slug, title: it.title, html: a.html, pdf: a.pdf })),
   );
   const existing = Object.fromEntries([...rows.values()].map((r) => [r.item_id, { html: Boolean(r.html_path), pdf: Boolean(r.pdf_path) }]));
+  const { data: examRows } = course.track === "on-tap-he" ? { data: [] } : await supabase.from("exams").select("title, category").eq("subject", course.subject).eq("grade", course.grade);
   const name = `${course.subject === "toan" ? "Toán" : "Tiếng Việt"} lớp ${course.grade}${course.track === "on-tap-he" ? " – Ôn tập hè" : ""}`;
 
   return (
     <>
-      <PageHero badge="Trang quản trị" title={`Tải hàng loạt – ${name}`} subtitle={course.track === "on-tap-he" ? "Chọn nhiều file một lần; website tự xếp vào đề theo số đề trong tên file, cô xem lại rồi bấm Lưu." : "Chọn nhiều file một lần; website tự xếp vào tuần theo tên file, cô xem lại rồi bấm Lưu."} />
+      <PageHero badge="Trang quản trị" title={`Tải hàng loạt – ${name}`} subtitle={course.track === "on-tap-he" ? "Chọn nhiều file một lần; website tự xếp vào đề theo số đề trong tên file, cô xem lại rồi bấm Lưu." : "Chọn nhiều file một lần; website đọc tên file: có “tuần N” thì xếp vào tuần N, có “giữa kì / cuối kì / ôn tập học kì” thì xếp vào mục Đề thi. Cô xem lại rồi bấm Lưu."} />
       <Container className="max-w-3xl space-y-4 py-8">
         <Link href={`/quan-tri/bai-hoc/${course.id}`} className="inline-block py-2 font-extrabold text-brand-700 underline">← {name}</Link>
-        <BulkUploadForm courseId={course.id} slots={slots} existing={existing} summer={course.track === "on-tap-he"} />
+        <BulkUploadForm courseId={course.id} slots={slots} existing={existing} summer={course.track === "on-tap-he"} course={{ subject: course.subject, grade: course.grade as 2 | 3 | 4 | 5 }} existingExams={(examRows ?? []) as { title: string; category: string }[]} />
       </Container>
     </>
   );

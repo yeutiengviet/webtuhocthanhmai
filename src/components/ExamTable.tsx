@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { Icon } from "@/components/art";
 import { FreeBadge, LockBadge } from "@/components/ui";
-import { EXAM_CATEGORY_LABELS, examHref } from "@/lib/exam-meta";
+import { EXAM_CATEGORIES, EXAM_CATEGORY_LABELS, examHref } from "@/lib/exam-meta";
 import type { Exam } from "@/lib/types";
 
 /**
@@ -9,6 +9,24 @@ import type { Exam } from "@/lib/types";
  * "Điểm của con" và "Điểm cao nhất" sẽ có từ Giai đoạn 4 (khi học sinh đăng nhập) — không hiện số giả.
  */
 export function ExamTable({ exams, error = false }: { exams: Exam[]; error?: boolean }) {
+  // Nhiều nhóm đề (giữa kì, cuối kì, ôn tập…) thì chia mục có tiêu đề cho dễ tìm
+  const groups = EXAM_CATEGORIES.map((c) => ({ c, list: exams.filter((e) => e.category === c) })).filter((g) => g.list.length > 0);
+  if (!error && groups.length > 1) {
+    return (
+      <div className="space-y-8">
+        {groups.map((g) => (
+          <section key={g.c} aria-labelledby={`nhom-${g.c}`}>
+            <h3 id={`nhom-${g.c}`} className="mb-3 text-xl text-gray-900">{EXAM_CATEGORY_LABELS[g.c]} <span className="text-base font-semibold text-gray-600">({g.list.length} đề)</span></h3>
+            <ExamGroup exams={g.list} />
+          </section>
+        ))}
+      </div>
+    );
+  }
+  return <ExamGroup exams={exams} error={error} />;
+}
+
+function ExamGroup({ exams, error = false }: { exams: Exam[]; error?: boolean }) {
   if (error) {
     return (
       <p role="alert" className="rounded-3xl bg-amber-50 p-5 text-center font-semibold text-amber-900 ring-1 ring-amber-200">

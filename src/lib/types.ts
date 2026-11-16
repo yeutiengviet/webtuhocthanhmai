@@ -67,7 +67,17 @@ export interface Item {
 }
 
 /** Nhóm đề thi (khu "Đề thi"). */
-export type ExamCategory = "danh-gia-thang" | "giua-ki-1" | "cuoi-ki-1" | "giua-ki-2" | "cuoi-nam" | "luyen-thi";
+export type ExamCategory =
+  | "danh-gia-thang"
+  | "on-tap-giua-ki-1"
+  | "giua-ki-1"
+  | "on-tap-cuoi-ki-1"
+  | "cuoi-ki-1"
+  | "on-tap-giua-ki-2"
+  | "giua-ki-2"
+  | "on-tap-cuoi-nam"
+  | "cuoi-nam"
+  | "luyen-thi";
 
 /** Một đề thi trong khu "Đề thi" (bảng exams trong Supabase). */
 export interface Exam {
