@@ -8,8 +8,8 @@ export const site = {
   domain: "hocgioithanhmai.com" as string | null,
   quote: "Mỗi ngày một bài nhỏ — cả năm vững vàng.",
   /** Số điện thoại/Zalo hiển thị. null = chưa cung cấp, sẽ ẩn. */
-  hotline: "09722299941" as string | null,
-  zalo: "09722299941" as string | null,
+  hotline: "0972299941" as string | null,
+  zalo: "0972299941" as string | null,
   /** Mã video YouTube giới thiệu. null = chưa có. */
   introVideoRef: null as string | null,
   /** Học sinh, phụ huynh… — chỉ điền số thật. */
