@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { groupByItem, guessFromFileName, matchSlot, validateMatches, type SlotInfo } from "@/lib/bulk-match";
+import { groupByItem, guessFromFileName, guessSummerTestNumber, matchSummerSlot, matchSlot, validateMatches, type SlotInfo } from "@/lib/bulk-match";
 
 describe("đoán tuần và mục từ tên file", () => {
   const cases: [string, number | null, string | null][] = [
@@ -57,5 +57,20 @@ describe("xếp file vào mục", () => {
     expect([...g.keys()]).toEqual(["t3-w5-luyen-tap-co-ban"]);
     expect(g.get("t3-w5-luyen-tap-co-ban")?.html?.fileName).toBe("a.html");
     expect(g.get("t3-w5-luyen-tap-co-ban")?.pdf?.fileName).toBe("a.pdf");
+  });
+});
+
+describe("đề ôn tập hè: xếp file theo số đề", () => {
+  const slots = Array.from({ length: 20 }, (_, i) => ({ id: `t3-he-de-${i + 1}`, week: 1, slug: `de-${i + 1}`, title: `Đề ${i + 1}`, html: true, pdf: true }));
+  it("đọc số đề từ tên file", () => {
+    expect(guessSummerTestNumber("Đề 3.html")).toBe(3);
+    expect(guessSummerTestNumber("de-12.pdf")).toBe(12);
+    expect(guessSummerTestNumber("On he lop 3 - De 07.html")).toBe(7);
+    expect(guessSummerTestNumber("ĐỀ 20 ôn hè.pdf")).toBe(20);
+    expect(guessSummerTestNumber("on he lop 4.pdf")).toBeNull();
+  });
+  it("xếp vào đúng đề, không có đề thì để trống", () => {
+    expect(matchSummerSlot("Đề 5.pdf", slots)?.id).toBe("t3-he-de-5");
+    expect(matchSummerSlot("Đề 25.pdf", slots)).toBeNull();
   });
 });

@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { useMemo, useState } from "react";
 import { saveLessonFiles } from "@/app/quan-tri/actions";
 import { discardPair, uploadPair, type UploadedIds } from "@/components/admin/FileSlot";
-import { groupByItem, guessFromFileName, matchSlot, validateMatches, type MatchProblem, type SlotInfo } from "@/lib/bulk-match";
+import { groupByItem, guessFromFileName, matchSlot, matchSummerSlot, validateMatches, type MatchProblem, type SlotInfo } from "@/lib/bulk-match";
 import { checkFileContent, kindFromFileName, MAX_FILE_BYTES } from "@/lib/exam-meta";
 
 interface Row {
@@ -22,7 +22,7 @@ const PROBLEM: Record<MatchProblem, string> = {
   trung: "Trùng: có 2 file cùng loại cho một mục",
 };
 
-export function BulkUploadForm({ courseId, slots, existing }: { courseId: string; slots: SlotInfo[]; existing: Record<string, { html: boolean; pdf: boolean }> }) {
+export function BulkUploadForm({ courseId, slots, existing, summer = false }: { courseId: string; slots: SlotInfo[]; existing: Record<string, { html: boolean; pdf: boolean }>; summer?: boolean }) {
   const router = useRouter();
   const [rows, setRows] = useState<Row[]>([]);
   const [isFree, setIsFree] = useState(true);
@@ -46,10 +46,10 @@ export function BulkUploadForm({ courseId, slots, existing }: { courseId: string
       if (!kind) contentError = "Chỉ nhận file .html hoặc .pdf";
       else if (file.size > MAX_FILE_BYTES) contentError = "File quá lớn (tối đa 10 MB)";
       else contentError = checkFileContent(new Uint8Array(await file.slice(0, 8192).arrayBuffer()), kind);
-      const slot = matchSlot(guessFromFileName(file.name), slots);
+      const slot = summer ? matchSummerSlot(file.name, slots) : matchSlot(guessFromFileName(file.name), slots);
       added.push({ key: `${file.name}-${file.size}-${file.lastModified}-${Math.random()}`, file, itemId: slot?.id ?? null, contentError });
     }
-    added.sort((a, b) => (byId.get(a.itemId ?? "")?.week ?? 99) - (byId.get(b.itemId ?? "")?.week ?? 99) || a.file.name.localeCompare(b.file.name, "vi"));
+    added.sort((a, b) => (byId.get(a.itemId ?? "")?.week ?? 99) - (byId.get(b.itemId ?? "")?.week ?? 99) || a.file.name.localeCompare(b.file.name, "vi", { numeric: true }));
     setRows((r) => [...r, ...added]);
   }
 
@@ -62,7 +62,7 @@ export function BulkUploadForm({ courseId, slots, existing }: { courseId: string
     for (const [itemId, g] of groups) {
       n++;
       const title = byId.get(itemId);
-      const label = title ? `Tuần ${title.week} – ${title.title}` : itemId;
+      const label = title ? (summer ? title.title : `Tuần ${title.week} – ${title.title}`) : itemId;
       setBusy(`Đang lưu ${n}/${groups.size}: ${label}`);
       let ids: UploadedIds = {};
       try {
@@ -99,10 +99,16 @@ export function BulkUploadForm({ courseId, slots, existing }: { courseId: string
         <label className="block cursor-pointer rounded-2xl border-2 border-dashed border-brand-300 bg-brand-50 p-6 text-center">
           <span className="text-4xl" aria-hidden>📂</span>
           <span className="mt-2 block font-extrabold text-brand-700">Bấm để chọn nhiều file cùng lúc</span>
+          {summer ? (
+            <span className="mt-1 block text-sm text-gray-700">
+              Đặt tên file có <strong>số đề</strong>, ví dụ: <code>Đề 1.html</code>, <code>Đề 1.pdf</code>, <code>On he lop 3 - De 12.html</code>. Mỗi đề nhận 1 file tương tác (.html) và 1 file PDF.
+            </span>
+          ) : (
           <span className="mt-1 block text-sm text-gray-700">
             Đặt tên file có <strong>số tuần</strong> và <strong>loại phiếu</strong>, ví dụ: <code>Tuan 5 - Co ban.html</code>, <code>Tuần 5 nâng cao.pdf</code>,{" "}
             <code>Tuần 4 kiểm tra 15 phút.html</code>, <code>Tuần 3 tài liệu.pdf</code>, <code>Tuần 9 đề 2.html</code>
           </span>
+          )}
           <input type="file" multiple accept=".html,.htm,.pdf,text/html,application/pdf" className="sr-only" aria-label="Chọn nhiều file" onChange={(e) => { pick(e.target.files); e.target.value = ""; }} />
         </label>
       </div>
@@ -129,8 +135,10 @@ export function BulkUploadForm({ courseId, slots, existing }: { courseId: string
                     onChange={(e) => setRows((x) => x.map((y) => (y.key === r.key ? { ...y, itemId: e.target.value || null } : y)))}
                     className="mt-2 block w-full rounded-xl border-2 border-gray-200 bg-white px-3 py-2 font-semibold"
                   >
-                    <option value="">— Chọn tuần và mục —</option>
-                    {weeks.map((w) => (
+                    <option value="">{summer ? "— Chọn đề —" : "— Chọn tuần và mục —"}</option>
+                    {summer ? slots.map((s) => (
+                      <option key={s.id} value={s.id}>{s.title}</option>
+                    )) : weeks.map((w) => (
                       <optgroup key={w} label={`Tuần ${w}`}>
                         {slots.filter((s) => s.week === w).map((s) => (
                           <option key={s.id} value={s.id}>Tuần {w} – {s.title}{s.html ? "" : " (chỉ PDF)"}</option>
@@ -146,7 +154,7 @@ export function BulkUploadForm({ courseId, slots, existing }: { courseId: string
 
           <div className="mt-4 space-y-1 rounded-2xl bg-gray-50 p-4">
             <label className="flex items-center gap-3 py-1 font-semibold">
-              <input type="checkbox" checked={isFree} onChange={(e) => setIsFree(e.target.checked)} className="h-5 w-5 accent-brand-600" /> Miễn phí cho mọi người (nhãn Free)
+              <input type="checkbox" checked={isFree} onChange={(e) => setIsFree(e.target.checked)} className="h-5 w-5 accent-brand-600" /> Ai cũng xem được, kể cả chưa đăng nhập (nhãn Free)
             </label>
             <label className="flex items-center gap-3 py-1 font-semibold">
               <input type="checkbox" checked={published} onChange={(e) => setPublished(e.target.checked)} className="h-5 w-5 accent-brand-600" /> Hiện ngay trên website

@@ -8,7 +8,7 @@ import { getSubject, gradeSlug, parseGradeSlug } from "@/lib/content";
 import { EXAM_CATEGORY_LABELS, examHref, examMedia } from "@/lib/exam-meta";
 import { findPublishedExam, listPublishedExams } from "@/lib/exams";
 
-// GIAI ĐOẠN 3: khi kiểm tra gói học theo người đăng nhập, trang này phải chuyển về render động + Cache-Control: private.
+// Nếu sau này kiểm tra quyền theo người đăng nhập, trang này phải chuyển về render động + Cache-Control: private.
 // Lưu sẵn trang, tự làm mới mỗi 60 giây; quản trị thêm/sửa/xóa đề thì làm mới ngay (revalidatePath).
 export const revalidate = 60;
 
@@ -73,8 +73,9 @@ export default async function ExamPage({ params }: { params: Params }) {
             {media.kind === "locked" ? (
               <div className="rounded-[2rem] border-2 border-dashed border-brand-300 bg-white p-8 text-center">
                 <p className="mx-auto grid h-16 w-16 place-items-center rounded-full bg-brand-100 text-3xl" aria-hidden>🔒</p>
-                <p className="mt-3 font-display text-2xl font-extrabold text-brand-700">Đề này dành cho học sinh đã đăng ký gói học</p>
-                <Link href="/thanh-toan" className="btn-toy mt-4 inline-block rounded-full bg-brand-600 px-6 py-3 font-extrabold text-white">Đăng ký gói học</Link>
+                <p className="mt-3 font-display text-2xl font-extrabold text-brand-700">Đề này cô đang cập nhật</p>
+                <p className="mt-1 text-gray-700">Phụ huynh quay lại sau ít hôm nhé. Trong lúc chờ, con có thể làm các đề khác của lớp.</p>
+                <Link href={`/de-thi/${subject.slug}/${gradeSlug(grade)}`} className="btn-toy mt-4 inline-block rounded-full bg-brand-600 px-6 py-3 font-extrabold text-white">Xem đề khác</Link>
               </div>
             ) : media.main?.type === "external" ? (
               <WorksheetFrame url={media.main.url} title={exam.title} />

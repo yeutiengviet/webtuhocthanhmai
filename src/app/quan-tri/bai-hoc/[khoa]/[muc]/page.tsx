@@ -21,13 +21,13 @@ export default async function AdminLessonItem({ params }: { params: Promise<{ kh
   if (!accepts.pdf) notFound();
   const { data } = await supabase.from("lesson_files").select(LESSON_FILE_COLUMNS).eq("item_id", item.id).maybeSingle();
   const row = data as LessonFileRow | null;
-  const name = `${course.subject === "toan" ? "Toán" : "Tiếng Việt"} lớp ${course.grade}`;
+  const name = `${course.subject === "toan" ? "Toán" : "Tiếng Việt"} lớp ${course.grade}${course.track === "on-tap-he" ? " – Ôn tập hè" : ""}`;
 
   return (
     <>
       <PageHero badge="Trang quản trị" title={item.title} subtitle={`${name} · ${week.label ?? `${course.track === "nang-cao" ? "Chuyên đề" : "Tuần"} ${week.number}`}: ${week.title}`} />
       <Container className="max-w-2xl py-8">
-        <Link href={`/quan-tri/bai-hoc/${course.id}`} className="mb-4 inline-block py-2 font-extrabold text-brand-700 underline">← Các tuần {name}</Link>
+        <Link href={`/quan-tri/bai-hoc/${course.id}`} className="mb-4 inline-block py-2 font-extrabold text-brand-700 underline">← {name}</Link>
         <LessonFileForm
           key={row?.updated_at ?? "moi"}
           itemId={item.id}

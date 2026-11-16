@@ -84,13 +84,14 @@ describe("Toán lớp 4 – 35 tuần", () => {
   it("đường dẫn hướng học lạ (kể cả tên thuộc tính hệ thống) không được coi là hợp lệ", () => {
     expect(isTrack("theo-tuan")).toBe(true);
     for (const t of ["constructor", "__proto__", "toString", "hasOwnProperty", "abc"]) expect(isTrack(t)).toBe(false);
-    expect(getCourse("toan", 4, "on-tap-he")).toBeUndefined();
+    expect(getCourse("toan", 4, "ky-thi")).toBeUndefined();
   });
 
-  it("bản dùng thử: mục trả phí không xem được, mục Free xem được", () => {
-    const paid = weeks[10].items[0];
-    expect(paid.isFree).toBe(false);
-    expect(canViewItem(paid)).toBe(false);
+  it("khách chưa đăng nhập chỉ xem mục Free; phụ huynh đã đăng nhập xem được tất cả", () => {
+    const locked = weeks[10].items[0];
+    expect(locked.isFree).toBe(false);
+    expect(canViewItem(locked)).toBe(false);
+    expect(canViewItem(locked, true)).toBe(true);
     expect(canViewItem(weeks[0].items[0])).toBe(true);
   });
 
@@ -98,9 +99,9 @@ describe("Toán lớp 4 – 35 tuần", () => {
     const s = courseStats(toanLop4TheoTuan);
     expect(s.weeks).toBe(35);
     expect(s.totalItems).toBe(weeks.reduce((a, w) => a + w.items.length, 0));
-    expect(getCourses("toan", 4)).toHaveLength(2);
-    expect(getCourses("tieng-viet")).toHaveLength(4);
-    expect(getCourses("toan")).toHaveLength(8);
+    expect(getCourses("toan", 4).map((c) => c.track)).toEqual(["theo-tuan", "on-tap-he", "nang-cao"]);
+    expect(getCourses("tieng-viet")).toHaveLength(8);
+    expect(getCourses("toan")).toHaveLength(12);
   });
 });
 

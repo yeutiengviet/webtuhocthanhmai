@@ -16,7 +16,7 @@ export default async function AdminCourseLessons({ params }: { params: Promise<{
   const course = /^[a-z0-9-]{1,60}$/.test(khoa) ? getCourseById(khoa) : undefined;
   if (!course) notFound();
   const { rows, error } = await adminLessonFiles(supabase, course);
-  const name = `${course.subject === "toan" ? "Toán" : "Tiếng Việt"} lớp ${course.grade}`;
+  const name = `${course.subject === "toan" ? "Toán" : "Tiếng Việt"} lớp ${course.grade}${course.track === "on-tap-he" ? " – Ôn tập hè" : ""}`;
 
   return (
     <>

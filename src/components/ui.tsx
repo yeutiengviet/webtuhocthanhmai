@@ -35,8 +35,8 @@ export function LevelBadge({ level }: { level: Level | null }) {
 
 export function LockBadge() {
   return (
-    <span className="inline-flex items-center gap-1 rounded-full bg-gray-200 px-2.5 py-0.5 text-xs font-bold text-gray-700" title="Cần đăng ký gói học">
-      <Icon name="lock" className="h-3.5 w-3.5" /> Gói học
+    <span className="inline-flex items-center gap-1 rounded-full bg-gray-200 px-2.5 py-0.5 text-xs font-bold text-gray-700" title="Đăng nhập (tài khoản miễn phí) để học">
+      <Icon name="lock" className="h-3.5 w-3.5" /> Đăng nhập
     </span>
   );
 }

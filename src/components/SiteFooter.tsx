@@ -25,13 +25,13 @@ export function SiteFooter() {
             <p className="font-display text-lg text-brand-300">Chính sách</p>
             <ul className="mt-1 text-sm [&_a]:block [&_a]:py-2">
               <li><Link className="hover:underline" href="/huong-dan">Hướng dẫn học</Link></li>
-              <li><Link className="hover:underline" href="/thanh-toan">Hướng dẫn nộp phí</Link></li>
+              <li><Link className="hover:underline" href="/dang-nhap?tab=dang-ky">Tạo tài khoản miễn phí</Link></li>
               <li><Link className="hover:underline" href="/chinh-sach-rieng-tu">Chính sách quyền riêng tư</Link></li>
               <li><Link className="hover:underline" href="/dieu-khoan">Điều khoản sử dụng</Link></li>
             </ul>
           </div>
         </div>
-        <p className="border-t border-blue-800 py-4 text-center text-xs text-blue-200">© {site.name}. Bản dùng thử.</p>
+        <p className="border-t border-blue-800 py-4 text-center text-xs text-blue-200">© {site.name}.</p>
       </div>
     </footer>
   );

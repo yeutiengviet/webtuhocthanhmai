@@ -3,6 +3,15 @@
 Website độc lập (không dùng chung mã/cơ sở dữ liệu với phần mềm quản lý trung tâm).
 Nội dung theo sách **Kết nối tri thức với cuộc sống**.
 
+## Tài khoản phụ huynh (miễn phí) và Đề ôn tập hè
+
+- Phụ huynh tạo tài khoản ở `/dang-nhap?tab=dang-ky` (họ tên, SĐT/Zalo, lớp của con, email, mật khẩu). Họ tên/SĐT/lớp lưu trong thông tin tài khoản (Supabase → Authentication → Users → user_metadata).
+- Khách chưa đăng nhập: chỉ xem mục có nhãn Free. Đã đăng nhập: xem được mọi bài. Trang tài khoản: `/tai-khoan`; quên mật khẩu → `/doi-mat-khau`.
+- **Đề ôn tập hè**: mỗi lớp, cả Toán và Tiếng Việt, có 20 đề (`src/data/on-tap-he.ts`, đổi số đề ở `SO_DE_ON_HE`). Đường dẫn: `/toan/lop-3/on-tap-he`, `/tieng-viet/lop-3/on-tap-he`…
+  Tải phiếu: Trang quản trị → Phiếu bài học → "… – ☀️ Ôn tập hè" → tải từng đề, hoặc **Tải hàng loạt** với tên file có số đề (`Đề 1.html`, `Đề 1.pdf`).
+- Cần làm trong Supabase: Authentication → URL Configuration → thêm `https://hocgioithanhmai.vercel.app/**` vào **Redirect URLs**; email miễn phí của Supabase chỉ gửi vài thư/giờ — nên gắn SMTP riêng hoặc tắt "Confirm email" khi mời nhiều phụ huynh.
+- Chạy `supabase/migrations/0003_phu_huynh_dang_nhap_xem_phieu.sql` để phụ huynh đã đăng nhập tải được cả phiếu cô bỏ nhãn Free.
+
 ## Trang quản trị — tải đề lên (Giai đoạn 2, đã chạy)
 
 Địa chỉ: **https://hocgioithanhmai.vercel.app/quan-tri**

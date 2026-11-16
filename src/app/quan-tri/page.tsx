@@ -24,7 +24,7 @@ export default async function AdminHome() {
             <span aria-hidden>📤</span> Tải đề mới
           </Link>
           <Link href="/quan-tri/bai-hoc" className="btn-toy inline-flex items-center gap-2 rounded-full bg-accent-600 px-6 py-3 text-lg font-extrabold text-white">
-            <span aria-hidden>📚</span> Phiếu bài học theo tuần
+            <span aria-hidden>📚</span> Phiếu bài học (theo tuần · ôn tập hè)
           </Link>
           <SignOutButton />
         </div>

@@ -73,7 +73,7 @@ export function LessonFileForm({
       <div className="space-y-1 rounded-2xl bg-gray-50 p-4">
         <label className="flex items-center gap-3 py-2 font-semibold">
           <input type="checkbox" name="isFree" defaultChecked={initial?.isFree ?? true} className="h-5 w-5 accent-brand-600" />
-          Miễn phí cho mọi người (nhãn Free)
+          Ai cũng xem được, kể cả chưa đăng nhập (nhãn Free)
         </label>
         <label className="flex items-center gap-3 py-2 font-semibold">
           <input type="checkbox" name="published" defaultChecked={initial?.published ?? true} className="h-5 w-5 accent-brand-600" />
