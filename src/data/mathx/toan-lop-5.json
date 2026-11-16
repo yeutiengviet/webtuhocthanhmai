@@ -1,0 +1,270 @@
+{
+ "lop": 5,
+ "tuan": [
+  {
+   "tuan": 1,
+   "baiHoc": [
+    "Ôn tập số tự nhiên",
+    "Ôn tập các phép tính với số tự nhiên"
+   ]
+  },
+  {
+   "tuan": 2,
+   "baiHoc": [
+    "Ôn tập phân số",
+    "Ôn tập và bổ sung về các phép tính với phân số",
+    "Phân số thập phân"
+   ]
+  },
+  {
+   "tuan": 3,
+   "baiHoc": [
+    "Cộng, trừ hai phân số",
+    "Ôn tập nâng cao, các bài toán chọn lọc"
+   ]
+  },
+  {
+   "tuan": 4,
+   "baiHoc": [
+    "Hỗn số",
+    "Luyện tập chung"
+   ],
+   "tongHop": "Bài luyện tập tổng hợp – Tuần 1, 2, 3, 4"
+  },
+  {
+   "tuan": 5,
+   "baiHoc": [
+    "Khái niệm số thập phân",
+    "Khái niệm số thập phân (tiếp theo)"
+   ]
+  },
+  {
+   "tuan": 6,
+   "baiHoc": [
+    "So sánh các số thập phân",
+    "Làm tròn số thập phân"
+   ]
+  },
+  {
+   "tuan": 7,
+   "baiHoc": [
+    "Viết số đo đại lượng dưới dạng số thập phân"
+   ]
+  },
+  {
+   "tuan": 8,
+   "baiHoc": [
+    "Ôn tập số thập phân"
+   ]
+  },
+  {
+   "tuan": 9,
+   "baiHoc": [
+    "Ki-lô-mét vuông. Héc-ta",
+    "Các đơn vị đo diện tích"
+   ],
+   "tongHop": "Bài luyện tập tổng hợp – Tuần 5, 6, 7, 9"
+  },
+  {
+   "onTap": "Ôn tập kiểm tra giữa kì I",
+   "kind": "giua-ky",
+   "muc": [
+    "Đề ôn luyện thi giữa học kì I",
+    "Đề cương ôn tập giữa kì I"
+   ]
+  },
+  {
+   "tuan": 10,
+   "baiHoc": [
+    "Phép cộng số thập phân"
+   ]
+  },
+  {
+   "tuan": 11,
+   "baiHoc": [
+    "Phép trừ số thập phân"
+   ]
+  },
+  {
+   "tuan": 12,
+   "baiHoc": [
+    "Phép nhân số thập phân"
+   ]
+  },
+  {
+   "tuan": 13,
+   "baiHoc": [
+    "Chia một số thập phân cho một số tự nhiên",
+    "Chia một số thập phân cho một số thập phân"
+   ],
+   "tongHop": "Bài luyện tập tổng hợp – Tuần 10, 11, 12, 13"
+  },
+  {
+   "tuan": 14,
+   "baiHoc": [
+    "Nhân, chia số thập phân với 10, 100, 1000, … hoặc với 0,1; 0,01; 0,001; …"
+   ]
+  },
+  {
+   "tuan": 15,
+   "baiHoc": [
+    "Hình tam giác. Diện tích hình tam giác"
+   ]
+  },
+  {
+   "tuan": 16,
+   "baiHoc": [
+    "Hình thang. Diện tích hình thang",
+    "Hình thang. Diện tích hình thang (tiếp theo)"
+   ]
+  },
+  {
+   "tuan": 17,
+   "baiHoc": [
+    "Đường tròn. Chu vi và diện tích hình tròn",
+    "Đường tròn. Chu vi và diện tích hình tròn (tiếp theo)"
+   ],
+   "tongHop": "Bài luyện tập tổng hợp – Tuần 14, 15, 16, 17"
+  },
+  {
+   "tuan": 18,
+   "baiHoc": [
+    "Ôn tập hình học: Hình tam giác, Hình thang, Hình tròn"
+   ]
+  },
+  {
+   "onTap": "Ôn tập kiểm tra cuối học kì I",
+   "kind": "cuoi-ky",
+   "muc": [
+    "Đề ôn luyện thi cuối học kì I"
+   ]
+  },
+  {
+   "tuan": 19,
+   "baiHoc": [
+    "Tỉ số. Tỉ số phần trăm",
+    "Tỉ lệ bản đồ và ứng dụng"
+   ]
+  },
+  {
+   "tuan": 20,
+   "baiHoc": [
+    "Tìm hai số khi biết tổng và tỉ số của hai số đó",
+    "Tìm hai số khi biết hiệu và tỉ số của hai số đó"
+   ]
+  },
+  {
+   "tuan": 21,
+   "baiHoc": [
+    "Tìm tỉ số phần trăm của hai số",
+    "Tìm giá trị phần trăm của một số"
+   ]
+  },
+  {
+   "tuan": 22,
+   "baiHoc": [
+    "Hình khai triển của hình lập phương, hình hộp chữ nhật và hình trụ",
+    "Diện tích xung quanh và diện tích toàn phần của hình hộp chữ nhật",
+    "Diện tích xung quanh và diện tích toàn phần của hình lập phương"
+   ],
+   "tongHop": "Bài luyện tập tổng hợp – Tuần 19, 20, 21, 22"
+  },
+  {
+   "tuan": 23,
+   "baiHoc": [
+    "Thể tích của một hình",
+    "Xăng-ti-mét khối. Đề-xi-mét khối",
+    "Mét khối"
+   ]
+  },
+  {
+   "tuan": 24,
+   "baiHoc": [
+    "Thể tích của hình hộp chữ nhật",
+    "Thể tích của hình lập phương"
+   ]
+  },
+  {
+   "tuan": 25,
+   "baiHoc": [
+    "Ôn tập diện tích và thể tích hình hộp chữ nhật, hình lập phương"
+   ]
+  },
+  {
+   "tuan": 26,
+   "baiHoc": [
+    "Các đơn vị đo thời gian",
+    "Cộng, trừ số đo thời gian"
+   ]
+  },
+  {
+   "onTap": "Ôn tập kiểm tra giữa học kì II",
+   "kind": "giua-ky",
+   "muc": [
+    "Đề kiểm tra giữa học kì II"
+   ]
+  },
+  {
+   "tuan": 27,
+   "baiHoc": [
+    "Nhân, chia số đo thời gian với một số"
+   ],
+   "tongHop": "Bài luyện tập tổng hợp – Tuần 23, 24, 26, 27"
+  },
+  {
+   "tuan": 28,
+   "baiHoc": [
+    "Vận tốc của một chuyển động đều"
+   ]
+  },
+  {
+   "tuan": 29,
+   "baiHoc": [
+    "Quãng đường, thời gian của một chuyển động đều"
+   ]
+  },
+  {
+   "tuan": 30,
+   "baiHoc": [
+    "Thu thập, phân loại, sắp xếp các số liệu",
+    "Biểu đồ hình quạt tròn",
+    "Tỉ số của số lần lặp lại một sự kiện so với tổng số lần thực hiện"
+   ],
+   "tongHop": "Bài luyện tập tổng hợp – Tuần 28, 29, 30"
+  },
+  {
+   "tuan": 31,
+   "baiHoc": [
+    "Ôn tập phân số, hỗn số và số thập phân",
+    "Ôn tập các phép tính với phân số, hỗn số và số thập phân"
+   ]
+  },
+  {
+   "tuan": 32,
+   "baiHoc": [
+    "Ôn tập tỉ số và tỉ số phần trăm",
+    "Ôn tập giải toán về tỉ số phần trăm"
+   ]
+  },
+  {
+   "tuan": 33,
+   "baiHoc": [
+    "Ôn tập hình học: Hình tam giác, Hình thang, Hình tròn, Hình hộp chữ nhật và Hình lập phương"
+   ]
+  },
+  {
+   "tuan": 34,
+   "baiHoc": [
+    "Ôn tập Chuyển động đều: Vận tốc, Thời gian và Quãng đường"
+   ]
+  },
+  {
+   "onTap": "Ôn tập học kì II",
+   "kind": "cuoi-ky",
+   "muc": [
+    "Đề cương cuối học kì II",
+    "Đề kiểm tra học kì II"
+   ]
+  }
+ ]
+}

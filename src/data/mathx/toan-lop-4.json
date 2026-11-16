@@ -1,0 +1,291 @@
+{
+ "lop": 4,
+ "tuan": [
+  {
+   "tuan": 1,
+   "baiHoc": [
+    "Ôn tập các số đến 100 000",
+    "Ôn tập các phép tính trong phạm vi 100 000"
+   ]
+  },
+  {
+   "tuan": 2,
+   "baiHoc": [
+    "Số chẵn, số lẻ",
+    "Biểu thức chữ"
+   ]
+  },
+  {
+   "tuan": 3,
+   "baiHoc": [
+    "Giải bài toán có ba bước tính"
+   ]
+  },
+  {
+   "tuan": 4,
+   "baiHoc": [
+    "Đo góc, đơn vị đo góc",
+    "Góc nhọn, góc tù, góc bẹt"
+   ],
+   "tongHop": "Bài luyện tập tổng hợp – Tuần 1, 2, 3, 4"
+  },
+  {
+   "tuan": 5,
+   "baiHoc": [
+    "Số có sáu chữ số. Số 1 000 000"
+   ]
+  },
+  {
+   "tuan": 6,
+   "baiHoc": [
+    "Hàng và lớp",
+    "Các số trong phạm vi lớp triệu"
+   ]
+  },
+  {
+   "tuan": 7,
+   "baiHoc": [
+    "Làm tròn số đến hàng trăm nghìn"
+   ]
+  },
+  {
+   "tuan": 8,
+   "baiHoc": [
+    "So sánh các số có nhiều chữ số",
+    "Làm quen với dãy số tự nhiên"
+   ],
+   "tongHop": "Bài luyện tập tổng hợp – Tuần 5, 6, 7, 8"
+  },
+  {
+   "onTap": "Ôn tập kiểm tra giữa kì I",
+   "kind": "giua-ky",
+   "muc": [
+    "Đề ôn tập giữa kì I",
+    "Đề cương ôn tập giữa kì 1"
+   ]
+  },
+  {
+   "tuan": 9,
+   "baiHoc": [
+    "Yến, tạ, tấn"
+   ]
+  },
+  {
+   "tuan": 10,
+   "baiHoc": [
+    "Đề-xi-mét vuông, mét vuông, mi-li-mét vuông",
+    "Giây, thế kỉ"
+   ]
+  },
+  {
+   "tuan": 11,
+   "baiHoc": [
+    "Phép cộng các số có nhiều chữ số"
+   ]
+  },
+  {
+   "tuan": 12,
+   "baiHoc": [
+    "Phép trừ các số có nhiều chữ số"
+   ],
+   "tongHop": "Bài luyện tập tổng hợp – Tuần 9, 10, 11, 12"
+  },
+  {
+   "tuan": 13,
+   "baiHoc": [
+    "Tính chất giao hoán của phép cộng",
+    "Tìm hai số biết tổng và hiệu của hai số đó"
+   ]
+  },
+  {
+   "tuan": 14,
+   "baiHoc": [
+    "Hai đường thẳng vuông góc",
+    "Thực hành vẽ hai đường thẳng vuông góc"
+   ]
+  },
+  {
+   "tuan": 15,
+   "baiHoc": [
+    "Hai đường thẳng song song",
+    "Thực hành vẽ hai đường thẳng song song"
+   ]
+  },
+  {
+   "tuan": 16,
+   "baiHoc": [
+    "Hình bình hành, hình thoi"
+   ],
+   "tongHop": "Bài luyện tập tổng hợp – Tuần 13, 14, 15, 16"
+  },
+  {
+   "tuan": 17,
+   "baiHoc": [
+    "Ôn tập các số đến lớp triệu",
+    "Ôn tập phép cộng, phép trừ",
+    "Ôn tập về số tự nhiên và các phép tính với số tự nhiên"
+   ]
+  },
+  {
+   "tuan": 18,
+   "baiHoc": [
+    "Ôn tập hình học và đo lường"
+   ]
+  },
+  {
+   "onTap": "Ôn tập kiểm tra học kì I",
+   "kind": "cuoi-ky",
+   "muc": [
+    "Đề cương ôn thi học kì I",
+    "Đề kiểm tra học kì I"
+   ]
+  },
+  {
+   "tuan": 19,
+   "baiHoc": [
+    "Nhân với số có một chữ số"
+   ]
+  },
+  {
+   "tuan": 20,
+   "baiHoc": [
+    "Chia cho số có một chữ số"
+   ]
+  },
+  {
+   "tuan": 21,
+   "baiHoc": [
+    "Tính chất giao hoán và kết hợp của phép nhân",
+    "Nhân, chia với 10, 100, 1 000, …"
+   ]
+  },
+  {
+   "tuan": 22,
+   "baiHoc": [
+    "Tính chất phân phối của phép nhân đối với phép cộng",
+    "Nhân với số có hai chữ số"
+   ],
+   "tongHop": "Bài luyện tập tổng hợp – Tuần 19, 20, 21, 22",
+   "thuVi": [
+    "Nhân số có hai chữ số với số có hai chữ số mà hàng chục bằng 9",
+    "Nhân số có hai chữ số với số có hai chữ số trong một số trường hợp",
+    "Bình phương số có hai chữ số mà hàng đơn vị là 5",
+    "Bình phương một số có hai chữ số"
+   ]
+  },
+  {
+   "tuan": 23,
+   "baiHoc": [
+    "Chia cho số có hai chữ số"
+   ],
+   "thuVi": [
+    "Nhân số có hai chữ số với 11",
+    "Nhân hai số trong khoảng 100–110"
+   ]
+  },
+  {
+   "tuan": 24,
+   "baiHoc": [
+    "Tìm số trung bình cộng",
+    "Bài toán liên quan đến rút về đơn vị"
+   ]
+  },
+  {
+   "tuan": 25,
+   "baiHoc": [
+    "Dãy số liệu thống kê",
+    "Biểu đồ cột",
+    "Số lần xuất hiện của một sự kiện"
+   ]
+  },
+  {
+   "tuan": 26,
+   "baiHoc": [
+    "Khái niệm phân số",
+    "Phân số và phép chia số tự nhiên"
+   ],
+   "tongHop": "Bài luyện tập tổng hợp – Tuần 23, 24, 25, 26"
+  },
+  {
+   "onTap": "Ôn tập kiểm tra giữa kì II",
+   "kind": "giua-ky",
+   "muc": [
+    "Đề kiểm tra giữa kì II",
+    "Đề kiểm tra giữa học kì II"
+   ]
+  },
+  {
+   "tuan": 27,
+   "baiHoc": [
+    "Tính chất cơ bản của phân số",
+    "Rút gọn phân số"
+   ]
+  },
+  {
+   "tuan": 28,
+   "baiHoc": [
+    "Quy đồng mẫu số các phân số"
+   ]
+  },
+  {
+   "tuan": 29,
+   "baiHoc": [
+    "So sánh phân số"
+   ]
+  },
+  {
+   "tuan": 30,
+   "baiHoc": [
+    "Phép cộng phân số",
+    "Phép trừ phân số"
+   ],
+   "tongHop": "Bài luyện tập tổng hợp – Tuần 27, 28, 29, 30",
+   "thuVi": [
+    "Phương pháp con bướm để cộng – trừ phân số"
+   ]
+  },
+  {
+   "tuan": 31,
+   "baiHoc": [
+    "Phép nhân phân số",
+    "Phép chia phân số"
+   ]
+  },
+  {
+   "tuan": 32,
+   "baiHoc": [
+    "Tìm phân số của một số"
+   ],
+   "tongHop": "Bài luyện tập tổng hợp – Tuần 31, 32"
+  },
+  {
+   "tuan": 33,
+   "baiHoc": [
+    "Ôn tập số tự nhiên",
+    "Ôn tập phép tính với số tự nhiên"
+   ]
+  },
+  {
+   "tuan": 34,
+   "baiHoc": [
+    "Ôn tập phân số",
+    "Ôn tập phép tính với phân số"
+   ]
+  },
+  {
+   "tuan": 35,
+   "baiHoc": [
+    "Ôn tập hình học và đo lường",
+    "Ôn tập một số yếu tố thống kê và xác suất"
+   ]
+  },
+  {
+   "onTap": "Ôn tập kiểm tra học kì II",
+   "kind": "cuoi-ky",
+   "muc": [
+    "Đề cương ôn tập học kì II",
+    "Đề kiểm tra học kì II"
+   ]
+  }
+ ]
+}

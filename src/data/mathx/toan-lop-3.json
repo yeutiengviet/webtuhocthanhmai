@@ -1,0 +1,293 @@
+{
+ "lop": 3,
+ "tuan": [
+  {
+   "tuan": 1,
+   "baiHoc": [
+    "Ôn tập các số đến 1000",
+    "Ôn tập phép cộng, phép trừ trong phạm vi 1000"
+   ]
+  },
+  {
+   "tuan": 2,
+   "baiHoc": [
+    "Tìm thành phần trong phép cộng, phép trừ",
+    "Ôn tập bảng nhân 2; 5, bảng chia 2; 5"
+   ]
+  },
+  {
+   "tuan": 3,
+   "baiHoc": [
+    "Bảng nhân 3, bảng chia 3",
+    "Bảng nhân 4, bảng chia 4"
+   ]
+  },
+  {
+   "tuan": 4,
+   "baiHoc": [
+    "Ôn tập hình học và đo lường",
+    "Bảng nhân 6, bảng chia 6"
+   ],
+   "tongHop": "Bài luyện tập tổng hợp – Tuần 1, 2, 3, 4"
+  },
+  {
+   "tuan": 5,
+   "baiHoc": [
+    "Bảng nhân 7, bảng chia 7",
+    "Bảng nhân 8, bảng chia 8"
+   ]
+  },
+  {
+   "tuan": 6,
+   "baiHoc": [
+    "Bảng nhân 9, bảng chia 9",
+    "Tìm thành phần trong phép nhân, phép chia"
+   ],
+   "thuVi": [
+    "Phương pháp nhớ nhanh bảng nhân 9",
+    "Phương pháp dùng tay tính bảng nhân 9",
+    "Tính nhanh phép trừ số có hai chữ số viết ngược nhau"
+   ]
+  },
+  {
+   "tuan": 7,
+   "baiHoc": [
+    "Một phần mấy",
+    "Điểm ở giữa. Trung điểm của đoạn thẳng"
+   ]
+  },
+  {
+   "tuan": 8,
+   "baiHoc": [
+    "Hình tròn. Tâm, bán kính, đường kính của hình tròn",
+    "Góc, góc vuông, góc không vuông"
+   ],
+   "tongHop": "Bài luyện tập tổng hợp – Tuần 5, 6, 7, 8"
+  },
+  {
+   "tuan": 9,
+   "baiHoc": [
+    "Hình tam giác, hình tứ giác. Hình chữ nhật, hình vuông",
+    "Khối lập phương, khối hộp chữ nhật"
+   ]
+  },
+  {
+   "onTap": "Ôn tập kiểm tra giữa kì I",
+   "kind": "giua-ky",
+   "muc": [
+    "Đề kiểm tra giữa kì I",
+    "Đề cương ôn tập giữa kì I",
+    "Đề ôn tập kiểm tra giữa kì 1"
+   ]
+  },
+  {
+   "tuan": 10,
+   "baiHoc": [
+    "Nhân số có hai chữ số với số có một chữ số",
+    "Gấp một số lên một số lần"
+   ]
+  },
+  {
+   "tuan": 11,
+   "baiHoc": [
+    "Phép chia hết, phép chia có dư",
+    "Chia số có hai chữ số cho số có một chữ số"
+   ]
+  },
+  {
+   "tuan": 12,
+   "baiHoc": [
+    "Giảm một số đi một số lần",
+    "Bài toán giải bằng hai bước tính"
+   ],
+   "tongHop": "Bài luyện tập tổng hợp – Tuần 9, 10, 11, 12"
+  },
+  {
+   "tuan": 13,
+   "baiHoc": [
+    "Mi-li-mét",
+    "Gam"
+   ]
+  },
+  {
+   "tuan": 14,
+   "baiHoc": [
+    "Mi-li-lít",
+    "Nhiệt độ. Đơn vị đo nhiệt độ"
+   ]
+  },
+  {
+   "tuan": 15,
+   "baiHoc": [
+    "Nhân số có ba chữ số với số có một chữ số",
+    "Chia số có ba chữ số cho số có một chữ số"
+   ]
+  },
+  {
+   "tuan": 16,
+   "baiHoc": [
+    "Biểu thức số. Tính giá trị của biểu thức số",
+    "So sánh số lớn gấp mấy lần số bé"
+   ],
+   "tongHop": "Bài luyện tập tổng hợp – Tuần 13, 14, 15, 16"
+  },
+  {
+   "tuan": 17,
+   "baiHoc": [
+    "Ôn tập phép nhân, phép chia trong phạm vi 100, 1000",
+    "Ôn tập biểu thức số"
+   ]
+  },
+  {
+   "tuan": 18,
+   "baiHoc": [
+    "Ôn tập hình học và đo lường"
+   ],
+   "tongHop": "Bài luyện tập tổng hợp – Tuần 17, 18"
+  },
+  {
+   "onTap": "Ôn tập kiểm tra học kì I",
+   "kind": "cuoi-ky",
+   "muc": [
+    "Đề cương ôn thi cuối học kì I",
+    "Đề kiểm tra học kì I"
+   ]
+  },
+  {
+   "tuan": 19,
+   "baiHoc": [
+    "Các số có năm chữ số. Số 10 000",
+    "So sánh các số trong phạm vi 10 000"
+   ]
+  },
+  {
+   "tuan": 20,
+   "baiHoc": [
+    "Làm quen với chữ số La Mã",
+    "Làm tròn số đến hàng chục, hàng trăm"
+   ]
+  },
+  {
+   "tuan": 21,
+   "baiHoc": [
+    "Chu vi tam giác, hình tứ giác, hình chữ nhật, hình vuông",
+    "Diện tích của một hình. Xăng-ti-mét vuông"
+   ]
+  },
+  {
+   "tuan": 22,
+   "baiHoc": [
+    "Diện tích hình chữ nhật, diện tích hình vuông"
+   ],
+   "tongHop": "Bài luyện tập tổng hợp – Tuần 19, 20, 21, 22"
+  },
+  {
+   "tuan": 23,
+   "baiHoc": [
+    "Phép cộng trong phạm vi 10 000",
+    "Phép trừ trong phạm vi 10 000"
+   ]
+  },
+  {
+   "tuan": 24,
+   "baiHoc": [
+    "Nhân số có bốn chữ số với số có một chữ số"
+   ]
+  },
+  {
+   "tuan": 25,
+   "baiHoc": [
+    "Chia số có bốn chữ số cho số có một chữ số"
+   ]
+  },
+  {
+   "tuan": 26,
+   "baiHoc": [
+    "Các số có sáu chữ số. Số 100 000"
+   ],
+   "tongHop": "Bài luyện tập tổng hợp – Tuần 23, 24, 25, 26"
+  },
+  {
+   "tuan": 27,
+   "baiHoc": [
+    "So sánh các số trong phạm vi 100 000",
+    "Làm tròn số đến hàng nghìn, hàng chục nghìn"
+   ]
+  },
+  {
+   "onTap": "Ôn tập kiểm tra giữa kì II",
+   "kind": "giua-ky",
+   "muc": [
+    "Đề kiểm tra giữa kì II",
+    "Đề kiểm tra giữa học kì II"
+   ]
+  },
+  {
+   "tuan": 28,
+   "baiHoc": [
+    "Phép cộng trong phạm vi 100 000",
+    "Phép trừ trong phạm vi 100 000"
+   ]
+  },
+  {
+   "tuan": 29,
+   "baiHoc": [
+    "Xem đồng hồ. Tháng – năm"
+   ]
+  },
+  {
+   "tuan": 30,
+   "baiHoc": [
+    "Tiền Việt Nam"
+   ],
+   "tongHop": "Bài luyện tập tổng hợp – Tuần 27, 28, 29, 30"
+  },
+  {
+   "tuan": 31,
+   "baiHoc": [
+    "Nhân số có năm chữ số với số có một chữ số"
+   ],
+   "thuVi": [
+    "Một số phép tính có kết quả đẹp",
+    "Sự kỳ diệu của chữ số 1"
+   ]
+  },
+  {
+   "tuan": 32,
+   "baiHoc": [
+    "Chia số có năm chữ số cho số có một chữ số"
+   ]
+  },
+  {
+   "tuan": 33,
+   "baiHoc": [
+    "Thu thập, phân loại, ghi chép số liệu. Bảng số liệu",
+    "Khả năng xảy ra của một sự kiện",
+    "Ôn tập các số trong phạm vi 10 000, 100 000"
+   ],
+   "tongHop": "Bài luyện tập tổng hợp – Tuần 31, 32, 33"
+  },
+  {
+   "tuan": 34,
+   "baiHoc": [
+    "Ôn tập phép cộng, phép trừ trong phạm vi 100 000",
+    "Ôn tập phép nhân, phép chia trong phạm vi 100 000"
+   ]
+  },
+  {
+   "tuan": 35,
+   "baiHoc": [
+    "Ôn tập hình học và đo lường",
+    "Ôn tập bảng số liệu, khả năng xảy ra của một sự kiện"
+   ]
+  },
+  {
+   "onTap": "Ôn tập kiểm tra học kì II",
+   "kind": "cuoi-ky",
+   "muc": [
+    "Đề cương ôn thi cuối kì II",
+    "Đề kiểm tra học kì II"
+   ]
+  }
+ ]
+}

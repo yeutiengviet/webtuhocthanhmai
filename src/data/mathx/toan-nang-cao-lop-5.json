@@ -1,0 +1,297 @@
+{
+ "lop": 5,
+ "chuyenDe": [
+  {
+   "ten": "Bài giảng học thử",
+   "bai": [
+    "Bài toán chuyển động ngược chiều"
+   ],
+   "hocThu": true
+  },
+  {
+   "ten": "Dãy số – quy luật",
+   "bai": [
+    "Tìm qui luật dãy số (phần 1)",
+    "Tìm qui luật dãy số (phần 2)",
+    "Tìm qui luật dãy số (phần 3)",
+    "Dãy hình có quy luật",
+    "Xác định số có thuộc dãy hay không",
+    "Tìm số số hạng của dãy số",
+    "Tìm số hạng thứ n của dãy số (phần 1)",
+    "Tìm số hạng thứ n của dãy số (phần 2)",
+    "Tìm số chữ số của dãy số",
+    "Bài toán trang sách",
+    "Dãy chữ – Dãy số lặp lại (phần 1)",
+    "Dãy chữ – Dãy số lặp lại (phần 2)",
+    "Xét dãy số phụ (phần 1)",
+    "Xét dãy số phụ (phần 2)",
+    "Viết các số tự nhiên theo qui luật",
+    "Phương pháp ghép cặp trong bài toán dãy số",
+    "Phương pháp ghép cặp trong bài toán tính tổng các chữ số"
+   ]
+  },
+  {
+   "ten": "Số và chữ số, hoán vị, sắp xếp chữ số",
+   "bai": [
+    "Viết số tự nhiên từ các chữ số cho trước",
+    "Tính số các số lập được từ các chữ số cho trước (phần 1)",
+    "Tính số các số lập được từ các chữ số cho trước (phần 2)",
+    "Tính số các số lập được từ các chữ số cho trước (phần 3)",
+    "Tính tổng các số lập được (phần 1)",
+    "Tính tổng các số lập được (phần 2)",
+    "Một số bài toán đếm số cách (phần 1)",
+    "Một số bài toán đếm số cách (phần 2)",
+    "Tìm số lần xuất hiện của chữ số trong dãy số (phần 1)",
+    "Tìm số lần xuất hiện của chữ số trong dãy số (phần 2)",
+    "Tính tổng các chữ số của dãy số"
+   ]
+  },
+  {
+   "ten": "Chuyên đề cấu tạo số",
+   "bai": [
+    "Thay đổi chữ số của một số",
+    "Thêm, bớt, xóa chữ số của một số",
+    "Thêm, xóa chữ số của một số (tiếp) (phần 1)",
+    "Thêm, xóa chữ số của một số (tiếp) (phần 2)"
+   ]
+  },
+  {
+   "ten": "Chữ số tận cùng",
+   "bai": [
+    "Tìm chữ số tận cùng của một tổng",
+    "Tìm chữ số tận cùng của một tích (phần 1)",
+    "Tìm chữ số tận cùng của một tích (phần 2)",
+    "Tìm chữ số tận cùng của một biểu thức kết hợp (phần 1)",
+    "Tìm chữ số tận cùng của một biểu thức kết hợp (phần 2)",
+    "Tìm số chữ số 0 liền nhau tận cùng (phần 1)",
+    "Tìm số chữ số 0 liền nhau tận cùng (phần 2)",
+    "Tìm số chữ số 0 liền nhau tận cùng (phần 3)",
+    "Áp dụng tính chẵn lẻ vào giải toán"
+   ]
+  },
+  {
+   "ten": "Chia hết – chia có dư",
+   "bai": [
+    "Ôn tập dấu hiệu chia hết cho 2, 3, 5, 9 (phần 1)",
+    "Ôn tập dấu hiệu chia hết cho 2, 3, 5, 9 (phần 2)",
+    "Các bài toán về vận dụng dấu hiệu chia hết (phần 1)",
+    "Các bài toán về vận dụng dấu hiệu chia hết (phần 2)"
+   ]
+  },
+  {
+   "ten": "Phân số",
+   "bai": [
+    "So sánh phân số bằng phân số trung gian",
+    "So sánh phân số bằng phần bù",
+    "So sánh phân số bằng phần hơn",
+    "So sánh phân số bằng phần bù, phần hơn mở rộng",
+    "Tính nhanh dãy tổng các phân số có qui luật",
+    "Tính nhanh dãy tích các phân số có qui luật",
+    "Tính nhanh dãy phân số có quy luật (phần 1)",
+    "Tính nhanh dãy phân số có quy luật (phần 2)",
+    "Tính nhanh dãy phân số có quy luật (phần 3)",
+    "Tính nhanh dãy phân số có quy luật (phần 4)",
+    "Tính nhanh dãy phân số có quy luật (phần 5)",
+    "Tính nhanh dãy phân số có quy luật (phần 6)",
+    "Tính nhanh dãy phân số có quy luật (phần 7)"
+   ]
+  },
+  {
+   "ten": "Số thập phân",
+   "bai": [
+    "Viết số thập phân – so sánh số thập phân",
+    "Lập số thập phân",
+    "Các phép tính số thập phân",
+    "Bài toán thay đổi dấu phẩy của số thập phân (phần 1)",
+    "Bài toán thay đổi dấu phẩy của số thập phân (phần 2)",
+    "Tìm số thập phân theo điều kiện về chữ số"
+   ]
+  },
+  {
+   "ten": "Bài toán công việc chung",
+   "bai": [
+    "Bài toán công việc chung (phần 1)",
+    "Bài toán công việc chung (phần 2)",
+    "Bài toán công việc chung (phần 3)",
+    "Bài toán công việc chung (phần 4)",
+    "Bài toán công việc chung (phần 5)",
+    "Bài toán công việc chung (phần 6)",
+    "Bài toán vòi nước chảy vào, chảy ra",
+    "Bài toán vòi nước chảy vào tháo ra"
+   ]
+  },
+  {
+   "ten": "Tỉ số phần trăm",
+   "bai": [
+    "Tính tỉ số phần trăm, tìm số khi biết tỉ số phần trăm (phần 1)",
+    "Tính tỉ số phần trăm, tìm số khi biết tỉ số phần trăm (phần 2)",
+    "Bài toán tăng, giảm tỉ số phần trăm (phần 1)",
+    "Bài toán tăng, giảm tỉ số phần trăm (phần 2)",
+    "Bài toán tăng, giảm tỉ số phần trăm (phần 3)",
+    "Bài toán lãi lỗ (phần 1)",
+    "Bài toán lãi lỗ (phần 2)",
+    "Bài toán lãi lỗ (phần 3)",
+    "Dạng toán dung dịch, hạt tươi, hạt khô với các trạng thái khác nhau",
+    "Dạng toán hạt tươi, hạt khô",
+    "Ôn tập tổng hợp"
+   ]
+  },
+  {
+   "ten": "Giả thiết tạm",
+   "bai": [
+    "Phương pháp giả thiết tạm đơn (phần 1)",
+    "Phương pháp giả thiết tạm đơn (phần 2)",
+    "Phương pháp giả thiết tạm đơn (phần 3)",
+    "Phương pháp giả thiết tạm đơn (phần 4)",
+    "Phương pháp giả thiết tạm đơn (phần 5)",
+    "Bài toán giả thiết tạm kép (phần 1)",
+    "Bài toán giả thiết tạm kép (phần 2)"
+   ]
+  },
+  {
+   "ten": "Tính ngược",
+   "bai": [
+    "Ôn tập tổng hợp các bài toán tính ngược",
+    "Hướng dẫn giải ôn tập tổng hợp – Chuyên đề tính ngược (phần 1)",
+    "Hướng dẫn giải ôn tập tổng hợp – Chuyên đề tính ngược (phần 2)"
+   ]
+  },
+  {
+   "ten": "Hình học (tam giác, hình thang, hình chữ nhật)",
+   "bai": [
+    "Tính diện tích tam giác",
+    "Tỉ số diện tích tam giác (phần 1)",
+    "Tỉ số diện tích tam giác (phần 2)",
+    "Tỉ số diện tích tam giác (phần 3)",
+    "Tỉ số diện tích tam giác (phần 4)",
+    "Tỉ số diện tích tam giác (phần 5)",
+    "Tỉ số diện tích tam giác (phần 6)",
+    "Tỉ số diện tích tam giác (phần 7)",
+    "Tính diện tích bằng phương pháp gián tiếp (phần 1)",
+    "Tính diện tích bằng phương pháp gián tiếp (phần 2)",
+    "Tính chất diện tích hình thang",
+    "Tính chất tỉ số diện tích trong hình tứ giác"
+   ]
+  },
+  {
+   "ten": "Hình lập phương, hình hộp chữ nhật",
+   "bai": [
+    "Sơn màu hình lập phương",
+    "Sơn màu hình hộp chữ nhật",
+    "Sơn màu hình lập phương (tiếp theo)",
+    "Xếp các khối lập phương thành hình khối"
+   ]
+  },
+  {
+   "ten": "Các bài toán chuyển động",
+   "bai": [
+    "Bài toán chuyển động đều cơ bản (phần 1)",
+    "Bài toán chuyển động đều cơ bản (phần 2)",
+    "Mối liên hệ giữa quãng đường và vận tốc",
+    "Chuyển động ngược chiều (phần 1)",
+    "Chuyển động ngược chiều (phần 2)",
+    "Chuyển động ngược chiều (phần 3)",
+    "Chuyển động cùng chiều (phần 1)",
+    "Chuyển động cùng chiều (phần 2)",
+    "Bài toán chuyển động đồng hồ (phần 1)",
+    "Bài toán chuyển động đồng hồ (phần 2)",
+    "Bài toán chuyển động đồng hồ (phần 3)",
+    "Vận tốc trung bình (phần 1)",
+    "Vận tốc trung bình (phần 2)",
+    "Vận tốc trung bình (phần 3)",
+    "Chuyển động dòng nước (phần 1)",
+    "Chuyển động dòng nước (phần 2)",
+    "Chuyển động của vật có chiều dài đáng kể (phần 1)",
+    "Chuyển động của vật có chiều dài đáng kể (phần 2)",
+    "Chuyển động vòng tròn"
+   ]
+  },
+  {
+   "ten": "Suy luận logic",
+   "bai": [
+    "Suy luận logic – Phần 1",
+    "Suy luận logic – Phần 2",
+    "Suy luận logic – Phần 3",
+    "Suy luận logic – Phần 4",
+    "Suy luận logic – Phần 5",
+    "Suy luận logic – Phần 6"
+   ]
+  },
+  {
+   "ten": "Nguyên lý chuồng bồ câu",
+   "bai": [
+    "Nguyên lý Dirichlet (phần 1)",
+    "Nguyên lý Dirichlet (phần 2)"
+   ]
+  },
+  {
+   "ten": "Biểu đồ Ven",
+   "bai": [
+    "Mở đầu dạng toán biểu đồ Ven",
+    "Bài toán biểu đồ Ven (phần 1)",
+    "Bài toán biểu đồ Ven (phần 2)",
+    "Bài toán biểu đồ Ven (nâng cao – khó)"
+   ]
+  },
+  {
+   "ten": "Học toán tư duy (livestream)",
+   "bai": [
+    "Giải đề số 01",
+    "Giải đề số 02",
+    "Bài toán dãy số",
+    "Cấu tạo số",
+    "Tỉ lệ diện tích tam giác",
+    "Tính nhanh phân số (phần 1)",
+    "Tính nhanh phân số (phần 2)",
+    "Tính nhanh phân số (phần 3)",
+    "Bài toán tư duy hack não",
+    "Bài toán tính ngược",
+    "Bài toán tính tuổi",
+    "Giải đề số 03",
+    "Giải đề số 04",
+    "Tỉ số phần trăm (phần 1)",
+    "Tỉ số phần trăm (phần 2)",
+    "Bài toán chuyển động (phần 1)",
+    "Bài toán chuyển động (phần 2)",
+    "Bài toán chuyển động ngược chiều",
+    "Bài toán chuyển động cùng chiều"
+   ]
+  },
+  {
+   "ten": "Bài toán hai tỉ số",
+   "bai": [
+    "Dạng 1: Tổng hai số không thay đổi",
+    "Dạng 2: Hiệu hai số không thay đổi",
+    "Dạng 3: Một trong hai số không đổi"
+   ]
+  },
+  {
+   "ten": "Bài toán thừa thiếu",
+   "bai": [
+    "Bài toán thừa thiếu (phần 1)",
+    "Bài toán thừa thiếu (phần 2)",
+    "Bài toán thừa thiếu (phần 3)"
+   ]
+  },
+  {
+   "ten": "Chuyên đề giải toán về phân số",
+   "bai": [
+    "Giải toán về phân số – Phần 1",
+    "Giải toán về phân số – Phần 2",
+    "Giải toán về phân số – Phần 3",
+    "Ôn tập các bài toán có lời văn"
+   ]
+  },
+  {
+   "ten": "Chuyên đề tỉ lệ thuận – tỉ lệ nghịch",
+   "bai": [
+    "Bài toán tỉ lệ thuận (phần 1)",
+    "Bài toán tỉ lệ thuận (phần 2)",
+    "Bài toán tỉ lệ thuận (phần 3)",
+    "Bài toán tỉ lệ nghịch (phần 1)",
+    "Bài toán tỉ lệ nghịch (phần 2)",
+    "Bài toán tỉ lệ nghịch (phần 3)"
+   ]
+  }
+ ]
+}

@@ -28,7 +28,7 @@ export function OpenWeekFromHash() {
   useEffect(() => {
     const apply = () => {
       const id = decodeURIComponent(window.location.hash.slice(1));
-      if (/^tuan-\d+$/.test(id)) openAndScroll(id, false);
+      if (/^(tuan|on-tap)-\d+$/.test(id)) openAndScroll(id, false);
     };
     apply();
     window.addEventListener("hashchange", apply);

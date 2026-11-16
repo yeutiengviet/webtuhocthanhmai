@@ -1,0 +1,261 @@
+{
+ "lop": 2,
+ "tuan": [
+  {
+   "tuan": 1,
+   "baiHoc": [
+    "Ôn tập các số đến 100",
+    "Tia số. Số liền trước, số liền sau"
+   ]
+  },
+  {
+   "tuan": 2,
+   "baiHoc": [
+    "Các thành phần của phép cộng, phép trừ",
+    "Hơn kém nhau bao nhiêu"
+   ]
+  },
+  {
+   "tuan": 3,
+   "baiHoc": [
+    "Ôn tập phép cộng, phép trừ (không nhớ) trong phạm vi 100"
+   ]
+  },
+  {
+   "tuan": 4,
+   "baiHoc": [
+    "Phép cộng (qua 10) trong phạm vi 20"
+   ]
+  },
+  {
+   "tuan": 5,
+   "baiHoc": [
+    "Bảng cộng (qua 10)",
+    "Bài toán về thêm, bớt một số đơn vị"
+   ]
+  },
+  {
+   "tuan": 6,
+   "baiHoc": [
+    "Phép trừ (qua 10) trong phạm vi 20"
+   ]
+  },
+  {
+   "tuan": 7,
+   "baiHoc": [
+    "Bảng trừ (qua 10)",
+    "Bài toán về nhiều hơn, ít hơn một số đơn vị"
+   ]
+  },
+  {
+   "tuan": 8,
+   "baiHoc": [
+    "Ki-lô-gam"
+   ]
+  },
+  {
+   "tuan": 9,
+   "baiHoc": [
+    "Lít"
+   ]
+  },
+  {
+   "onTap": "Ôn tập kiểm tra giữa kì I",
+   "kind": "giua-ky",
+   "muc": [
+    "Bộ 5 đề kiểm tra giữa học kì 1",
+    "Đề cương ôn tập giữa kì I"
+   ]
+  },
+  {
+   "tuan": 10,
+   "baiHoc": [
+    "Phép cộng (có nhớ) số có hai chữ số với số có một chữ số"
+   ]
+  },
+  {
+   "tuan": 11,
+   "baiHoc": [
+    "Phép cộng (có nhớ) số có hai chữ số với số có hai chữ số"
+   ]
+  },
+  {
+   "tuan": 12,
+   "baiHoc": [
+    "Phép trừ (có nhớ) số có hai chữ số với số có một chữ số"
+   ]
+  },
+  {
+   "tuan": 13,
+   "baiHoc": [
+    "Phép trừ (có nhớ) số có hai chữ số với số có hai chữ số"
+   ]
+  },
+  {
+   "tuan": 14,
+   "baiHoc": [
+    "Điểm, đoạn thẳng, đường thẳng, đường cong, ba điểm thẳng hàng",
+    "Đường gấp khúc. Hình tứ giác"
+   ]
+  },
+  {
+   "tuan": 15,
+   "baiHoc": [
+    "Ngày – giờ, giờ – phút"
+   ]
+  },
+  {
+   "tuan": 16,
+   "baiHoc": [
+    "Ngày – tháng"
+   ]
+  },
+  {
+   "onTap": "Ôn tập kiểm tra học kì I",
+   "kind": "cuoi-ky",
+   "muc": [
+    "Đề cương ôn tập cuối học kì 1",
+    "Bộ 5 đề kiểm tra cuối học kì 1"
+   ]
+  },
+  {
+   "tuan": 17,
+   "baiHoc": [
+    "Luyện tập"
+   ]
+  },
+  {
+   "tuan": 18,
+   "baiHoc": [
+    "Luyện tập"
+   ]
+  },
+  {
+   "tuan": 19,
+   "baiHoc": [
+    "Phép nhân",
+    "Thừa số, tích"
+   ]
+  },
+  {
+   "tuan": 20,
+   "baiHoc": [
+    "Bảng nhân 2",
+    "Bảng nhân 5",
+    "Phép chia"
+   ]
+  },
+  {
+   "tuan": 21,
+   "baiHoc": [
+    "Số bị chia, số chia, thương",
+    "Bảng chia 2"
+   ]
+  },
+  {
+   "tuan": 22,
+   "baiHoc": [
+    "Bảng chia 5"
+   ]
+  },
+  {
+   "tuan": 23,
+   "baiHoc": [
+    "Khối trụ, khối cầu"
+   ]
+  },
+  {
+   "tuan": 24,
+   "baiHoc": [
+    "Đơn vị, chục, trăm, nghìn",
+    "Các số tròn trăm, tròn chục"
+   ]
+  },
+  {
+   "tuan": 25,
+   "baiHoc": [
+    "So sánh các số tròn trăm, tròn chục",
+    "Số có ba chữ số"
+   ]
+  },
+  {
+   "tuan": 26,
+   "baiHoc": [
+    "Viết số thành tổng các trăm, chục, đơn vị",
+    "So sánh các số có ba chữ số"
+   ]
+  },
+  {
+   "tuan": 27,
+   "baiHoc": [
+    "Đề-xi-mét. Mét. Ki-lô-mét",
+    "Giới thiệu tiền Việt Nam"
+   ]
+  },
+  {
+   "onTap": "Ôn tập kiểm tra giữa kì II",
+   "kind": "giua-ky",
+   "muc": [
+    "Bộ 5 đề kiểm tra giữa học kì II"
+   ]
+  },
+  {
+   "tuan": 28,
+   "baiHoc": [
+    "Phép cộng (không nhớ) trong phạm vi 1000"
+   ]
+  },
+  {
+   "tuan": 29,
+   "baiHoc": [
+    "Phép cộng (có nhớ) trong phạm vi 1000",
+    "Phép trừ (không nhớ) trong phạm vi 1000"
+   ]
+  },
+  {
+   "tuan": 30,
+   "baiHoc": [
+    "Phép trừ (có nhớ) trong phạm vi 1000"
+   ]
+  },
+  {
+   "tuan": 31,
+   "baiHoc": [
+    "Thu thập, phân loại, kiểm đếm số liệu",
+    "Biểu đồ tranh"
+   ]
+  },
+  {
+   "tuan": 32,
+   "baiHoc": [
+    "Chắc chắn, có thể, không thể"
+   ]
+  },
+  {
+   "tuan": 33,
+   "baiHoc": [
+    "Luyện tập"
+   ]
+  },
+  {
+   "tuan": 34,
+   "baiHoc": [
+    "Luyện tập"
+   ]
+  },
+  {
+   "tuan": 35,
+   "baiHoc": [
+    "Luyện tập"
+   ]
+  },
+  {
+   "onTap": "Ôn tập kiểm tra học kì II",
+   "kind": "cuoi-ky",
+   "muc": [
+    "Đề cương ôn tập cuối học kì II",
+    "Bộ 5 đề kiểm tra cuối học kì II"
+   ]
+  }
+ ]
+}

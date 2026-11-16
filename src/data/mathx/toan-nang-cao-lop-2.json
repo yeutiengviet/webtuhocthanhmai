@@ -1,0 +1,124 @@
+{
+ "lop": 2,
+ "chuyenDe": [
+  {
+   "ten": "Bài giảng học thử",
+   "bai": [
+    "Dãy số và quy luật dãy số",
+    "Phép cộng, trừ trong phạm vi 100"
+   ],
+   "hocThu": true
+  },
+  {
+   "ten": "Số và chữ số",
+   "bai": [
+    "Bài toán số và chữ số (phần 1)",
+    "Bài toán số và chữ số (phần 2)",
+    "Bài toán số và chữ số (phần 3)",
+    "Bài toán số và chữ số (phần 4)",
+    "Bài toán số và chữ số (phần 5)",
+    "Bài toán số và chữ số (phần 6)",
+    "Bài toán số và chữ số (phần 7)",
+    "Bài toán số và chữ số (phần 8)",
+    "Bài toán số và chữ số (phần 9)",
+    "Bài toán số và chữ số (phần 10)"
+   ]
+  },
+  {
+   "ten": "Phép cộng, trừ, nhân, chia",
+   "bai": [
+    "Bài 1: Phép cộng, trừ trong phạm vi 20",
+    "Bài 2: Phép cộng, trừ trong phạm vi 20 (tiếp theo)",
+    "Bài 3: Phép cộng, trừ trong phạm vi 100",
+    "Bài 4: Phép cộng, trừ trong phạm vi 100",
+    "Bài 5: Phép cộng, trừ trong phạm vi 100"
+   ]
+  },
+  {
+   "ten": "Giải toán có lời văn",
+   "bai": [
+    "Bốn phép tính với bài toán có lời văn (phần 1)",
+    "Bốn phép tính với bài toán có lời văn (phần 2)",
+    "Bốn phép tính với bài toán có lời văn (phần 3)",
+    "Bốn phép tính với bài toán có lời văn (phần 4)",
+    "Bài toán về nhiều hơn, ít hơn (phần 1)",
+    "Bài toán về nhiều hơn, ít hơn (phần 2)",
+    "Bài toán về nhiều hơn, ít hơn (phần 3)"
+   ]
+  },
+  {
+   "ten": "Bài toán trồng cây – khoảng cách",
+   "bai": [
+    "Bài 1: Tìm số khoảng cách giữa các cây",
+    "Bài 2: Tính khoảng cách, tìm số cây"
+   ]
+  },
+  {
+   "ten": "Dãy số – quy luật",
+   "bai": [
+    "Các bài toán dãy số và quy luật (phần 1)",
+    "Các bài toán dãy số và quy luật (phần 2)",
+    "Các bài toán dãy số và quy luật (phần 3)",
+    "Các bài toán dãy số và quy luật (phần 4)",
+    "Các bài toán dãy số và quy luật (phần 5)",
+    "Các bài toán dãy số và quy luật (phần 6)"
+   ]
+  },
+  {
+   "ten": "Các bài toán tính tuổi",
+   "bai": [
+    "Bài 1: Bài toán tính tuổi",
+    "Bài 2: Bài toán tính tuổi (tiếp)",
+    "Bài 3: Các bài toán tính tuổi (tiếp theo)"
+   ]
+  },
+  {
+   "ten": "Các bài toán hình học",
+   "bai": [
+    "Đếm số đoạn thẳng (phần 1)",
+    "Đếm số đoạn thẳng (phần 2)",
+    "Đếm số hình tam giác (phần 1)",
+    "Đếm số hình tam giác (phần 2)",
+    "Đếm số hình vuông (phần 1)",
+    "Đếm số hình vuông (phần 2)",
+    "Đếm số hình chữ nhật"
+   ]
+  },
+  {
+   "ten": "Giải toán bằng phương pháp so sánh và phương pháp thế",
+   "bai": [
+    "Phương pháp so sánh (phần 1)",
+    "Phương pháp so sánh (phần 2)",
+    "Phương pháp thay thế (phần 1)",
+    "Phương pháp thay thế (phần 2)"
+   ]
+  },
+  {
+   "ten": "Phương pháp liệt kê – lập bảng",
+   "bai": [
+    "Phương pháp liệt kê – Lập bảng – Bài 1",
+    "Phương pháp liệt kê – Lập bảng – Bài 2",
+    "Phương pháp liệt kê – Lập bảng – Bài 3",
+    "Phương pháp liệt kê – Lập bảng – Bài 4"
+   ]
+  },
+  {
+   "ten": "Phương pháp vẽ sơ đồ",
+   "bai": [
+    "Phương pháp vẽ sơ đồ – Bài 1",
+    "Phương pháp vẽ sơ đồ – Bài 2",
+    "Phương pháp vẽ sơ đồ – Bài 3"
+   ]
+  },
+  {
+   "ten": "Học toán tư duy (livestream)",
+   "bai": [
+    "Bài 1: Phương pháp vẽ sơ đồ",
+    "Bài 2: Phương pháp thế",
+    "Bài 3: Bài toán bốc bi",
+    "Bài 4: Bài toán xác định vị trí",
+    "Bài 5: Các bài toán suy luận logic"
+   ]
+  }
+ ]
+}

@@ -19,6 +19,8 @@ import {
   lessonMedia,
   publishedWeeks,
   unitName,
+  weekLabel,
+  weekSlug,
 } from "@/lib/content";
 import { formatRange } from "@/lib/dates";
 import { getPublishedLessonFiles } from "@/lib/lesson-files";
@@ -49,7 +51,7 @@ function load(p: Awaited<Params>) {
 
 export async function generateMetadata({ params }: { params: Params }): Promise<Metadata> {
   const d = load(await params);
-  return d ? { title: `${d.item.title} – ${unitName(d.course)} ${d.week.number}` } : { title: "Không tìm thấy trang" };
+  return d ? { title: `${d.item.title} – ${weekLabel(d.course, d.week)}` } : { title: "Không tìm thấy trang" };
 }
 
 export default async function LessonPage({ params }: { params: Params }) {
@@ -74,7 +76,7 @@ export default async function LessonPage({ params }: { params: Params }) {
         items={[
           { href: `/${subject.slug}`, label: subject.name },
           { href: `/${subject.slug}/${gradeSlug(grade)}`, label: `Lớp ${grade}` },
-          { href: `${courseHref(course)}#tuan-${week.number}`, label: `${unitName(course)} ${week.number}` },
+          { href: `${courseHref(course)}#${weekSlug(week)}`, label: weekLabel(course, week) },
         ]}
       />
 
@@ -83,7 +85,7 @@ export default async function LessonPage({ params }: { params: Params }) {
           <header className="relative overflow-hidden rounded-[2rem] bg-gradient-to-br from-brand-100 via-brand-50 to-accent-50 p-5 ring-1 ring-brand-200 sm:p-7">
             <span aria-hidden className="absolute -right-8 -top-8 h-32 w-32 rounded-full bg-brand-200/60" />
             <p className="relative text-sm font-bold text-brand-700">
-              {unitName(course)} {week.number}{course.track === "nang-cao" ? "" : ` (${formatRange(week.startDate, week.endDate)})`} · {ITEM_TYPE_LABELS[item.type]}
+              {weekLabel(course, week)}{course.track === "nang-cao" || week.kind !== "hoc" ? "" : ` (${formatRange(week.startDate, week.endDate)})`} · {ITEM_TYPE_LABELS[item.type]}
             </p>
             <h1 className="relative mt-1 text-3xl text-gray-900 sm:text-4xl">{item.title}</h1>
             <div className="relative mt-3 flex flex-wrap items-center gap-2 text-sm font-semibold">
@@ -163,7 +165,7 @@ export default async function LessonPage({ params }: { params: Params }) {
               {nearby.filter((w) => w.items.length > 0).map((w) => (
                 <li key={w.id}>
                   <Link href={itemHref(course, w, w.items[0])} className="block rounded-2xl p-2 text-sm hover:bg-accent-50">
-                    <span className="font-extrabold text-accent-700">{unitName(course)} {w.number}:</span> {w.title}
+                    <span className="font-extrabold text-accent-700">{weekLabel(course, w)}:</span> {w.title}
                   </Link>
                 </li>
               ))}
