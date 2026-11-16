@@ -52,12 +52,12 @@ export default function HomePage() {
               Video bài giảng và phiếu luyện tập tương tác, bám sát sách <strong>Kết nối tri thức</strong> từng tuần — con học vui, phụ huynh yên tâm.
             </p>
             <div className="mt-5 flex flex-wrap gap-3">
-              <Link href="/hoc-thu" className="btn-toy inline-flex items-center gap-2 rounded-full bg-brand-600 px-6 py-3 text-lg font-extrabold text-white">
-                Học thử miễn phí <Icon name="arrow" className="h-5 w-5" />
+              <Link href="/toan" className="btn-toy inline-flex items-center gap-2 rounded-full bg-brand-600 px-6 py-3 text-lg font-extrabold text-white">
+                Vào học Toán <Icon name="arrow" className="h-5 w-5" />
               </Link>
-              <Link href="/gioi-thieu#video" className="inline-flex items-center gap-2 rounded-full bg-white px-5 py-3 font-extrabold text-accent-700 shadow ring-2 ring-accent-200">
+              <Link href="/gioi-thieu" className="inline-flex items-center gap-2 rounded-full bg-white px-5 py-3 font-extrabold text-accent-700 shadow ring-2 ring-accent-200">
                 <span className="grid h-8 w-8 place-items-center rounded-full bg-accent-600 text-white"><Icon name="play" className="h-4 w-4" /></span>
-                Xem video giới thiệu
+                Về cô Thanh Mai
               </Link>
             </div>
           </div>
@@ -136,9 +136,9 @@ export default function HomePage() {
         </div>
       </Container>
 
-      {/* 4. Năm cam kết */}
+      {/* 4. Các cam kết */}
       <Container className="pt-12">
-        <SectionTitle kicker="Vì sao chọn cô Thanh Mai" title="5 cam kết với phụ huynh" />
+        <SectionTitle kicker="Vì sao chọn cô Thanh Mai" title={`${site.commitments.length} cam kết với phụ huynh`} />
         <ol className="grid gap-3 sm:grid-cols-2 lg:grid-cols-5">
           {site.commitments.map((c, i) => (
             <li key={c.title} className={`rounded-3xl p-5 ring-2 ${COMMIT_COLORS[i % COMMIT_COLORS.length]}`}>
