@@ -3,6 +3,7 @@ import { redirect } from "next/navigation";
 import { ParentSignOutButton } from "@/components/ParentSignOutButton";
 import { Container, GRADE_THEME, PageHero } from "@/components/ui";
 import { GRADES, gradeSlug } from "@/lib/content";
+import { phoneFromAccountEmail } from "@/lib/account-id";
 import { getAdmin } from "@/lib/supabase/server";
 
 export const metadata = { title: "Tài khoản", robots: { index: false, follow: false } };
@@ -27,7 +28,7 @@ export default async function AccountPage({ searchParams }: { searchParams: Prom
 
   return (
     <>
-      <PageHero badge="Tài khoản phụ huynh · Miễn phí" title={name ? `Chào ${name}!` : "Tài khoản của tôi"} subtitle={user.email ?? undefined} />
+      <PageHero badge="Tài khoản phụ huynh · Miễn phí" title={name ? `Chào ${name}!` : "Tài khoản của tôi"} subtitle={phoneFromAccountEmail(user.email) ? `Số điện thoại: ${phoneFromAccountEmail(user.email)}` : (user.email ?? undefined)} />
       <Container className="max-w-4xl space-y-6 py-8">
         {moi && (
           <p role="status" className="rounded-3xl bg-emerald-50 p-4 font-bold text-emerald-900 ring-1 ring-emerald-200">

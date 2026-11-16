@@ -294,7 +294,7 @@ test("nút Đăng nhập trên menu mở khung đăng nhập có nút Tạo tài
   await page.getByRole("tab", { name: "Tạo tài khoản" }).click();
   await expect(page.getByRole("button", { name: "Tạo tài khoản miễn phí" })).toBeVisible();
   await expect(page.getByLabel("Họ tên phụ huynh")).toBeVisible();
-  await expect(page.getByLabel("Email")).toBeVisible();
+  await expect(page.getByLabel("Số điện thoại hoặc email")).toBeVisible();
 });
 
 test("Đề ôn tập hè: có ở cả Toán và Tiếng Việt mọi lớp, mỗi khóa 20 đề", async ({ page }) => {

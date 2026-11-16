@@ -2,10 +2,13 @@
 
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
+import { site } from "@/data/site";
+import { parseLoginId } from "@/lib/account-id";
 import { createSupabaseBrowser } from "@/lib/supabase/browser";
 
 // Đăng nhập / tạo tài khoản MIỄN PHÍ cho phụ huynh (trang /dang-nhap).
 // Tài khoản mới luôn là "phụ huynh" (bảng profiles, mặc định role = 'parent') — không bao giờ có quyền quản trị.
+// Phụ huynh đăng nhập bằng SỐ ĐIỆN THOẠI hoặc EMAIL (không gửi SMS — xem src/lib/account-id.ts).
 // Họ tên, số điện thoại, lớp của con lưu trong thông tin tài khoản (user_metadata) để cô xem trong Supabase.
 
 const field = "mt-1 block w-full rounded-2xl border-2 border-gray-200 bg-white px-4 py-3 font-semibold text-gray-900 focus:border-brand-500";
@@ -23,7 +26,7 @@ export function ParentAuthForm({ initialMode = "login", next, linkError = false 
   const [fullName, setFullName] = useState("");
   const [phone, setPhone] = useState("");
   const [grade, setGrade] = useState("");
-  const [email, setEmail] = useState("");
+  const [account, setAccount] = useState("");
   const [password, setPassword] = useState("");
   const [showPw, setShowPw] = useState(false);
   const [busy, setBusy] = useState(false);
@@ -57,7 +60,10 @@ export function ParentAuthForm({ initialMode = "login", next, linkError = false 
   async function submit(e: React.FormEvent) {
     e.preventDefault();
     setMsg(null);
-    const mail = email.trim();
+    const id = parseLoginId(account);
+    if (!id) return setMsg({ ok: false, text: "Phụ huynh nhập số điện thoại (vd 0912345678) hoặc email cho đúng nhé." });
+    const mail = id.email;
+    const contact = site.zalo ?? site.hotline;
     if (mode !== "forgot" && password.length < 8) return setMsg({ ok: false, text: "Mật khẩu cần ít nhất 8 ký tự." });
     if (mode === "signup" && fullName.trim().length < 2) return setMsg({ ok: false, text: "Phụ huynh nhập họ tên giúp cô nhé." });
     setBusy(true);
@@ -66,7 +72,7 @@ export function ParentAuthForm({ initialMode = "login", next, linkError = false 
       if (mode === "login") {
         const { data, error } = await supabase.auth.signInWithPassword({ email: mail, password });
         if (error || !data.user) {
-          setMsg({ ok: false, text: error && /confirm/i.test(error.message) ? "Email chưa được xác nhận. Phụ huynh mở hộp thư (cả mục Thư rác/Spam) và bấm link xác nhận trước." : "Sai email hoặc mật khẩu." });
+          setMsg({ ok: false, text: error && /confirm/i.test(error.message) ? "Email chưa được xác nhận. Phụ huynh mở hộp thư (cả mục Thư rác/Spam) và bấm link xác nhận trước." : id.kind === "phone" ? "Sai số điện thoại hoặc mật khẩu." : "Sai email hoặc mật khẩu." });
           return;
         }
         await goAfterLogin(data.user.id);
@@ -76,15 +82,18 @@ export function ParentAuthForm({ initialMode = "login", next, linkError = false 
           password,
           options: {
             emailRedirectTo: `${window.location.origin}/dang-nhap`,
-            data: { full_name: fullName.trim().slice(0, 120), phone: phone.trim().slice(0, 20), grade: grade || null },
+            data: { full_name: fullName.trim().slice(0, 120), phone: id.kind === "phone" ? id.phone : phone.trim().slice(0, 20), grade: grade || null },
           },
         });
+        const who = id.kind === "phone" ? "Số điện thoại" : "Email";
         if (error) {
           const t = /rate|limit/i.test(error.message)
-            ? "Website đang gửi quá nhiều email xác nhận. Phụ huynh đợi ít phút rồi thử lại, hoặc nhắn Zalo cho cô."
+            ? "Website đang bận. Phụ huynh đợi ít phút rồi thử lại, hoặc nhắn Zalo cho cô."
             : /registered|exists/i.test(error.message)
-              ? "Email này đã có tài khoản. Phụ huynh chuyển sang Đăng nhập (hoặc Quên mật khẩu)."
-              : "Chưa tạo được tài khoản: " + error.message;
+              ? `${who} này đã có tài khoản. Phụ huynh chuyển sang Đăng nhập.`
+              : id.kind === "phone"
+                ? `Chưa tạo được tài khoản bằng số điện thoại. Phụ huynh thử lại bằng email, hoặc nhắn Zalo cho cô${contact ? ` (${contact})` : ""}.`
+                : "Chưa tạo được tài khoản: " + error.message;
           return setMsg({ ok: false, text: t });
         }
         if (data.session && data.user) {
@@ -95,12 +104,16 @@ export function ParentAuthForm({ initialMode = "login", next, linkError = false 
         }
         // Email đã có tài khoản: Supabase trả về người dùng không có danh tính (không gửi email).
         if (data.user && (data.user.identities?.length ?? 0) === 0) {
-          setMsg({ ok: false, text: "Email này đã có tài khoản. Phụ huynh chuyển sang Đăng nhập (hoặc Quên mật khẩu)." });
+          setMsg({ ok: false, text: `${who} này đã có tài khoản. Phụ huynh chuyển sang Đăng nhập.` });
           return;
         }
         setMsg({ ok: true, text: `Đã tạo tài khoản! Phụ huynh mở hộp thư ${mail} (xem cả mục Thư rác/Spam), bấm link xác nhận là vào học được.` });
         setMode("login");
       } else {
+        if (id.kind === "phone") {
+          setMsg({ ok: false, text: `Tài khoản bằng số điện thoại: phụ huynh nhắn Zalo cho cô${contact ? ` (${contact})` : ""} để được đặt lại mật khẩu.` });
+          return;
+        }
         const { error } = await supabase.auth.resetPasswordForEmail(mail, { redirectTo: `${window.location.origin}/doi-mat-khau` });
         if (error) return setMsg({ ok: false, text: /rate|limit/i.test(error.message) ? "Gửi quá nhiều lần, phụ huynh đợi ít phút rồi thử lại." : "Chưa gửi được email: " + error.message });
         setMsg({ ok: true, text: `Nếu ${mail} đã có tài khoản, website vừa gửi email đặt lại mật khẩu. Phụ huynh mở email và bấm link.` });
@@ -111,6 +124,24 @@ export function ParentAuthForm({ initialMode = "login", next, linkError = false 
       setBusy(false);
     }
   }
+
+  const accountField = (
+    <label className="block font-extrabold text-gray-800">
+      Số điện thoại hoặc email
+      <input
+        className={field}
+        type="text"
+        autoComplete="username"
+        autoCapitalize="none"
+        spellCheck={false}
+        required
+        placeholder="vd 0912345678"
+        value={account}
+        onChange={(e) => setAccount(e.target.value)}
+      />
+      {mode === "signup" && <span className="mt-1 block text-sm font-semibold text-gray-600">Dùng số điện thoại cũng được — không cần mã xác nhận.</span>}
+    </label>
+  );
 
   const switchTo = (m: Mode) => {
     setMode(m);
@@ -141,16 +172,19 @@ export function ParentAuthForm({ initialMode = "login", next, linkError = false 
       {mode === "signup" && (
         <>
           <p className="rounded-2xl bg-emerald-50 p-3 text-sm font-bold text-emerald-900 ring-1 ring-emerald-200">
-            <span aria-hidden>🎁</span> Tài khoản miễn phí — mở toàn bộ bài giảng, phiếu luyện tập và đề ôn tập hè.
+            <span aria-hidden>🎁</span> Tài khoản miễn phí — tạo bằng số điện thoại hoặc email, mở toàn bộ bài giảng, phiếu luyện tập và đề ôn tập hè.
           </p>
           <label className="block font-extrabold text-gray-800">
             Họ tên phụ huynh
             <input className={field} type="text" autoComplete="name" required maxLength={120} value={fullName} onChange={(e) => setFullName(e.target.value)} />
           </label>
-          <label className="block font-extrabold text-gray-800">
-            Số điện thoại / Zalo <span className="font-semibold text-gray-500">(không bắt buộc)</span>
-            <input className={field} type="tel" autoComplete="tel" inputMode="tel" maxLength={20} value={phone} onChange={(e) => setPhone(e.target.value)} />
-          </label>
+          {accountField}
+          {account.includes("@") && (
+            <label className="block font-extrabold text-gray-800">
+              Số điện thoại / Zalo <span className="font-semibold text-gray-500">(không bắt buộc)</span>
+              <input className={field} type="tel" autoComplete="tel" inputMode="tel" maxLength={20} value={phone} onChange={(e) => setPhone(e.target.value)} />
+            </label>
+          )}
           <label className="block font-extrabold text-gray-800">
             Con đang học lớp <span className="font-semibold text-gray-500">(không bắt buộc)</span>
             <select className={field} value={grade} onChange={(e) => setGrade(e.target.value)}>
@@ -163,10 +197,7 @@ export function ParentAuthForm({ initialMode = "login", next, linkError = false 
         </>
       )}
 
-      <label className="block font-extrabold text-gray-800">
-        Email
-        <input className={field} type="email" autoComplete="email" required value={email} onChange={(e) => setEmail(e.target.value)} />
-      </label>
+      {mode !== "signup" && accountField}
 
       {mode !== "forgot" && (
         <label className="block font-extrabold text-gray-800">

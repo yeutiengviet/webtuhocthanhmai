@@ -202,7 +202,7 @@ function LockedNotice() {
     <div className="rounded-[2rem] border-2 border-dashed border-brand-300 bg-white p-8 text-center">
       <p className="mx-auto grid h-16 w-16 place-items-center rounded-full bg-brand-100 text-3xl" aria-hidden>🔒</p>
       <p className="mt-3 font-display text-2xl font-extrabold text-brand-700">Đăng nhập để học bài này</p>
-      <p className="mt-1 text-gray-700">Phụ huynh tạo tài khoản <strong>miễn phí</strong> (chỉ cần email) để mở toàn bộ bài giảng và phiếu luyện tập cho con.</p>
+      <p className="mt-1 text-gray-700">Phụ huynh tạo tài khoản <strong>miễn phí</strong> (bằng số điện thoại hoặc email) để mở toàn bộ bài giảng và phiếu luyện tập cho con.</p>
       <div className="mt-4 flex flex-wrap justify-center gap-3">
         <Link href="/dang-nhap?tab=dang-ky" className="btn-toy rounded-full bg-brand-600 px-6 py-3 font-extrabold text-white">Tạo tài khoản miễn phí</Link>
         <Link href="/dang-nhap" className="rounded-full bg-white px-6 py-3 font-extrabold text-brand-700 ring-2 ring-brand-200">Đăng nhập</Link>

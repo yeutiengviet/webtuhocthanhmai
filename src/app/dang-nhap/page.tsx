@@ -13,7 +13,7 @@ export default async function LoginPage({ searchParams }: { searchParams: Promis
       <PageHero
         badge="Tài khoản phụ huynh · Miễn phí"
         title={signup ? "Tạo tài khoản" : "Đăng nhập"}
-        subtitle="Phụ huynh tạo tài khoản miễn phí bằng email để con học toàn bộ bài giảng, phiếu luyện tập và đề ôn tập hè."
+        subtitle="Phụ huynh tạo tài khoản miễn phí bằng số điện thoại hoặc email để con học toàn bộ bài giảng, phiếu luyện tập và đề ôn tập hè."
       />
       <Container className="max-w-md py-8">
         <ParentAuthForm initialMode={signup ? "signup" : "login"} next={typeof next === "string" ? next : undefined} linkError={Boolean(error_description)} />

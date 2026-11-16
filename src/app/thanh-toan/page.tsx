@@ -13,8 +13,8 @@ export default function PaymentGuidePage() {
         </div>
         <ol className="space-y-3">
           {[
-            "Bấm “Tạo tài khoản miễn phí”, nhập họ tên phụ huynh, email và mật khẩu.",
-            "Mở hộp thư email, bấm link xác nhận (nếu website gửi email xác nhận).",
+            "Bấm “Tạo tài khoản miễn phí”, nhập họ tên phụ huynh, số điện thoại (hoặc email) và mật khẩu.",
+            "Không cần mã xác nhận — tạo xong là vào học ngay.",
             "Đăng nhập, chọn môn và lớp của con để bắt đầu học.",
           ].map((t, i) => (
             <li key={i} className="flex gap-3 rounded-2xl bg-white p-4 shadow-sm">

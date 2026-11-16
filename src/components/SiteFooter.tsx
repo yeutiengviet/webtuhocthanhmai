@@ -18,6 +18,11 @@ export function SiteFooter() {
             <p className="font-display text-lg text-brand-300">Liên hệ</p>
             <ul className="mt-2 space-y-1 text-sm">
               <li>📞 Hotline/Zalo: {site.hotline ?? "đang cập nhật"}</li>
+              {site.zalo && (
+                <li>
+                  <a className="inline-block py-2 font-bold hover:underline" href={`https://zalo.me/${site.zalo.replace(/\D/g, "")}`} target="_blank" rel="noopener noreferrer">💬 Nhắn Zalo cho cô</a>
+                </li>
+              )}
               {site.domain && <li>🌐 {site.domain}</li>}
             </ul>
           </div>

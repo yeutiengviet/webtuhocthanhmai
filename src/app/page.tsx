@@ -203,7 +203,7 @@ export default function HomePage() {
             <h2 className="flex items-center gap-2 text-2xl text-gray-900"><span aria-hidden>🎁</span> Tạo tài khoản miễn phí</h2>
             <p className="mt-3 rounded-2xl bg-emerald-50 p-3 text-sm font-bold text-emerald-900 ring-1 ring-emerald-200">Hiện tại toàn bộ bài học miễn phí — phụ huynh không cần chuyển khoản.</p>
             <ol className="mt-4 space-y-3">
-              {["Bấm “Tạo tài khoản”, nhập họ tên phụ huynh, email và mật khẩu.", "Mở email, bấm link xác nhận (nếu website yêu cầu).", "Đăng nhập — mọi bài giảng, phiếu luyện tập và đề ôn tập hè đều mở.", "Tải phiếu PDF về in cho con làm thêm."].map((t, i) => (
+              {["Bấm “Tạo tài khoản”, nhập họ tên phụ huynh, số điện thoại (hoặc email) và mật khẩu.", "Không cần mã xác nhận — tạo xong là vào học ngay.", "Đăng nhập — mọi bài giảng, phiếu luyện tập và đề ôn tập hè đều mở.", "Tải phiếu PDF về in cho con làm thêm."].map((t, i) => (
                 <li key={t} className="flex items-start gap-3">
                   <span className="grid h-8 w-8 shrink-0 place-items-center rounded-full bg-accent-600 font-display font-extrabold text-white">{i + 1}</span>
                   <span className="pt-1 text-gray-800">{t}</span>
