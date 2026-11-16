@@ -41,7 +41,7 @@ export default function TrialPage() {
                     <Link href={itemHref(course, week, item)} className="card-lift flex h-full items-start gap-3 rounded-2xl bg-white p-3 ring-1 ring-gray-100">
                       <ItemIcon type={item.type} />
                       <span className="min-w-0">
-                        <span className="block text-xs font-bold text-brand-700">Tuần {week.number}</span>
+                        <span className="block text-xs font-bold text-brand-700">{week.label ?? `${course.track === "nang-cao" ? "Chuyên đề" : "Tuần"} ${week.number}`}</span>
                         <span className="block font-bold leading-snug text-gray-900">{item.title}</span>
                         <span className="mt-1 flex items-center gap-2">
                           <LevelBadge level={item.level} />

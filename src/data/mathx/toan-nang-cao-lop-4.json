@@ -1,0 +1,194 @@
+{
+ "lop": 4,
+ "chuyenDe": [
+  {
+   "ten": "Chuyên đề lập số tự nhiên",
+   "bai": [
+    "Viết số tự nhiên bé nhất / lớn nhất thỏa mãn tổng các chữ số không đổi (bài 1)",
+    "Viết số tự nhiên bé nhất / lớn nhất thỏa mãn tổng các chữ số không đổi (bài 2)",
+    "Viết số tự nhiên bé nhất / lớn nhất thỏa mãn tổng các chữ số không đổi (bài 3)",
+    "Viết số tự nhiên bé nhất / lớn nhất thỏa mãn tổng các chữ số không đổi (bài 4)",
+    "Viết số tự nhiên bé nhất / lớn nhất thỏa mãn tích các chữ số không đổi (bài 5)",
+    "Viết số tự nhiên bé nhất / lớn nhất thỏa mãn tích các chữ số không đổi (bài 6)"
+   ],
+   "hocThu": true
+  },
+  {
+   "ten": "Sắp xếp chữ số, hoán vị",
+   "bai": [
+    "Lập số tự nhiên từ các chữ số cho trước",
+    "Lập được bao nhiêu số tự nhiên từ các chữ số cho trước? (phần 1)",
+    "Lập được bao nhiêu số tự nhiên từ các chữ số cho trước? (phần 2)",
+    "Bài toán đếm số cách sắp xếp (phần 1)",
+    "Bài toán đếm số cách sắp xếp (phần 2)",
+    "Bài toán đếm số cách sắp xếp (phần 3)",
+    "Đếm số lần xuất hiện của chữ số"
+   ]
+  },
+  {
+   "ten": "Trung bình cộng",
+   "bai": [
+    "Tìm số trung bình cộng",
+    "Tìm số khi biết trung bình cộng",
+    "Trung bình cộng của dãy số cách đều",
+    "Dạng toán ít hơn/nhiều hơn trung bình cộng (phần 1)",
+    "Dạng toán ít hơn/nhiều hơn trung bình cộng (phần 2)",
+    "Luyện tập"
+   ]
+  },
+  {
+   "ten": "Dãy số – quy luật",
+   "bai": [
+    "Tìm qui luật dãy số (phần 1)",
+    "Tìm qui luật dãy số (phần 2)",
+    "Tìm qui luật dãy số (phần 3)",
+    "Tìm số số hạng của dãy số cách đều",
+    "Tìm số hạng thứ n của dãy số cách đều",
+    "Tính tổng dãy số cách đều",
+    "Tìm số chữ số của dãy số",
+    "Bài toán trang sách",
+    "Dãy hình có qui luật (phần 1)",
+    "Dãy hình có qui luật (phần 2)",
+    "Dãy số Fibonacci (phần 1)",
+    "Dãy số Fibonacci (phần 2)",
+    "Tam giác số Pascal",
+    "Dãy chữ (phần 1)",
+    "Dãy chữ (phần 2)",
+    "Xét dãy số phụ (phần 1)",
+    "Xét dãy số phụ (phần 2)",
+    "Viết số theo qui luật"
+   ]
+  },
+  {
+   "ten": "Cấu tạo số",
+   "bai": [
+    "Thêm chữ số vào số đã cho",
+    "Thêm chữ số vào một số",
+    "Thêm chữ số vào một số (tiếp)",
+    "Xóa chữ số của một số",
+    "Ôn tập",
+    "Liên hệ giữa số cần tìm và các chữ số của nó"
+   ]
+  },
+  {
+   "ten": "Dấu hiệu chia hết",
+   "bai": [
+    "Dấu hiệu chia hết cho 2",
+    "Dấu hiệu chia hết cho 5",
+    "Dấu hiệu chia hết cho 3 và 9",
+    "Luyện tập dấu hiệu chia hết cho 2, 3, 5, 9",
+    "Vận dụng dấu hiệu chia hết để giải toán (phần 1)",
+    "Vận dụng dấu hiệu chia hết để giải toán (phần 2)",
+    "Vận dụng dấu hiệu chia hết để giải toán (phần 3)"
+   ]
+  },
+  {
+   "ten": "Bài toán tổng – hiệu",
+   "bai": [
+    "Bài toán tìm 2 số khi biết tổng và hiệu của chúng",
+    "Bài toán tìm 2 số khi biết tổng và hiệu của chúng (tiếp theo)",
+    "Bài toán tổng hiệu với dãy số"
+   ]
+  },
+  {
+   "ten": "Bài toán tổng – tỉ số, hiệu – tỉ số",
+   "bai": [
+    "Tìm hai số khi biết tổng và tỉ số",
+    "Tìm hai số khi biết hiệu và tỉ số",
+    "Tìm hai số khi biết tổng hoặc hiệu và tỉ số (phần 1)",
+    "Tìm hai số khi biết tổng hoặc hiệu và tỉ số (phần 2)",
+    "Tìm hai số khi biết tổng hoặc hiệu và tỉ số (phần 3)"
+   ]
+  },
+  {
+   "ten": "Bài toán tính tuổi",
+   "bai": [
+    "Tính tuổi khi biết tổng và hiệu",
+    "Tính tuổi khi biết hiệu và tỉ số tuổi",
+    "Tính tuổi khi biết tổng, hiệu và tỉ số tuổi",
+    "Phương pháp vẽ sơ đồ trong bài toán tính tuổi",
+    "Bài toán tính tuổi",
+    "Bài toán tính tuổi (tiếp theo)"
+   ]
+  },
+  {
+   "ten": "Chuyên đề phân số",
+   "bai": [
+    "Tính chất cơ bản của phân số, rút gọn, so sánh phân số (phần 1)",
+    "Tính chất cơ bản của phân số, rút gọn, so sánh phân số (phần 2)",
+    "So sánh phân số (phần 1)",
+    "So sánh phân số (phần 2)",
+    "So sánh hai phân số sử dụng phân số trung gian",
+    "So sánh phân số bằng phương pháp so sánh phần bù",
+    "So sánh phân số bằng phương pháp so sánh phần hơn",
+    "So sánh phân số bằng phần bù, phần hơn mở rộng",
+    "Một số bài toán về tìm số các phân số thỏa mãn điều kiện cho trước",
+    "Phân số với bài toán tổng hiệu, tổng tỉ, hiệu tỉ (phần 1)",
+    "Phân số với bài toán tổng hiệu, tổng tỉ, hiệu tỉ (phần 2)",
+    "Phân số với bài toán tổng hiệu, tổng tỉ, hiệu tỉ (phần 3)",
+    "Phân số với bài toán tổng hiệu, tổng tỉ, hiệu tỉ (phần 4)",
+    "Tính nhanh phân số",
+    "Dãy phân số có quy luật",
+    "Tính nhanh dãy phân số có qui luật (bài 1)",
+    "Tính nhanh dãy phân số có qui luật (bài 2)",
+    "Tính nhanh dãy phân số có qui luật (bài 3)",
+    "Tính nhanh dãy phân số có qui luật (bài 4)",
+    "Tính nhanh dãy phân số có qui luật (bài 5)",
+    "Tính nhanh dãy phân số có qui luật (bài 6)",
+    "Tính nhanh dãy phân số có qui luật (bài 7)"
+   ]
+  },
+  {
+   "ten": "Bài toán giả thiết tạm",
+   "bai": [
+    "Mở đầu về phương pháp giả thiết tạm",
+    "Bài toán giả thiết tạm đơn (phần 1)",
+    "Bài toán giả thiết tạm đơn (phần 2)",
+    "Bài toán giả thiết tạm đơn (phần 3)",
+    "Giới thiệu bài toán giả thiết tạm kép"
+   ]
+  },
+  {
+   "ten": "Chuyên đề hình học",
+   "bai": [
+    "Chuyên đề hình học – Bài 1",
+    "Chuyên đề hình học – Bài 2",
+    "Bài toán tăng giảm diện tích – Phần 1",
+    "Bài toán tăng giảm diện tích – Phần 2"
+   ]
+  },
+  {
+   "ten": "Các bài toán suy luận logic",
+   "bai": [
+    "Phương pháp lập bảng",
+    "Phương pháp lựa chọn",
+    "Phương pháp lựa chọn (tiếp theo)"
+   ]
+  },
+  {
+   "ten": "Nguyên lý chuồng chim bồ câu",
+   "bai": [
+    "Nguyên lý chuồng chim bồ câu",
+    "Nguyên lý Dirichlet (phần 2)"
+   ]
+  },
+  {
+   "ten": "Học toán tư duy (livestream)",
+   "bai": [
+    "Dãy hình vẽ có quy luật",
+    "Bài toán xếp hàng",
+    "Bài toán so sánh và thay thế",
+    "Bài toán về dãy số",
+    "Bài toán tư duy hack não (phần 1)",
+    "Bài toán tư duy hack não (phần 2)",
+    "Bài toán trung bình cộng",
+    "Các bài toán tư duy",
+    "Bài toán dãy số",
+    "So sánh phân số",
+    "Cộng, trừ phân số",
+    "Bài toán giả thiết tạm (phần 1)",
+    "Bài toán giả thiết tạm (phần 2)"
+   ]
+  }
+ ]
+}

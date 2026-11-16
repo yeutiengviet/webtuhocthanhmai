@@ -33,10 +33,10 @@ export default async function AdminCourseLessons({ params }: { params: Promise<{
           const items = w.items.filter((i) => itemAcceptsFiles(i).pdf);
           const done = items.filter((i) => rows.has(i.id)).length;
           return (
-            <details key={w.id} className="rounded-3xl bg-white shadow-sm ring-1 ring-brand-100" open={w.number === 1}>
+            <details key={w.id} className="rounded-3xl bg-white shadow-sm ring-1 ring-brand-100" open={w === course.weeks[0]}>
               <summary className="flex cursor-pointer items-center gap-3 p-4">
                 <span className="min-w-0 flex-1">
-                  <span className="block font-extrabold text-gray-900">Tuần {w.number}: {w.title}</span>
+                  <span className="block font-extrabold text-gray-900">{w.label ?? `${course.track === "nang-cao" ? "Chuyên đề" : "Tuần"} ${w.number}`}: {w.title}</span>
                   <span className="text-sm text-gray-600">{formatRange(w.startDate, w.endDate)} · đã có {done}/{items.length}</span>
                 </span>
               </summary>

@@ -25,7 +25,7 @@ export default async function AdminLessonItem({ params }: { params: Promise<{ kh
 
   return (
     <>
-      <PageHero badge="Trang quản trị" title={item.title} subtitle={`${name} · Tuần ${week.number}: ${week.title}`} />
+      <PageHero badge="Trang quản trị" title={item.title} subtitle={`${name} · ${week.label ?? `${course.track === "nang-cao" ? "Chuyên đề" : "Tuần"} ${week.number}`}: ${week.title}`} />
       <Container className="max-w-2xl py-8">
         <Link href={`/quan-tri/bai-hoc/${course.id}`} className="mb-4 inline-block py-2 font-extrabold text-brand-700 underline">← Các tuần {name}</Link>
         <LessonFileForm

@@ -85,13 +85,13 @@ test("bài Free: phiếu tương tác nhúng trong iframe sandbox an toàn", asy
 });
 
 test("bài Free dạng video: có khung video và phiếu luyện tập bên dưới", async ({ page }) => {
-  await page.goto("/toan/lop-4/theo-tuan/tuan-1/video-bai-1");
+  await page.goto("/toan/lop-4/theo-tuan/tuan-1/video-bai-giang-1");
   await expect(page.getByText("Video bài giảng đang được cập nhật")).toBeVisible();
   await expect(page.getByRole("heading", { name: "Luyện tập sau bài giảng" })).toBeVisible();
 });
 
 test("bài trả phí: hiện khóa, KHÔNG có video/phiếu trong mã HTML trả về", async ({ page, request }) => {
-  const path = "/toan/lop-4/theo-tuan/tuan-5/video-bai-10";
+  const path = "/toan/lop-4/theo-tuan/tuan-5/video-bai-giang-1";
   await page.goto(path);
   await expect(page.getByText("Bài này dành cho học sinh đã đăng ký gói học")).toBeVisible();
   await expect(page.locator("iframe")).toHaveCount(0);
@@ -109,7 +109,7 @@ test("link có #tuan-N mở đúng tuần; banner phiếu dẫn thẳng tới ph
   await page.goto("/toan/lop-4/theo-tuan#tuan-12");
   await expect(page.locator("#tuan-12")).toHaveAttribute("open", "");
   // Bấm đường dẫn "Tuần 5" từ trang bài học
-  await page.goto("/toan/lop-4/theo-tuan/tuan-5/video-bai-10");
+  await page.goto("/toan/lop-4/theo-tuan/tuan-5/video-bai-giang-1");
   await page.getByRole("navigation", { name: "Đường dẫn" }).getByRole("link", { name: "Tuần 5" }).click();
   await expect(page.locator("#tuan-5")).toHaveAttribute("open", "");
   // Banner thứ 3
@@ -146,21 +146,23 @@ test("đường dẫn đoán bừa trả về 404, tiêu đề tab không gây h
   await expect(page).toHaveTitle(/Không tìm thấy trang/);
   await page.goto("/toan/lop-6");
   await expect(page).toHaveTitle(/Không tìm thấy trang/);
-  for (const p of ["/toan/lop-4/constructor", "/toan/lop-4/__proto__", "/toan/lop-6", "/tieng-viet/lop-1", "/toan/lop-4/theo-tuan/tuan-36/video-bai-1", "/toan/lop-4/theo-tuan/tuan-1/khong-co", "/van/lop-4", "/toan/lop-4/nang-cao"]) {
+  for (const p of ["/toan/lop-4/constructor", "/toan/lop-4/__proto__", "/toan/lop-6", "/tieng-viet/lop-1", "/toan/lop-4/theo-tuan/tuan-36/video-bai-giang-1", "/toan/lop-4/theo-tuan/tuan-1/khong-co", "/van/lop-4", "/toan/lop-4/on-tap-he"]) {
     expect((await request.get(p)).status(), p).toBe(404);
   }
 });
 
-test("tất cả trang bài học của cả 8 khóa (Toán, Tiếng Việt lớp 2–5) đều mở được", async ({ page, request }) => {
+test("tất cả trang bài học của cả 8 khóa theo tuần (Toán, Tiếng Việt lớp 2–5) đều mở được", async ({ page, request }) => {
   test.setTimeout(600_000);
   let total = 0;
   for (const mon of ["toan", "tieng-viet"]) {
     for (const lop of [2, 3, 4, 5]) {
       const course = `/${mon}/lop-${lop}/theo-tuan`;
       await page.goto(course);
-      await expect(page.locator("details[id^=tuan-]"), course).toHaveCount(35);
-      const hrefs = await page.locator("details[id^=tuan-] a").evaluateAll((as) => as.map((a) => a.getAttribute("href") ?? ""));
-      expect(new Set(hrefs.map((h) => h.match(/tuan-(\d+)/)?.[1])).size, course).toBe(35);
+      // Toán lớp 2–5 theo mathx: 35 tuần (lớp 5: 34 tuần) + 4 khối ôn tập; Tiếng Việt: 35 tuần
+      const weeksExpected = mon === "toan" && lop === 5 ? 34 : 35;
+      await expect(page.locator("details[id^=tuan-]"), course).toHaveCount(weeksExpected);
+      const hrefs = await page.locator("details[id^=tuan-] a, details[id^=on-tap-] a").evaluateAll((as) => as.map((a) => a.getAttribute("href") ?? ""));
+      expect(new Set(hrefs.map((h) => h.match(/tuan-(\d+)/)?.[1]).filter(Boolean)).size, course).toBe(weeksExpected);
       // Trang bài học dựng ở lần mở đầu (có đọc phiếu từ kho) → hỏi song song từng nhóm 12 trang
       for (let i = 0; i < hrefs.length; i += 12) {
         const batch = hrefs.slice(i, i + 12);
@@ -171,6 +173,17 @@ test("tất cả trang bài học của cả 8 khóa (Toán, Tiếng Việt lớ
     }
   }
   expect(total).toBeGreaterThan(1500);
+  // Toán nâng cao theo chuyên đề: mở được mọi bài
+  for (const lop of [2, 3, 4, 5]) {
+    const course = `/toan/lop-${lop}/nang-cao`;
+    await page.goto(course);
+    const hrefs = await page.locator("details[id^=tuan-] a").evaluateAll((as) => as.map((a) => a.getAttribute("href") ?? ""));
+    expect(hrefs.length, course).toBeGreaterThan(50);
+    for (let i = 0; i < hrefs.length; i += 12) {
+      const codes = await Promise.all(hrefs.slice(i, i + 12).map(async (h) => [h, (await request.get(h)).status()] as const));
+      for (const [h, code] of codes) expect(code, h).toBe(200);
+    }
+  }
 });
 
 test("các trang phụ mở được, không lỗi console", async ({ page }) => {
@@ -215,7 +228,7 @@ test("mạng chậm (giả lập 3G): trang chủ và trang khóa học vẫn t�
 
 test("đo tương phản màu thật bằng axe (chuẩn WCAG AA) trên các trang chính", async ({ page }) => {
   const { default: AxeBuilder } = await import("@axe-core/playwright");
-  for (const p of ["/", "/toan", "/toan/lop-4", "/toan/lop-4/theo-tuan", "/toan/lop-4/theo-tuan/tuan-5/video-bai-10", "/hoc-thu", "/ky-thi", "/de-thi", "/de-thi/toan", "/de-thi/toan/lop-4/danh-gia-nang-luc-thang-10", "/quan-tri/dang-nhap"]) {
+  for (const p of ["/", "/toan", "/toan/lop-4", "/toan/lop-4/theo-tuan", "/toan/lop-4/theo-tuan/tuan-5/video-bai-giang-1", "/hoc-thu", "/ky-thi", "/de-thi", "/de-thi/toan", "/de-thi/toan/lop-4/danh-gia-nang-luc-thang-10", "/quan-tri/dang-nhap"]) {
     await page.goto(p);
     await page.getByRole("button", { name: "Tạm dừng" }).click({ timeout: 1000 }).catch(() => {});
     // Tắt nền chấm bi (rất mờ) và đầu trang dính, vì chúng khiến axe không xác định được màu nền

@@ -30,6 +30,10 @@ export type WeekKind = "hoc" | "on-tap-giua-ky" | "on-tap-cuoi-ky";
 export interface Week {
   id: string;
   number: number;
+  /** Đường dẫn riêng (khối ôn tập); mặc định `tuan-<số>`. */
+  slug?: string;
+  /** Nhãn hiển thị thay cho "Tuần N" (vd. "Ôn tập"). */
+  label?: string;
   /** Ngày đầu/cuối tuần dạng YYYY-MM-DD (ngày lịch Việt Nam, không có giờ). */
   startDate: string;
   endDate: string;

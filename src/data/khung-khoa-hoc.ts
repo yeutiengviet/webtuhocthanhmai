@@ -4,7 +4,7 @@
 // (nhập file CSV / trang quản trị ở Giai đoạn 2).
 
 import "server-only";
-import { HOLIDAY_MONDAYS, SCHOOL_YEAR_START } from "@/data/toan-lop4";
+import { HOLIDAY_MONDAYS, SCHOOL_YEAR_START } from "@/data/toan-theo-tuan";
 import { buildWeekCalendar } from "@/lib/dates";
 import type { Course, Item, SubjectSlug, Week, WeekKind } from "@/lib/types";
 
@@ -93,11 +93,9 @@ export function buildSkeletonCourse(subject: SubjectSlug, grade: 2 | 3 | 4 | 5):
 }
 
 export const SKELETON_COURSES: Course[] = [
-  buildSkeletonCourse("toan", 2),
-  buildSkeletonCourse("toan", 3),
-  buildSkeletonCourse("toan", 5),
   buildSkeletonCourse("tieng-viet", 2),
   buildSkeletonCourse("tieng-viet", 3),
   buildSkeletonCourse("tieng-viet", 4),
   buildSkeletonCourse("tieng-viet", 5),
 ];
+

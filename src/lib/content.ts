@@ -5,7 +5,7 @@
 // lỡ bị import vào một component chạy trên trình duyệt ("use client"), build sẽ BÁO LỖI ngay.
 import "server-only";
 import { SKELETON_COURSES } from "@/data/khung-khoa-hoc";
-import { toanLop4TheoTuan } from "@/data/toan-lop4";
+import { TOAN_NANG_CAO, TOAN_THEO_TUAN } from "@/data/toan-theo-tuan";
 import { lessonFileHref } from "@/lib/exam-meta";
 import type { Course, Item, ItemType, Subject, SubjectSlug, Track, Week } from "@/lib/types";
 
@@ -32,8 +32,8 @@ export const ITEM_TYPE_LABELS: Record<ItemType, string> = {
 };
 
 // Thứ tự: môn, rồi lớp.
-const COURSES: Course[] = [toanLop4TheoTuan, ...SKELETON_COURSES].sort(
-  (a, b) => a.subject.localeCompare(b.subject) || a.grade - b.grade,
+const COURSES: Course[] = [...TOAN_THEO_TUAN, ...SKELETON_COURSES, ...TOAN_NANG_CAO].sort(
+  (a, b) => a.subject.localeCompare(b.subject) || a.grade - b.grade || a.track.localeCompare(b.track),
 );
 
 export function getSubject(slug: string): Subject | undefined {
@@ -71,8 +71,18 @@ export function publishedWeeks(course: Course): Week[] {
   return course.weeks.filter((w) => w.published);
 }
 
+/** Tên đơn vị của một khóa: "Tuần" hoặc "Chuyên đề" (mục nâng cao). */
+export function unitName(course: Course): string {
+  return course.track === "nang-cao" ? "Chuyên đề" : "Tuần";
+}
+
 export function weekSlug(w: Week): string {
-  return `tuan-${w.number}`;
+  return w.slug ?? `tuan-${w.number}`;
+}
+
+/** Nhãn hiển thị của một tuần/chuyên đề: "Tuần 5", "Chuyên đề 3" hoặc "Ôn tập". */
+export function weekLabel(course: Course, w: Week): string {
+  return w.label ?? `${unitName(course)} ${w.number}`;
 }
 
 export function findWeek(course: Course, slug: string): Week | undefined {
@@ -176,7 +186,7 @@ export function courseStats(course: Course) {
   const weeks = publishedWeeks(course);
   const items = weeks.flatMap((w) => w.items);
   return {
-    weeks: weeks.length,
+    weeks: weeks.filter((w) => w.kind === "hoc").length,
     videos: items.filter((i) => i.type === "video").length,
     worksheets: items.filter((i) => i.type === "worksheet").length,
     tests: items.filter((i) => i.type === "test").length,

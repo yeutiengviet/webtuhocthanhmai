@@ -1,43 +1,39 @@
 import { describe, expect, it } from "vitest";
-import { HOLIDAY_MONDAYS, LESSONS, PLAN, toanLop4TheoTuan } from "@/data/toan-lop4";
+import { HOLIDAY_MONDAYS } from "@/data/toan-theo-tuan";
+import lop4Data from "@/data/mathx/toan-lop-4.json";
 import { canViewItem, courseStats, freeItems, getCourse, getCourses, isTrack, lessonMedia } from "@/lib/content";
 import { safeDocumentUrl, safeWorksheetUrl, telHref, youtubeId } from "@/lib/urls";
 import type { Item } from "@/lib/types";
 import { weekday } from "@/lib/dates";
 
+const toanLop4TheoTuan = getCourse("toan", 4, "theo-tuan")!;
 const weeks = toanLop4TheoTuan.weeks;
+const teaching = weeks.filter((w) => w.kind === "hoc");
 
 describe("Toán lớp 4 – 35 tuần", () => {
-  it("có đúng 35 tuần, đánh số 1..35", () => {
-    expect(weeks).toHaveLength(35);
-    expect(weeks.map((w) => w.number)).toEqual(Array.from({ length: 35 }, (_, i) => i + 1));
+  it("có 35 tuần học đánh số 1..35, xen 4 khối ôn tập", () => {
+    expect(teaching.map((w) => w.number)).toEqual(Array.from({ length: 35 }, (_, i) => i + 1));
+    expect(weeks).toHaveLength(39);
+    expect(weeks.filter((w) => w.kind !== "hoc").map((w) => w.slug)).toEqual(["on-tap-1", "on-tap-2", "on-tap-3", "on-tap-4"]);
   });
 
-  it("các tuần liên tiếp, bắt đầu thứ Hai, không trùng tuần nghỉ Tết", () => {
-    for (let i = 0; i < weeks.length; i++) {
-      expect(weekday(weeks[i].startDate)).toBe(1);
-      expect(HOLIDAY_MONDAYS).not.toContain(weeks[i].startDate);
-      if (i > 0) expect(weeks[i].startDate > weeks[i - 1].endDate).toBe(true);
+  it("các tuần học liên tiếp, bắt đầu thứ Hai, không trùng tuần nghỉ Tết", () => {
+    for (let i = 0; i < teaching.length; i++) {
+      expect(weekday(teaching[i].startDate)).toBe(1);
+      expect(HOLIDAY_MONDAYS).not.toContain(teaching[i].startDate);
+      if (i > 0) expect(teaching[i].startDate > teaching[i - 1].endDate).toBe(true);
     }
-    expect(weeks[0].startDate).toBe("2026-09-07");
+    expect(teaching[0].startDate).toBe("2026-09-07");
   });
 
-  it("phủ đủ 73 bài, mỗi bài xuất hiện đúng một lần", () => {
-    const allTitles = weeks.map((w) => w.title).join("\n");
-    for (const n of Object.keys(LESSONS).map(Number)) {
-      expect(allTitles).toContain(LESSONS[n]);
+  it("tên mỗi tuần chính là tên các bài của tuần theo mathx", () => {
+    for (const b of lop4Data.tuan) {
+      if (!("tuan" in b) || b.tuan === undefined || b.baiHoc === undefined) continue;
+      const w = teaching[b.tuan - 1];
+      expect(w.title).toBe(b.baiHoc.join(" · "));
     }
-    expect(Object.keys(LESSONS)).toHaveLength(73);
-    const planned = PLAN.flatMap((p) => p.lessons);
-    expect(planned).toEqual(Array.from({ length: 73 }, (_, i) => i + 1));
-  });
-
-  it("tên mỗi tuần ghi đủ tên các bài của tuần đó (kể cả tuần 35 có bài 73)", () => {
-    PLAN.forEach((plan, i) => {
-      for (const b of plan.lessons) expect(weeks[i].title, `tuần ${i + 1}`).toContain(LESSONS[b]);
-      for (const b of plan.lessons) expect(weeks[i].title).toMatch(new RegExp(`\\b${b}\\b`));
-    });
-    expect(weeks[34].title).toContain("Ôn tập chung");
+    expect(teaching[0].title).toBe("Ôn tập các số đến 100 000 · Ôn tập các phép tính trong phạm vi 100 000");
+    expect(teaching[34].title).toBe("Ôn tập hình học và đo lường · Ôn tập một số yếu tố thống kê và xác suất");
   });
 
   it("mã mục duy nhất toàn khóa; slug duy nhất trong tuần", () => {
@@ -51,17 +47,16 @@ describe("Toán lớp 4 – 35 tuần", () => {
   });
 
   it("mỗi tuần có 1–2 video bài giảng (không tính video mở rộng)", () => {
-    for (const w of weeks) {
+    for (const w of teaching) {
       const n = w.items.filter((i) => i.type === "video" && !i.isExtension && i.slug.startsWith("video-bai")).length;
-      if (w.kind === "on-tap-cuoi-ky" && w.title.startsWith("Ôn tập")) expect(n).toBe(0);
-      else expect(n === 1 || n === 2).toBe(true);
+      expect(n === 1 || n === 2).toBe(true);
     }
   });
 
-  it("tuần ôn tập có đề cương và bộ đề", () => {
+  it("khối ôn tập có đề cương và đề kiểm tra", () => {
     for (const w of weeks.filter((w) => w.kind !== "hoc")) {
-      expect(w.items.some((i) => i.slug === "de-cuong")).toBe(true);
-      expect(w.items.filter((i) => i.type === "test").length).toBeGreaterThanOrEqual(3);
+      expect(w.items.some((i) => i.type === "test")).toBe(true);
+      expect(w.items.every((i) => !i.isFree)).toBe(true);
     }
   });
 
@@ -89,7 +84,7 @@ describe("Toán lớp 4 – 35 tuần", () => {
   it("đường dẫn hướng học lạ (kể cả tên thuộc tính hệ thống) không được coi là hợp lệ", () => {
     expect(isTrack("theo-tuan")).toBe(true);
     for (const t of ["constructor", "__proto__", "toString", "hasOwnProperty", "abc"]) expect(isTrack(t)).toBe(false);
-    expect(getCourse("toan", 4, "nang-cao")).toBeUndefined();
+    expect(getCourse("toan", 4, "on-tap-he")).toBeUndefined();
   });
 
   it("bản dùng thử: mục trả phí không xem được, mục Free xem được", () => {
@@ -103,9 +98,9 @@ describe("Toán lớp 4 – 35 tuần", () => {
     const s = courseStats(toanLop4TheoTuan);
     expect(s.weeks).toBe(35);
     expect(s.totalItems).toBe(weeks.reduce((a, w) => a + w.items.length, 0));
-    expect(getCourses("toan", 4)).toHaveLength(1);
+    expect(getCourses("toan", 4)).toHaveLength(2);
     expect(getCourses("tieng-viet")).toHaveLength(4);
-    expect(getCourses("toan")).toHaveLength(4);
+    expect(getCourses("toan")).toHaveLength(8);
   });
 });
 

@@ -36,6 +36,7 @@ Kiểm thử trọn luồng quản trị (`tests/e2e/admin.spec.ts`) cần tài 
 | Phần | Trạng thái |
 |---|---|
 | Trang chủ, menu, chân trang | Đã có |
+| Tên bài Toán lớp 2, 3, 4, 5 theo tuần + mục **Toán nâng cao theo chuyên đề** (lớp 2–5) | Đã có — lấy từ mathx.vn, sửa tại các file JSON trong `src/data/mathx/` |
 | Trang môn, trang lớp, Học theo tuần (Toán lớp 4 – 35 tuần) | Đã có — **dữ liệu mẫu** |
 | Trang bài giảng (video + phiếu + cột "Cùng bài học / Cùng lớp học") | Đã có |
 | Nhúng phiếu bài tập HTML (khung cách ly `sandbox`) | Đã có — mới có 1 phiếu thật (Đánh giá tháng 10) |

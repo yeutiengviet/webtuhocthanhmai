@@ -9,13 +9,16 @@ describe("đủ 8 khóa: Toán và Tiếng Việt lớp 2–5", () => {
         expect(getCourse(subject, grade, "theo-tuan"), `${subject} ${grade}`).toBeDefined();
       }
     }
-    expect(allCourses()).toHaveLength(8);
+    // 8 khóa học theo tuần + 4 khóa Toán nâng cao theo chuyên đề
+    expect(allCourses()).toHaveLength(12);
+    for (const grade of [2, 3, 4, 5]) expect(getCourse("toan", grade, "nang-cao"), `nâng cao ${grade}`).toBeDefined();
   });
 
-  it("mỗi khóa 35 tuần, bắt đầu thứ Hai, mỗi tuần có ít nhất 1 mục", () => {
-    for (const c of allCourses()) {
-      const weeks = publishedWeeks(c);
-      expect(weeks, c.id).toHaveLength(35);
+  it("mỗi khóa theo tuần có 35 tuần, bắt đầu thứ Hai, mỗi tuần có ít nhất 1 mục", () => {
+    for (const c of allCourses().filter((c) => c.track === "theo-tuan")) {
+      const weeks = publishedWeeks(c).filter((w) => w.kind === "hoc" || c.isSkeleton);
+      // Toán lớp 5 trên mathx có 34 tuần học; các khóa khác 35 tuần
+      expect(weeks, c.id).toHaveLength(c.id === "toan-5-theo-tuan" ? 34 : 35);
       for (const w of weeks) {
         expect(weekday(w.startDate)).toBe(1);
         expect(w.items.length, `${c.id} tuần ${w.number}`).toBeGreaterThan(0);
@@ -34,7 +37,28 @@ describe("đủ 8 khóa: Toán và Tiếng Việt lớp 2–5", () => {
         }
     expect(new Set(ids).size).toBe(ids.length);
     expect(new Set(hrefs).size).toBe(hrefs.length);
-    expect(new Set(allCourses().map(courseHref)).size).toBe(8);
+    expect(new Set(allCourses().map(courseHref)).size).toBe(12);
+  });
+
+  it("Toán 2–5 theo tuần: tên tuần là tên bài, không còn 'đang cập nhật'", () => {
+    for (const grade of [2, 3, 4, 5]) {
+      const c = getCourse("toan", grade, "theo-tuan")!;
+      for (const w of c.weeks) {
+        expect(w.title.length, `${c.id} ${w.id}`).toBeGreaterThan(2);
+        expect(w.title).not.toMatch(/đang cập nhật/);
+      }
+    }
+  });
+
+  it("Toán nâng cao: đủ 4 lớp, số chuyên đề và số bài khớp mathx", () => {
+    const expected: Record<number, [number, number]> = { 2: [12, 58], 3: [13, 99], 4: [15, 113], 5: [23, 176] };
+    for (const grade of [2, 3, 4, 5]) {
+      const c = getCourse("toan", grade, "nang-cao")!;
+      expect([c.weeks.length, c.weeks.reduce((a, w) => a + w.items.length, 0)]).toEqual(expected[grade]);
+      // chuyên đề học thử đầu tiên mở miễn phí, còn lại khóa
+      expect(c.weeks[0].items.every((i) => i.isFree)).toBe(true);
+      expect(c.weeks.slice(1).every((w) => w.items.every((i) => !i.isFree))).toBe(true);
+    }
   });
 
   it("khung trống KHÔNG bịa tên bài: tên tuần là 'đang cập nhật' hoặc tuần ôn tập", () => {
@@ -47,17 +71,20 @@ describe("đủ 8 khóa: Toán và Tiếng Việt lớp 2–5", () => {
         }
       }
     }
-    // Chỉ Toán 4 có mục lục thật
-    expect(allCourses().filter((c) => !c.isSkeleton).map((c) => c.id)).toEqual(["toan-4-theo-tuan"]);
+    // Toán 2, 3, 4, 5 theo tuần có tên bài; Tiếng Việt vẫn là khung trống
+    expect(allCourses().filter((c) => c.track === "theo-tuan" && !c.isSkeleton).map((c) => c.id).sort()).toEqual([
+      "toan-2-theo-tuan", "toan-3-theo-tuan", "toan-4-theo-tuan", "toan-5-theo-tuan",
+    ]);
+    expect(allCourses().filter((c) => c.isSkeleton).every((c) => c.subject === "tieng-viet")).toBe(true);
   });
 
   it("tuần 1–2 của mọi khóa được học thử; tuần khác thì không (trừ phiếu tháng 10 Toán 4)", () => {
     for (const { course, week, item } of freeItems()) {
-      expect(week.number <= 2 || item.slug === "danh-gia-thang-10", `${course.id} ${week.number} ${item.slug}`).toBe(true);
+      expect(course.track === "nang-cao" || (week.kind === "hoc" && week.number <= 2) || item.slug === "danh-gia-thang-10", `${course.id} ${week.number} ${item.slug}`).toBe(true);
     }
-    for (const c of allCourses()) {
+    for (const c of allCourses().filter((c) => c.track === "theo-tuan")) {
       expect(c.weeks[0].items.every((i) => i.isFree)).toBe(true);
-      expect(c.weeks[10].items.some((i) => i.isFree)).toBe(false);
+      expect(c.weeks[12].items.some((i) => i.isFree)).toBe(false);
     }
   });
 });

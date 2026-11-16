@@ -1,0 +1,170 @@
+{
+ "lop": 3,
+ "chuyenDe": [
+  {
+   "ten": "Bài giảng học thử",
+   "bai": [
+    "Đếm số hình tam giác",
+    "Tìm một phần trong các phần bằng nhau của một số"
+   ],
+   "hocThu": true
+  },
+  {
+   "ten": "Bài toán số và chữ số",
+   "bai": [
+    "Đọc, viết, cấu tạo số (phần 1)",
+    "Đọc, viết số, cấu tạo, phân tích số (tiếp theo) (phần 1)",
+    "Đọc, viết số, cấu tạo, phân tích số (tiếp theo) (phần 2)",
+    "Thứ tự, so sánh các số (phần 1)",
+    "Thứ tự, so sánh các số (phần 2)",
+    "Tìm số theo điều kiện về chữ số (phần 1)",
+    "Tìm số theo điều kiện về chữ số (phần 2)",
+    "Tìm số theo điều kiện về chữ số (phần 3)",
+    "Tìm số theo điều kiện về chữ số (phần 4)"
+   ]
+  },
+  {
+   "ten": "Các bài toán về bốn phép tính",
+   "bai": [
+    "Phép cộng (phần 1)",
+    "Phép cộng (phần 2)",
+    "Phép cộng (phần 3)",
+    "Phép trừ (phần 1)",
+    "Phép trừ (phần 2)",
+    "Phép nhân (phần 1)",
+    "Phép nhân (phần 2)",
+    "Phép nhân (phần 3)",
+    "Phép nhân (phần 4)",
+    "Phép chia (phần 1)",
+    "Phép chia (phần 2)",
+    "Phép chia (phần 3)",
+    "Phép chia (phần 4)",
+    "Phép chia có dư (phần 1)",
+    "Phép chia có dư (phần 2)"
+   ]
+  },
+  {
+   "ten": "Nhiều hơn, ít hơn, gấp, giảm đi một số lần",
+   "bai": [
+    "Nhiều hơn, ít hơn, gấp lên, giảm đi một số lần (phần 1)",
+    "Nhiều hơn, ít hơn, gấp lên, giảm đi một số lần (phần 2)",
+    "Nhiều hơn, ít hơn, gấp lên, giảm đi một số lần (phần 3)",
+    "Nhiều hơn, ít hơn, gấp lên, giảm đi một số lần (phần 4)"
+   ]
+  },
+  {
+   "ten": "Tìm một phần trong các phần bằng nhau của một số",
+   "bai": [
+    "Tìm một phần trong các phần bằng nhau của một số (phần 1)",
+    "Tìm một phần trong các phần bằng nhau của một số (phần 2)",
+    "Tìm một phần trong các phần bằng nhau của một số (phần 3)"
+   ]
+  },
+  {
+   "ten": "Phương pháp vẽ sơ đồ, bài toán rút về đơn vị",
+   "bai": [
+    "Bài toán rút về đơn vị (phần 1)",
+    "Bài toán rút về đơn vị (phần 2)",
+    "Bài toán rút về đơn vị (phần 3)",
+    "Phương pháp vẽ sơ đồ (phần 1)",
+    "Phương pháp vẽ sơ đồ (phần 2)",
+    "Phương pháp vẽ sơ đồ (phần 3)"
+   ]
+  },
+  {
+   "ten": "Bài toán trồng cây",
+   "bai": [
+    "Bài 1. Bài toán trồng cây hai đầu",
+    "Bài 2. Tìm số khoảng cách giữa các cây",
+    "Bài 3. Tìm số cây khi biết khoảng cách",
+    "Bài 4. Ứng dụng bài toán trồng cây",
+    "Bài 5. Bài toán trồng cây một đầu",
+    "Bài 6. Bài toán không trồng cây hai đầu",
+    "Bài 7. Bài toán trồng cây vòng tròn",
+    "Bài 8. Ôn tập bài toán trồng cây"
+   ]
+  },
+  {
+   "ten": "Dãy số tự nhiên",
+   "bai": [
+    "Tìm quy luật dãy số đơn giản",
+    "Tìm quy luật dãy số (tiếp) (phần 1)",
+    "Tìm quy luật dãy số (tiếp) (phần 2)",
+    "Tìm số hạng của dãy số",
+    "Tìm số số hạng của dãy số",
+    "Phép chia có dư trong bài toán dãy số",
+    "Dãy số cách đều",
+    "Tìm số các số hạng trong dãy số cách đều",
+    "Tìm số hạng thứ n trong dãy số cách đều",
+    "Tính tổng các số hạng trong dãy số cách đều",
+    "Bài toán trang sách",
+    "Sắp xếp các số theo quy luật (phần 1)",
+    "Sắp xếp các số theo quy luật (phần 2)",
+    "Sắp xếp các số theo quy luật (phần 3)"
+   ]
+  },
+  {
+   "ten": "Các bài toán đếm số hình",
+   "bai": [
+    "Đếm số đoạn thẳng, tam giác",
+    "Đếm hình tam giác, hình vuông",
+    "Bài toán đếm hình (tiếp) (phần 1)",
+    "Bài toán đếm hình (tiếp) (phần 2)",
+    "Đếm số hình vuông – hình chữ nhật"
+   ]
+  },
+  {
+   "ten": "Các bài toán hình học",
+   "bai": [
+    "Chu vi hình chữ nhật",
+    "Chu vi hình vuông",
+    "Hình chữ nhật – Hình vuông (tiếp theo) (phần 1)",
+    "Hình chữ nhật – Hình vuông (tiếp theo) (phần 2)",
+    "Hình chữ nhật – Hình vuông (tiếp theo) (phần 3)",
+    "Hình chữ nhật – Hình vuông (tiếp theo) (phần 4)",
+    "Hình chữ nhật – Hình vuông (tiếp theo) (phần 5)",
+    "Hình chữ nhật – Hình vuông (tiếp theo) (phần 6)",
+    "Hình chữ nhật – Hình vuông (tiếp theo) (phần 7)",
+    "Hình chữ nhật – Hình vuông (tiếp theo) (phần 8)",
+    "Hình chữ nhật – Hình vuông (tiếp theo) (phần 9)"
+   ]
+  },
+  {
+   "ten": "Các bài toán tính tuổi",
+   "bai": [
+    "Các bài toán tính tuổi (phần 1)",
+    "Các bài toán tính tuổi (phần 2)",
+    "Các bài toán tính tuổi (phần 3)",
+    "Các bài toán tính tuổi (phần 4)"
+   ]
+  },
+  {
+   "ten": "Các bài toán suy luận logic",
+   "bai": [
+    "Suy luận logic – Bài 1",
+    "Suy luận logic – Bài 2",
+    "Suy luận logic – Bài 3",
+    "Suy luận logic – Bài 4",
+    "Suy luận logic – Bài 5",
+    "Suy luận logic – Bài 6",
+    "Suy luận logic – Bài 7",
+    "Suy luận logic – Bài 8",
+    "Suy luận logic – Bài 9",
+    "Suy luận logic – Bài 10",
+    "Suy luận logic – Bài 11",
+    "Suy luận logic – Bài 12"
+   ]
+  },
+  {
+   "ten": "Học toán tư duy (livestream)",
+   "bai": [
+    "Bài 1: Bài toán xếp hàng",
+    "Bài 2: Phương pháp vẽ sơ đồ",
+    "Bài 3: Bài toán trồng cây",
+    "Bài 4: Dãy số cách đều",
+    "Bài 5: Các bài toán tư duy",
+    "Bài 6: Các bài toán tư duy – phần 2"
+   ]
+  }
+ ]
+}
