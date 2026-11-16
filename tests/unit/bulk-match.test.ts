@@ -10,7 +10,9 @@ import {
   guessSummerTestNumber,
   matchSlot,
   matchSummerSlot,
+  routeBatch,
   routeFile,
+  guessWeeks,
   validateMatches,
   validateTargets,
   type SlotInfo,
@@ -124,7 +126,9 @@ describe("đề thi: nhận từ tên file", () => {
     ["Đề thi học kì 1.pdf", "cuoi-ki-1", true],
     ["Kiểm tra học kì 2.pdf", "cuoi-nam", true],
     ["Đề ôn thi cuối kì 1.pdf", "on-tap-cuoi-ki-1", true],
-    ["Ôn tập HK1.pdf", null, true],
+    ["Ôn tập HK1.pdf", "on-tap-cuoi-ki-1", true],
+    ["Đề HK2.pdf", "cuoi-nam", true],
+    ["de hk1.html", "cuoi-ki-1", true],
     ["Đề cuối học kỳ.pdf", null, true],
     ["Ôn tập học kì.pdf", null, true],
     ["Lớp 3 tuần 18 cơ bản.html", null, false],
@@ -157,7 +161,7 @@ describe("chia file: tuần hay Đề thi", () => {
   it("có 'tuần 18' → xếp vào tuần 18", () => expect(routeFile("Lớp 3 - Tuần 18 - Cơ bản.html", wk)).toBe("t3-w18-luyen-tap-co-ban"));
   it("đề giữa/cuối kì, ôn tập học kì → Đề thi", () => {
     expect(routeFile("Lớp 3 đề cuối kì 1.pdf", wk)).toBe("exam:cuoi-ki-1");
-    expect(routeFile("Lớp 3 tuần 18 ôn tập cuối học kỳ 1.pdf", wk)).toBe("exam:on-tap-cuoi-ki-1");
+    expect(routeFile("Lớp 3 đề ôn tập cuối học kỳ 1.pdf", wk)).toBe("exam:on-tap-cuoi-ki-1");
     expect(routeFile("Đề giữa kì 1.html", wk)).toBe("exam:giua-ki-1");
   });
   it("đề thi chưa rõ kì thì chưa xếp (để cô chọn)", () => expect(routeFile("Đề cuối học kỳ.pdf", wk)).toBeNull());
@@ -181,5 +185,44 @@ describe("chia file: tuần hay Đề thi", () => {
     expect([...groupByItem(m).keys()]).toEqual(["t3-w18-luyen-tap-co-ban"]);
     const dup = validateTargets([{ name: "a.pdf", target: "exam:cuoi-ki-1" }, { name: "A.pdf", target: "exam:cuoi-ki-1" }], wk);
     expect(dup.map((x) => x.problem)).toEqual(["trung", "trung"]);
+  });
+});
+
+describe("tên file có 'tuần N' luôn vào tuần; một tuần nhận nhiều file", () => {
+  const mk = (w: number, slug: string, html = true): SlotInfo => ({ id: `t3-w${w}-${slug}`, week: w, slug, title: slug, html, pdf: true });
+  const sl: SlotInfo[] = [
+    mk(17, "luyen-tap-co-ban"), mk(17, "luyen-tap-nang-cao"), mk(17, "tai-lieu-tuan", false),
+    mk(18, "luyen-tap-co-ban"), mk(18, "luyen-tap-nang-cao"), mk(18, "luyen-tap-tong-hop"), mk(18, "tai-lieu-tuan", false),
+  ];
+  it("đọc nhiều tuần trong một tên", () => {
+    expect(guessWeeks("Tuần 17, 18 tổng hợp.pdf")).toEqual({ weeks: [17, 18], keyword: true });
+    expect(guessWeeks("Lớp 3 tuần 17-18.pdf").weeks).toEqual([17, 18]);
+    expect(guessWeeks("Tuan 17 va 18.pdf").weeks).toEqual([17, 18]);
+    expect(guessWeeks("T4 15 phut.pdf").weeks).toEqual([4]);
+    expect(guessWeeks("Tuần 9 đề 2.html").weeks).toEqual([9]);
+    expect(guessWeeks("Đề cuối kì 1.pdf")).toEqual({ weeks: [1], keyword: false }); // số 1 là số kì — routeBatch bỏ qua vì là đề thi
+  });
+  it("tuần có chữ cuối kì vẫn vào tuần, không vào Đề thi", () => {
+    const r = routeBatch([{ name: "Lớp 3 tuần 18 đề cuối kì 1.pdf" }, { name: "Đề cuối kì 1.pdf" }], sl);
+    expect(r).toEqual(["t3-w18-luyen-tap-co-ban", "exam:cuoi-ki-1"]);
+  });
+  it("2 file cùng tuần không ghi loại → hai mục khác nhau", () => {
+    const r = routeBatch([{ name: "Lớp 3 tuần 17 đề A.pdf" }, { name: "Lớp 3 tuần 17 đề B.pdf" }], sl);
+    expect(r).toEqual(["t3-w17-luyen-tap-co-ban", "t3-w17-luyen-tap-nang-cao"]);
+  });
+  it(".html và .pdf cùng tên vào cùng một mục", () => {
+    const r = routeBatch([{ name: "Tuần 17 đề A.html" }, { name: "Tuần 17 đề A.pdf" }, { name: "Tuần 17 đề B.pdf" }], sl);
+    expect(r).toEqual(["t3-w17-luyen-tap-co-ban", "t3-w17-luyen-tap-co-ban", "t3-w17-luyen-tap-nang-cao"]);
+  });
+  it("'Tuần 17, 18' không ghi loại → mục tổng hợp của tuần 18; file đã có trong danh sách thì tránh", () => {
+    expect(routeBatch([{ name: "Tuần 17, 18.pdf" }], sl)).toEqual(["t3-w18-luyen-tap-tong-hop"]);
+    expect(routeBatch([{ name: "Tuần 17, 18.pdf" }], sl, ["t3-w18-luyen-tap-tong-hop|pdf"])).toEqual(["t3-w18-luyen-tap-co-ban"]);
+  });
+  it("hết mục trống thì để cô chọn; tên có loại phiếu rõ vẫn vào đúng mục", () => {
+    const r = routeBatch([{ name: "Tuần 17 a.html" }, { name: "Tuần 17 b.html" }, { name: "Tuần 17 c.html" }, { name: "Tuần 17 nâng cao.pdf" }], sl);
+    expect(r[0]).toBe("t3-w17-luyen-tap-co-ban");
+    expect(r[1]).toBe("t3-w17-luyen-tap-nang-cao");
+    expect(r[2]).toBeNull();
+    expect(r[3]).toBe("t3-w17-luyen-tap-nang-cao");
   });
 });
