@@ -70,10 +70,8 @@ function teachingItems(grade: Grade, b: TeachingBlock): Item[] {
     push({ slug: `video-bai-giang-${i + 1}`, type: "video", title: `Video: ${g.join("; ")}`, level: "co-ban", isFree: free, videoProvider: "youtube" }),
   );
 
-  // Toán 4 từ tuần 29 trên mathx chỉ có bài luyện tập nâng cao
-  if (!(grade === 4 && n >= 29)) {
-    push({ slug: "luyen-tap-co-ban", type: "worksheet", title: `Bài tập luyện tập Tuần ${n} – cơ bản`, level: "co-ban", isFree: free });
-  }
+  // Tuần học nào cũng có đủ ô "cơ bản" và "nâng cao" để cô tải phiếu lên (kể cả Toán 4 từ tuần 29)
+  push({ slug: "luyen-tap-co-ban", type: "worksheet", title: `Bài tập luyện tập Tuần ${n} – cơ bản`, level: "co-ban", isFree: free });
   push({ slug: "luyen-tap-nang-cao", type: "worksheet", title: `Bài tập luyện tập Tuần ${n} – nâng cao`, level: "nang-cao", isFree: free });
   if (b.tongHop) push({ slug: "luyen-tap-tong-hop", type: "worksheet", title: b.tongHop, level: "nang-cao", isFree: free });
   for (const w of REAL_WORKSHEETS[grade]?.[n] ?? []) {

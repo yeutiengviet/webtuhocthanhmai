@@ -106,3 +106,15 @@ describe("đủ 8 khóa: Toán và Tiếng Việt lớp 2–5", () => {
     }
   });
 });
+
+describe("tuần học nào cũng có ô phiếu cơ bản và nâng cao (để tải hàng loạt)", () => {
+  it("Toán lớp 2–5: mọi tuần học có luyen-tap-co-ban và luyen-tap-nang-cao", async () => {
+    const { TOAN_THEO_TUAN } = await import("@/data/toan-theo-tuan");
+    for (const c of TOAN_THEO_TUAN)
+      for (const w of c.weeks.filter((x) => x.kind === "hoc")) {
+        const slugs = w.items.map((i) => i.slug);
+        expect(slugs, `${c.id} tuần ${w.number}`).toContain("luyen-tap-co-ban");
+        expect(slugs, `${c.id} tuần ${w.number}`).toContain("luyen-tap-nang-cao");
+      }
+  });
+});
