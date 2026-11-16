@@ -60,7 +60,7 @@ export default async function CoursePage({ params }: { params: Params }) {
     const other = subject.slug === "toan" ? { slug: "tieng-viet", name: "Tiếng Việt" } : { slug: "toan", name: "Toán" };
     return (
       <>
-        <PageHero badge="☀️ Ôn tập hè" title={`Đề ôn tập hè ${subject.name} lớp ${grade}`} subtitle={`${weeks[0]?.title ?? ""}. Mỗi đề có bài làm tương tác trên web và phiếu PDF tải về in.`}>
+        <PageHero badge="☀️ Ôn tập hè" title={`Đề ôn tập hè ${subject.name} lớp ${grade}`} subtitle={`${items.length} đề: ${weeks.map((w) => `${w.items.length} ${w.label?.toLowerCase()}`).join(" và ")}. Mỗi đề có bài làm tương tác trên web và phiếu PDF tải về in.`}>
           <div className="mb-2">
             <Breadcrumbs items={[{ href: `/${subject.slug}`, label: subject.name }, { href: `/${subject.slug}/${lop}`, label: `Lớp ${grade}` }, { label: TRACK_LABELS[course.track].name }]} />
           </div>
@@ -72,7 +72,7 @@ export default async function CoursePage({ params }: { params: Params }) {
               <ul className="mt-2 space-y-1.5 text-sm text-gray-800">
                 <li><span aria-hidden>✏️</span> <strong>Làm trên web:</strong> con làm bài, nộp là có điểm ngay.</li>
                 <li><span aria-hidden>⬇️</span> <strong>Tải PDF:</strong> phụ huynh in ra cho con làm trên giấy.</li>
-                <li><span aria-hidden>📅</span> Mỗi tuần 2–3 đề, làm theo thứ tự từ Đề 1.</li>
+                <li><span aria-hidden>📅</span> Mỗi tuần 2–3 đề: làm đề cơ bản trước, vững rồi chuyển sang đề nâng cao.</li>
               </ul>
             </div>
             <div className="rounded-3xl bg-amber-50 p-4 ring-1 ring-amber-200">
@@ -83,37 +83,55 @@ export default async function CoursePage({ params }: { params: Params }) {
               </Link>
             </div>
           </div>
-          <ul className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-            {items.map(({ w, it }) => {
-              const f = files.get(it.id);
-              const hasHtml = Boolean(f?.hasHtml);
-              const hasPdf = Boolean(f?.hasPdf);
-              return (
-                <li key={it.id} className="flex flex-col rounded-3xl bg-white p-4 shadow-sm ring-1 ring-amber-200">
-                  <p className="flex items-center gap-2">
-                    <span className="grid h-12 w-12 shrink-0 place-items-center rounded-2xl bg-amber-500 font-display text-xl font-extrabold text-white">{it.order}</span>
-                    <span className="min-w-0">
-                      <span className="block font-display text-lg font-extrabold text-gray-900">Đề {it.order}</span>
-                      <span className="block text-xs font-semibold text-gray-600">{subject.name} lớp {grade}</span>
-                    </span>
-                  </p>
-                  <div className="mt-3 flex flex-1 flex-wrap items-end gap-2">
-                    {hasHtml && (
-                      <Link href={itemHref(course, w, it)} className="btn-toy inline-flex min-h-11 items-center gap-1.5 rounded-full bg-brand-600 px-4 font-extrabold text-white">
-                        <span aria-hidden>✏️</span> Làm trên web
-                      </Link>
-                    )}
-                    {hasPdf && (
-                      <a href={lessonFileHref(it.id, "pdf")} target="_blank" rel="noopener" className="inline-flex min-h-11 items-center gap-1.5 rounded-full bg-white px-4 font-extrabold text-brand-700 ring-2 ring-brand-200">
-                        <span aria-hidden>⬇️</span> Tải PDF
-                      </a>
-                    )}
-                    {!hasHtml && !hasPdf && <span className="text-sm font-semibold text-gray-500">Đang cập nhật</span>}
-                  </div>
-                </li>
-              );
-            })}
-          </ul>
+          <nav aria-label="Chọn phần" className="mb-5 flex flex-wrap gap-2">
+            {weeks.map((w) => (
+              <a key={w.id} href={`#${w.slug}`} className={`inline-flex min-h-11 items-center gap-1.5 rounded-full px-4 font-extrabold ring-2 ${w.items[0]?.level === "nang-cao" ? "bg-brand-50 text-brand-800 ring-brand-200" : "bg-accent-50 text-accent-800 ring-accent-200"}`}>
+                <span aria-hidden>{w.items[0]?.level === "nang-cao" ? "⭐" : "📗"}</span> {w.label} ({w.items.length} đề)
+              </a>
+            ))}
+          </nav>
+          {weeks.map((w) => {
+            const advanced = w.items[0]?.level === "nang-cao";
+            return (
+              <section key={w.id} id={w.slug} aria-labelledby={`${w.slug}-title`} className="mb-8 scroll-mt-32">
+                <h2 id={`${w.slug}-title`} className="flex items-center gap-2 font-display text-2xl font-extrabold text-gray-900">
+                  <span aria-hidden>{advanced ? "⭐" : "📗"}</span> {w.label}
+                </h2>
+                <p className="mb-3 text-sm text-gray-700">{advanced ? "Dành cho con đã vững kiến thức cơ bản, muốn thử sức với bài khó hơn." : "Củng cố kiến thức trọng tâm của cả năm — con nên làm phần này trước."}</p>
+                <ul className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+                  {w.items.map((it) => {
+                    const f = files.get(it.id);
+                    const hasHtml = Boolean(f?.hasHtml);
+                    const hasPdf = Boolean(f?.hasPdf);
+                    return (
+                      <li key={it.id} className={`flex flex-col rounded-3xl bg-white p-4 shadow-sm ring-1 ${advanced ? "ring-brand-200" : "ring-amber-200"}`}>
+                        <p className="flex items-center gap-2">
+                          <span className={`grid h-12 w-12 shrink-0 place-items-center rounded-2xl font-display text-xl font-extrabold text-white ${advanced ? "bg-brand-600" : "bg-amber-500"}`}>{it.order}</span>
+                          <span className="min-w-0">
+                            <span className="block font-display text-lg font-extrabold text-gray-900">Đề {it.order}</span>
+                            <span className="mt-0.5 flex flex-wrap items-center gap-1.5 text-xs font-semibold text-gray-600">{subject.name} lớp {grade} <LevelBadge level={it.level} /></span>
+                          </span>
+                        </p>
+                        <div className="mt-3 flex flex-1 flex-wrap items-end gap-2">
+                          {hasHtml && (
+                            <Link href={itemHref(course, w, it)} className="btn-toy inline-flex min-h-11 items-center gap-1.5 rounded-full bg-brand-600 px-4 font-extrabold text-white">
+                              <span aria-hidden>✏️</span> Làm trên web
+                            </Link>
+                          )}
+                          {hasPdf && (
+                            <a href={lessonFileHref(it.id, "pdf")} target="_blank" rel="noopener" className="inline-flex min-h-11 items-center gap-1.5 rounded-full bg-white px-4 font-extrabold text-brand-700 ring-2 ring-brand-200">
+                              <span aria-hidden>⬇️</span> Tải PDF
+                            </a>
+                          )}
+                          {!hasHtml && !hasPdf && <span className="text-sm font-semibold text-gray-500">Đang cập nhật</span>}
+                        </div>
+                      </li>
+                    );
+                  })}
+                </ul>
+              </section>
+            );
+          })}
           <p className="mt-6 text-sm text-gray-600">
             <Link href={`/${subject.slug}/${lop}`} className="font-bold text-brand-700 underline">← Các mục khác của {subject.name} lớp {grade}</Link>
           </p>

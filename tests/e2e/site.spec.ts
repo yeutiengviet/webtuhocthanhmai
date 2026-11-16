@@ -149,7 +149,7 @@ test("đường dẫn đoán bừa trả về 404, tiêu đề tab không gây h
   await expect(page).toHaveTitle(/Không tìm thấy trang/);
   await page.goto("/toan/lop-6");
   await expect(page).toHaveTitle(/Không tìm thấy trang/);
-  for (const p of ["/toan/lop-4/constructor", "/toan/lop-4/__proto__", "/toan/lop-6", "/tieng-viet/lop-1", "/toan/lop-4/theo-tuan/tuan-36/video-bai-giang-1", "/toan/lop-4/theo-tuan/tuan-1/khong-co", "/van/lop-4", "/toan/lop-4/ky-thi", "/toan/lop-4/on-tap-he/de-on-tap-he/de-21"]) {
+  for (const p of ["/toan/lop-4/constructor", "/toan/lop-4/__proto__", "/toan/lop-6", "/tieng-viet/lop-1", "/toan/lop-4/theo-tuan/tuan-36/video-bai-giang-1", "/toan/lop-4/theo-tuan/tuan-1/khong-co", "/van/lop-4", "/toan/lop-4/ky-thi", "/toan/lop-4/on-tap-he/de-nang-cao/de-21"]) {
     expect((await request.get(p)).status(), p).toBe(404);
   }
 });
@@ -297,14 +297,16 @@ test("nút Đăng nhập trên menu mở khung đăng nhập có nút Tạo tài
   await expect(page.getByLabel("Số điện thoại hoặc email")).toBeVisible();
 });
 
-test("Đề ôn tập hè: có ở cả Toán và Tiếng Việt mọi lớp, mỗi khóa 20 đề", async ({ page }) => {
+test("Đề ôn tập hè: có ở cả Toán và Tiếng Việt mọi lớp, mỗi khóa 20 đề cơ bản + 20 đề nâng cao", async ({ page }) => {
   for (const mon of ["toan", "tieng-viet"]) {
     for (const g of [2, 5]) {
       await page.goto(`/${mon}/lop-${g}`);
       await page.getByRole("link", { name: /Đề ôn tập hè/ }).click();
       await expect(page).toHaveURL(new RegExp(`/${mon}/lop-${g}/on-tap-he$`));
       await expect(page.getByRole("heading", { level: 1 })).toContainText(`lớp ${g}`);
-      await expect(page.getByText(/^Đề \d+$/)).toHaveCount(20);
+      await expect(page.getByText(/^Đề \d+$/)).toHaveCount(40);
+      await expect(page.getByRole("heading", { name: "Đề cơ bản" })).toBeVisible();
+      await expect(page.getByRole("heading", { name: "Đề nâng cao" })).toBeVisible();
     }
   }
 });

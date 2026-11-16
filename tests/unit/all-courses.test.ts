@@ -88,14 +88,21 @@ describe("đủ 8 khóa: Toán và Tiếng Việt lớp 2–5", () => {
     }
   });
 
-  it("Đề ôn tập hè: Toán và Tiếng Việt lớp 2–5, mỗi khóa 20 đề nhận cả phiếu tương tác và PDF, ai cũng xem được", () => {
+  it("Đề ôn tập hè: Toán và Tiếng Việt lớp 2–5, mỗi khóa 40 đề (20 cơ bản + 20 nâng cao) nhận cả phiếu tương tác và PDF, ai cũng xem được", () => {
     for (const subject of ["toan", "tieng-viet"]) {
       for (const grade of [2, 3, 4, 5]) {
         const c = getCourse(subject, grade, "on-tap-he");
         expect(c, `${subject} ${grade}`).toBeDefined();
+        expect(c!.weeks.map((w) => w.slug)).toEqual(["de-co-ban", "de-nang-cao"]);
         const items = c!.weeks.flatMap((w) => w.items);
-        expect(items).toHaveLength(20);
-        expect(items.map((i) => i.slug)).toEqual(Array.from({ length: 20 }, (_, i) => `de-${i + 1}`));
+        expect(items).toHaveLength(40);
+        expect(new Set(items.map((i) => i.id)).size).toBe(40);
+        for (const [w, level] of [[c!.weeks[0], "co-ban"], [c!.weeks[1], "nang-cao"]] as const) {
+          expect(w.items.map((i) => i.slug)).toEqual(Array.from({ length: 20 }, (_, i) => `de-${i + 1}`));
+          expect(w.items.every((i) => i.level === level)).toBe(true);
+        }
+        // mã đề cơ bản giữ như cũ để phiếu đã tải không bị mất
+        expect(c!.weeks[0].items[4].id).toMatch(/-he-de-5$/);
         for (const it of items) {
           expect(it.type).toBe("test");
           expect(it.isFree).toBe(true);
