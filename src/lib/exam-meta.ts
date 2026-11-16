@@ -5,10 +5,14 @@ import type { ExamCategory, SubjectSlug } from "@/lib/types";
 
 export const EXAM_CATEGORY_LABELS: Record<ExamCategory, string> = {
   "danh-gia-thang": "Đánh giá tháng",
-  "giua-ki-1": "Giữa học kì I",
-  "cuoi-ki-1": "Cuối học kì I",
-  "giua-ki-2": "Giữa học kì II",
-  "cuoi-nam": "Cuối năm",
+  "on-tap-giua-ki-1": "Ôn tập giữa học kì I",
+  "giua-ki-1": "Đề giữa học kì I",
+  "on-tap-cuoi-ki-1": "Ôn tập cuối học kì I",
+  "cuoi-ki-1": "Đề cuối học kì I",
+  "on-tap-giua-ki-2": "Ôn tập giữa học kì II",
+  "giua-ki-2": "Đề giữa học kì II",
+  "on-tap-cuoi-nam": "Ôn tập cuối năm",
+  "cuoi-nam": "Đề cuối năm",
   "luyen-thi": "Luyện thi",
 };
 export const EXAM_CATEGORIES = Object.keys(EXAM_CATEGORY_LABELS) as ExamCategory[];
