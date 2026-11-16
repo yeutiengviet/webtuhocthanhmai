@@ -2,14 +2,6 @@
  "lop": 2,
  "chuyenDe": [
   {
-   "ten": "Bài giảng học thử",
-   "bai": [
-    "Dãy số và quy luật dãy số",
-    "Phép cộng, trừ trong phạm vi 100"
-   ],
-   "hocThu": true
-  },
-  {
    "ten": "Số và chữ số",
    "bai": [
     "Bài toán số và chữ số (phần 1)",
@@ -108,16 +100,6 @@
     "Phương pháp vẽ sơ đồ – Bài 1",
     "Phương pháp vẽ sơ đồ – Bài 2",
     "Phương pháp vẽ sơ đồ – Bài 3"
-   ]
-  },
-  {
-   "ten": "Học toán tư duy (livestream)",
-   "bai": [
-    "Bài 1: Phương pháp vẽ sơ đồ",
-    "Bài 2: Phương pháp thế",
-    "Bài 3: Bài toán bốc bi",
-    "Bài 4: Bài toán xác định vị trí",
-    "Bài 5: Các bài toán suy luận logic"
    ]
   }
  ]

@@ -2,13 +2,6 @@
  "lop": 5,
  "chuyenDe": [
   {
-   "ten": "Bài giảng học thử",
-   "bai": [
-    "Bài toán chuyển động ngược chiều"
-   ],
-   "hocThu": true
-  },
-  {
    "ten": "Dãy số – quy luật",
    "bai": [
     "Tìm qui luật dãy số (phần 1)",
@@ -231,30 +224,6 @@
     "Bài toán biểu đồ Ven (phần 1)",
     "Bài toán biểu đồ Ven (phần 2)",
     "Bài toán biểu đồ Ven (nâng cao – khó)"
-   ]
-  },
-  {
-   "ten": "Học toán tư duy (livestream)",
-   "bai": [
-    "Giải đề số 01",
-    "Giải đề số 02",
-    "Bài toán dãy số",
-    "Cấu tạo số",
-    "Tỉ lệ diện tích tam giác",
-    "Tính nhanh phân số (phần 1)",
-    "Tính nhanh phân số (phần 2)",
-    "Tính nhanh phân số (phần 3)",
-    "Bài toán tư duy hack não",
-    "Bài toán tính ngược",
-    "Bài toán tính tuổi",
-    "Giải đề số 03",
-    "Giải đề số 04",
-    "Tỉ số phần trăm (phần 1)",
-    "Tỉ số phần trăm (phần 2)",
-    "Bài toán chuyển động (phần 1)",
-    "Bài toán chuyển động (phần 2)",
-    "Bài toán chuyển động ngược chiều",
-    "Bài toán chuyển động cùng chiều"
    ]
   },
   {

@@ -2,14 +2,6 @@
  "lop": 3,
  "chuyenDe": [
   {
-   "ten": "Bài giảng học thử",
-   "bai": [
-    "Đếm số hình tam giác",
-    "Tìm một phần trong các phần bằng nhau của một số"
-   ],
-   "hocThu": true
-  },
-  {
    "ten": "Bài toán số và chữ số",
    "bai": [
     "Đọc, viết, cấu tạo số (phần 1)",
@@ -153,17 +145,6 @@
     "Suy luận logic – Bài 10",
     "Suy luận logic – Bài 11",
     "Suy luận logic – Bài 12"
-   ]
-  },
-  {
-   "ten": "Học toán tư duy (livestream)",
-   "bai": [
-    "Bài 1: Bài toán xếp hàng",
-    "Bài 2: Phương pháp vẽ sơ đồ",
-    "Bài 3: Bài toán trồng cây",
-    "Bài 4: Dãy số cách đều",
-    "Bài 5: Các bài toán tư duy",
-    "Bài 6: Các bài toán tư duy – phần 2"
    ]
   }
  ]

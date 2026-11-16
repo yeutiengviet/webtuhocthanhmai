@@ -155,14 +155,20 @@ function buildTheoTuan(grade: Grade): Course {
 
 interface NangCaoData { lop: number; chuyenDe: { ten: string; hocThu?: boolean; bai: string[] }[] }
 const NC: Record<Grade, NangCaoData> = { 2: nc2, 3: nc3, 4: nc4, 5: nc5 };
+/**
+ * Lớp 2, 3, 5 đã bỏ chuyên đề "Bài giảng học thử" (từng đứng đầu danh sách) → cộng bù 1 vào mã
+ * để mã bài (t{lớp}-nc{n}-b{k}) giữ nguyên như cũ, file cô đã tải lên không bị lệch sang bài khác.
+ */
+const NC_ID_OFFSET: Record<Grade, number> = { 2: 1, 3: 1, 4: 0, 5: 1 };
 
 /** Toán nâng cao theo chuyên đề: mỗi "tuần" của khóa là một chuyên đề, mỗi bài giảng là một video. */
 function buildNangCao(grade: Grade): Course {
   const calendar = buildWeekCalendar(SCHOOL_YEAR_START, NC[grade].chuyenDe.length, []);
   const weeks: Week[] = NC[grade].chuyenDe.map((cd, i) => {
     const c = i + 1;
+    const code = c + NC_ID_OFFSET[grade];
     const items: Item[] = cd.bai.map((title, k) => ({
-      id: `t${grade}-nc${c}-b${k + 1}`,
+      id: `t${grade}-nc${code}-b${k + 1}`,
       slug: `bai-${k + 1}`,
       type: "video",
       title,
@@ -173,7 +179,7 @@ function buildNangCao(grade: Grade): Course {
       videoRef: null,
       url: null,
     }));
-    return { id: `t${grade}-nc${c}`, number: c, startDate: calendar[i].startDate, endDate: calendar[i].endDate, title: cd.ten, kind: "hoc", published: true, items };
+    return { id: `t${grade}-nc${code}`, number: c, startDate: calendar[i].startDate, endDate: calendar[i].endDate, title: cd.ten, kind: "hoc", published: true, items };
   });
   return {
     id: `toan-${grade}-nang-cao`,
