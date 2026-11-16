@@ -55,6 +55,7 @@ export function guessFromFileName(fileName: string): Guess {
   let slug: string | null = null;
   if (/ (nang ?cao|nc)(?= )/.test(s)) slug = "luyen-tap-nang-cao";
   else if (/ (co ?ban|cb)(?= )/.test(s)) slug = "luyen-tap-co-ban";
+  else if (/ (tong ?hop|th)(?= )/.test(s)) slug = "luyen-tap-tong-hop";
   else if (/ (kiem ?tra|kt|15 ?(phut|p))(?= )/.test(s)) slug = "kiem-tra-15-phut";
   else if (/ (de cuong)(?= )/.test(s)) slug = "de-cuong";
   else if (/ (tai lieu|tl)(?= )/.test(s)) slug = "tai-lieu-tuan";
@@ -95,7 +96,12 @@ export interface FileMatch {
 /** Tìm mục theo đoán; nếu tuần ôn tập không có "cơ bản" thì không tự xếp (để cô chọn). */
 export function matchSlot(guess: Guess, slots: SlotInfo[]): SlotInfo | null {
   if (guess.week === null || guess.slug === null) return null;
-  return slots.find((x) => x.week === guess.week && x.slug === guess.slug) ?? null;
+  const inWeek = slots.filter((x) => x.week === guess.week);
+  const exact = inWeek.find((x) => x.slug === guess.slug);
+  if (exact) return exact;
+  // Khóa Toán đặt tên đề ôn tập là "de-1", "de-2"… (khung Tiếng Việt là "de-on-tap-1"…)
+  const de = /^de-on-tap-(\d)$/.exec(guess.slug);
+  return de ? (inWeek.find((x) => x.slug === `de-${de[1]}`) ?? null) : null;
 }
 
 /** Kiểm tra cả danh sách: đúng loại file, không có 2 file cùng loại vào cùng một mục. */

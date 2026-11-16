@@ -20,6 +20,9 @@ describe("đoán tuần và mục từ tên file", () => {
     ["co ban.html", null, "luyen-tap-co-ban"],
     ["tuan 40 co ban.html", null, "luyen-tap-co-ban"],
     ["anh chup.html", null, null],
+    ["Lớp 4 Tuần 29 - Cơ bản.pdf", 29, "luyen-tap-co-ban"],
+    ["Lớp 4 Tuần 32 - Nâng cao.html", 32, "luyen-tap-nang-cao"],
+    ["Tuần 6 tổng hợp.html", 6, "luyen-tap-tong-hop"],
   ];
   for (const [name, week, slug] of cases) {
     it(name, () => expect(guessFromFileName(name)).toEqual({ week, slug }));
@@ -57,6 +60,13 @@ describe("xếp file vào mục", () => {
     expect([...g.keys()]).toEqual(["t3-w5-luyen-tap-co-ban"]);
     expect(g.get("t3-w5-luyen-tap-co-ban")?.html?.fileName).toBe("a.html");
     expect(g.get("t3-w5-luyen-tap-co-ban")?.pdf?.fileName).toBe("a.pdf");
+  });
+});
+
+describe("khóa Toán: đề ôn tập tên \"de-N\"", () => {
+  it("'Tuần 9 đề 2' xếp vào đề 2 của tuần ôn tập", () => {
+    const toan: SlotInfo[] = [{ id: "t4-on1-de-2", week: 9, slug: "de-2", title: "Đề 2", html: true, pdf: true }];
+    expect(matchSlot(guessFromFileName("Lớp 4 tuần 9 đề 2.pdf"), toan)?.id).toBe("t4-on1-de-2");
   });
 });
 
