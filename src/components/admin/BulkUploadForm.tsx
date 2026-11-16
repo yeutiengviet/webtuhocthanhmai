@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { useMemo, useState } from "react";
 import { createExam, saveLessonFiles } from "@/app/quan-tri/actions";
 import { discardPair, uploadPair, type UploadedIds } from "@/components/admin/FileSlot";
-import { courseMismatch, examGroupKey, examTarget, examTitleFromFileName, groupByExam, groupByItem, guessExamFromFileName, matchSummerSlot, parseExamTarget, routeFile, validateTargets, type MatchProblem, type SlotInfo } from "@/lib/bulk-match";
+import { courseMismatch, examGroupKey, examTarget, examTitleFromFileName, groupByExam, groupByItem, guessExamFromFileName, matchSummerSlot, parseExamTarget, routeBatch, validateTargets, type MatchProblem, type SlotInfo } from "@/lib/bulk-match";
 import { checkFileContent, EXAM_CATEGORIES, EXAM_CATEGORY_LABELS, kindFromFileName, MAX_FILE_BYTES } from "@/lib/exam-meta";
 import type { SubjectSlug } from "@/lib/types";
 
@@ -63,16 +63,21 @@ export function BulkUploadForm({
     setReport(null);
     if (!list) return;
     const added: Row[] = [];
-    for (const file of Array.from(list)) {
+    const files = Array.from(list);
+    const errors: (string | null)[] = [];
+    for (const file of files) {
       const kind = kindFromFileName(file.name);
       let contentError: string | null = null;
       if (!kind) contentError = "Chỉ nhận file .html hoặc .pdf";
       else if (file.size > MAX_FILE_BYTES) contentError = "File quá lớn (tối đa 10 MB)";
       else contentError = checkFileContent(new Uint8Array(await file.slice(0, 8192).arrayBuffer()), kind);
       if (!contentError && !summer) contentError = courseMismatch(file.name, course);
-      const itemId = summer ? (matchSummerSlot(file.name, slots)?.id ?? null) : routeFile(file.name, slots);
-      added.push({ key: `${file.name}-${file.size}-${file.lastModified}-${Math.random()}`, file, itemId, contentError });
+      errors.push(contentError);
     }
+    // Xếp cả loạt một lượt (một tuần có thể nhận nhiều file); tính cả các file đã có trong danh sách
+    const taken = rows.flatMap((r) => (r.itemId && !parseExamTarget(r.itemId) ? [`${r.itemId}|${kindFromFileName(r.file.name) ?? "?"}`] : []));
+    const targets = summer ? files.map((file) => matchSummerSlot(file.name, slots)?.id ?? null) : routeBatch(files.map((file) => ({ name: file.name })), slots, taken);
+    files.forEach((file, i) => added.push({ key: `${file.name}-${file.size}-${file.lastModified}-${Math.random()}`, file, itemId: targets[i], contentError: errors[i] }));
     added.sort((a, b) => (byId.get(a.itemId ?? "")?.week ?? 99) - (byId.get(b.itemId ?? "")?.week ?? 99) || a.file.name.localeCompare(b.file.name, "vi", { numeric: true }));
     setRows((r) => [...r, ...added]);
   }
@@ -163,10 +168,10 @@ export function BulkUploadForm({
             </span>
           ) : (
           <span className="mt-1 block text-sm text-gray-700">
-            Đặt tên file có <strong>số tuần</strong> và <strong>loại phiếu</strong>, ví dụ: <code>Tuan 5 - Co ban.html</code>, <code>Tuần 5 nâng cao.pdf</code>,{" "}
+            Đặt tên file có <strong>số tuần</strong> và <strong>loại phiếu</strong> (không ghi loại phiếu thì xếp vào mục còn trống của tuần, một tuần nhận nhiều file), ví dụ: <code>Tuan 5 - Co ban.html</code>, <code>Tuần 5 nâng cao.pdf</code>,{" "}
             <code>Tuần 4 kiểm tra 15 phút.html</code>, <code>Tuần 3 tài liệu.pdf</code>, <code>Tuần 9 đề 2.html</code>
             <span className="mt-2 block rounded-xl bg-white p-3 text-left ring-1 ring-brand-100">
-              <strong>Đề thi</strong> (vào mục Đề thi, không vào tuần): tên file có <strong>giữa kì / cuối kì / ôn tập học kì</strong> và số kì, ví dụ:{" "}
+              <strong>Đề thi</strong> (vào mục Đề thi): tên file <strong>không có chữ “tuần”</strong> mà có <strong>giữa kì / cuối kì / ôn tập học kì / HK1</strong> (HK1 = cuối học kì 1, HK2 = cuối học kì 2), ví dụ:{" "}
               <code>Đề giữa kì 1.html</code>, <code>Đề cuối học kỳ 1.pdf</code>, <code>Ôn tập cuối học kì 1.pdf</code>, <code>Đề cuối năm.pdf</code>. Cùng tên thì file .html và .pdf ghép thành một đề.
             </span>
           </span>

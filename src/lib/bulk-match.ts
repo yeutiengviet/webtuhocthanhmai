@@ -31,7 +31,7 @@ function normalize(name: string): string {
     .replace(/đ/g, "d")
     .replace(/Đ/g, "D")
     .toLowerCase()
-    .replace(/[_.\-–—()[\]]+/g, " ")
+    .replace(/[_.,;&\-–—()[\]]+/g, " ")
     .replace(/(\d)([a-z])/g, "$1 $2")
     .replace(/([a-z])(\d)/g, "$1 $2")
     .replace(/\s+/g, " ")
@@ -135,9 +135,9 @@ export function guessExamFromFileName(fileName: string): ExamGuess {
   if (/ cuoi nam(?= )/.test(s)) return { isExam: true, category: pick("cuoi", 2) };
   if (/ danh gia thang(?= )/.test(s)) return { isExam: true, category: "danh-gia-thang" };
   if (/ (luyen thi|thi thu)(?= )/.test(s)) return { isExam: true, category: "luyen-thi" };
-  // "Đề thi học kì 1", "Kiểm tra HK2" (không ghi giữa/cuối) = đề cuối kì; "Ôn tập HK1" thì để cô chọn giữa/cuối
-  m = / (?:hoc ?)?(?:ki|ky|hk) ?(1|2|ii|i)(?= )/.exec(s);
-  if (m && / (?:thi|kiem tra|on tap|on thi)(?= )/.test(s)) return { isExam: true, category: / (?:thi|kiem tra)(?= )/.test(s) && !onTap ? pick("cuoi", termNo(m[1])) : null };
+  // "HK1", "Đề thi học kì 2" (không ghi giữa/cuối) = đề cuối kì; HK2 = cuối năm
+  m = / (?:hoc (?:ki|ky)|hk) ?(1|2|ii|i)(?= )/.exec(s);
+  if (m) return { isExam: true, category: pick("cuoi", termNo(m[1])) };
   // có chữ giữa/cuối kì nhưng thiếu kì 1 hay 2, hoặc "ôn tập học kì": là đề thi, để cô chọn loại
   if (/ (giua|cuoi) ?(?:hoc ?)?(?:ki|ky)(?= )/.test(s) || / on tap hoc (?:ki|ky)(?= )/.test(s)) return { isExam: true, category: null };
   return { isExam: false, category: null };
@@ -176,11 +176,92 @@ export function courseMismatch(fileName: string, course: { grade: number; subjec
   return null;
 }
 
-/** Nơi xếp file: Đề thi (nếu tên file là đề thi và rõ nhóm), nếu không thì mục của tuần theo tên file. */
+/**
+ * Các tuần ghi trong tên file. Có chữ "tuần/T/W" + số (cho phép "Tuần 17, 18", "tuần 17-18", "tuần 17 và 18"):
+ * keyword=true. Không có chữ "tuần" thì chỉ lấy khi tên file có đúng một con số (keyword=false).
+ */
+export function guessWeeks(fileName: string): { weeks: number[]; keyword: boolean } {
+  let s = ` ${normalize(fileName)} `;
+  s = s.replace(/ (lop|l) ?[1-5](?= )/g, " ");
+  const first = / (?:tuan|t|w|week) ?0*(\d{1,2})(?= )(?! ?(?:phut|p)(?= ))/.exec(s);
+  if (first) {
+    const weeks = [Number(first[1])];
+    const more = / ?(?:va |den |toi )?0*(\d{1,2})(?= )(?! ?(?:phut|p)(?= ))/y;
+    more.lastIndex = first.index + first[0].length;
+    for (let m = more.exec(s); m; m = more.exec(s)) {
+      weeks.push(Number(m[1]));
+      more.lastIndex = m.index + m[0].length;
+    }
+    return { weeks: [...new Set(weeks)].filter((n) => n >= 1 && n <= 35), keyword: true };
+  }
+  const nums = [...s.matchAll(/ 0*(\d{1,2})(?= )/g)].map((m) => Number(m[1])).filter((n) => n >= 1 && n <= 35);
+  return { weeks: nums.length === 1 ? nums : [], keyword: false };
+}
+
+/**
+ * Xếp cả loạt file một lượt. Thứ tự ưu tiên cho từng file:
+ * 1. Tên có "tuần N" → vào tuần N (kể cả khi có chữ cuối kì/ôn tập). Ghi rõ loại phiếu (cơ bản, nâng cao, tổng hợp, kiểm tra 15 phút…)
+ *    thì vào đúng mục; không ghi thì vào mục còn trống đầu tiên của tuần — nên một tuần nhận được nhiều file.
+ *    File .html và .pdf cùng tên vào cùng một mục. "Tuần 17, 18": ưu tiên tuần có mục tổng hợp.
+ * 2. Không có "tuần" mà là đề giữa/cuối kì, ôn tập học kì, HK1… → mục Đề thi ("exam:<nhóm>").
+ * 3. Còn lại: tên chỉ có một con số thì coi là số tuần (vd "phieu nang cao 14.html").
+ * `taken`: các cặp "mãMục|loạiFile" đã có file khác trong danh sách (để không xếp trùng).
+ */
+export function routeBatch(files: { name: string }[], slots: SlotInfo[], taken: Iterable<string> = []): (string | null)[] {
+  const out: (string | null)[] = files.map(() => null);
+  const used = new Set(taken);
+  const reserve = (id: string, name: string) => used.add(`${id}|${kindFromFileName(name) ?? "?"}`);
+  const pending: { i: number; weeks: number[] }[] = [];
+
+  files.forEach((f, i) => {
+    const { weeks, keyword } = guessWeeks(f.name);
+    const exam = guessExamFromFileName(f.name);
+    if (!keyword && exam.isExam) {
+      out[i] = exam.category ? examTarget(exam.category) : null;
+      return;
+    }
+    if (weeks.length === 0) return;
+    const slug = guessFromFileName(f.name).slug;
+    for (const w of weeks) {
+      const slot = slug ? matchSlot({ week: w, slug }, slots) : null;
+      if (slot) {
+        out[i] = slot.id;
+        reserve(slot.id, f.name);
+        return;
+      }
+    }
+    pending.push({ i, weeks });
+  });
+
+  // Chưa rõ mục: gom file cùng tên (.html + .pdf) rồi tìm mục còn trống trong tuần
+  const groups = new Map<string, { i: number; weeks: number[] }[]>();
+  for (const p of pending) {
+    const key = examGroupKey(files[p.i].name);
+    groups.set(key, [...(groups.get(key) ?? []), p]);
+  }
+  const SPECIAL = new Set(["tai-lieu-tuan", "de-cuong"]);
+  for (const g of groups.values()) {
+    const weeks = [...g[0].weeks];
+    // nhiều tuần: tuần có mục "tổng hợp" trước, rồi tuần sau đến tuần trước
+    weeks.sort((a, b) => Number(slots.some((s) => s.week === b && s.slug === "luyen-tap-tong-hop")) - Number(slots.some((s) => s.week === a && s.slug === "luyen-tap-tong-hop")) || b - a);
+    const kinds = g.map((p) => kindFromFileName(files[p.i].name));
+    const fits = (s: SlotInfo) => kinds.every((k) => (k === null || s[k]) && !used.has(`${s.id}|${k ?? "?"}`));
+    const cand = weeks.flatMap((w) => slots.filter((s) => s.week === w));
+    // "Tuần 17, 18" là phiếu chung của nhiều tuần → mục "tổng hợp" trước
+    if (weeks.length > 1) cand.sort((a, b) => Number(b.slug === "luyen-tap-tong-hop") - Number(a.slug === "luyen-tap-tong-hop"));
+    const slot = cand.find((s) => !SPECIAL.has(s.slug) && fits(s)) ?? cand.find((s) => fits(s));
+    if (!slot) continue;
+    for (const p of g) {
+      out[p.i] = slot.id;
+      reserve(slot.id, files[p.i].name);
+    }
+  }
+  return out;
+}
+
+/** Xếp một file riêng lẻ (xem routeBatch). */
 export function routeFile(fileName: string, slots: SlotInfo[]): string | null {
-  const exam = guessExamFromFileName(fileName);
-  if (exam.isExam) return exam.category ? examTarget(exam.category) : null;
-  return matchSlot(guessFromFileName(fileName), slots)?.id ?? null;
+  return routeBatch([{ name: fileName }], slots)[0];
 }
 
 /** Tìm mục theo đoán; nếu tuần ôn tập không có "cơ bản" thì không tự xếp (để cô chọn). */
