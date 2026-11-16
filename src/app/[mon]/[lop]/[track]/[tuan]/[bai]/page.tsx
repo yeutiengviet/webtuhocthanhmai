@@ -207,7 +207,6 @@ function LockedNotice() {
       <p className="mt-1 text-gray-700">Phụ huynh đăng ký gói Toán lớp này để mở toàn bộ bài giảng và phiếu luyện tập.</p>
       <div className="mt-4 flex flex-wrap justify-center gap-3">
         <Link href="/thanh-toan" className="btn-toy rounded-full bg-brand-600 px-6 py-3 font-extrabold text-white">Đăng ký gói học</Link>
-        <Link href="/hoc-thu" className="rounded-full bg-emerald-50 px-6 py-3 font-extrabold text-emerald-800 ring-2 ring-emerald-200"><span aria-hidden>🎁</span> Học thử miễn phí</Link>
       </div>
     </div>
   );

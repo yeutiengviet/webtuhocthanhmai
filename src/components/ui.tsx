@@ -103,8 +103,8 @@ export function ComingSoon({ title, text }: { title: string; text: string }) {
           <p className="text-5xl" aria-hidden>🚧</p>
           <p className="mt-3 font-display text-2xl text-brand-700">Cô Thanh Mai đang chuẩn bị</p>
           <p className="mt-2 text-gray-700">{text}</p>
-          <Link href="/hoc-thu" className="btn-toy mt-5 inline-flex items-center gap-2 rounded-full bg-brand-600 px-6 py-3 font-extrabold text-white">
-            Vào học thử <Icon name="arrow" className="h-4 w-4" />
+          <Link href="/toan" className="btn-toy mt-5 inline-flex items-center gap-2 rounded-full bg-brand-600 px-6 py-3 font-extrabold text-white">
+            Vào học Toán <Icon name="arrow" className="h-4 w-4" />
           </Link>
         </div>
       </Container>

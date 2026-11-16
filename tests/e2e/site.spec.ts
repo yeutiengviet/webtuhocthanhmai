@@ -13,11 +13,11 @@ function trackErrors(page: Page) {
 test("trang chủ đủ các phần theo mục 5.2, không lỗi console", async ({ page }) => {
   const errors = trackErrors(page);
   await page.goto("/");
-  await expect(page.getByText("Xem video giới thiệu")).toBeVisible();
+  await expect(page.getByText("Về cô Thanh Mai")).toBeVisible();
   await expect(page.getByRole("region", { name: "Banner" })).toBeVisible();
   await expect(page.getByRole("button", { name: "Tạm dừng" })).toBeVisible();
   await expect(page.getByText("tuần học theo sách")).toBeVisible();
-  await expect(page.getByRole("heading", { name: "5 cam kết với phụ huynh" })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "4 cam kết với phụ huynh" })).toBeVisible();
   await expect(page.locator("main a[href='/toan']").filter({ hasText: "Vào xem" })).toBeVisible();
   await expect(page.locator("main a[href='/tieng-viet']").filter({ hasText: "Vào xem" })).toBeVisible();
   await expect(page.getByRole("heading", { name: "Con đang học lớp mấy?" })).toBeVisible();
@@ -31,7 +31,7 @@ test("menu điện thoại mở được và đủ mục theo 5.1", async ({ pag
   await page.goto("/");
   await page.getByRole("button", { name: "Menu" }).click();
   const menu = page.locator("#mobile-menu");
-  for (const label of ["Giới thiệu", "Học thử", "Toán", "Tiếng Việt", "Đề thi", "Kỳ thi", "Tài liệu", "Học sinh", "Đăng nhập"]) {
+  for (const label of ["Giới thiệu", "Toán", "Tiếng Việt", "Đề thi", "Tài liệu", "Đăng nhập"]) {
     await expect(menu.getByRole("link", { name: label, exact: true })).toBeVisible();
   }
   await expect(page.getByRole("link", { name: "Hướng dẫn", exact: true })).toBeVisible();
@@ -131,7 +131,7 @@ test("nút Đến tuần hiện tại mở đúng tuần theo giờ Việt Nam",
 });
 
 test("không có chữ trắng trên nền cam nhạt (tương phản thấp)", async ({ page }) => {
-  for (const p of ["/", "/toan/lop-4/theo-tuan", "/hoc-thu"]) {
+  for (const p of ["/", "/toan/lop-4/theo-tuan", "/gioi-thieu"]) {
     await page.goto(p);
     const bad = await page.locator(".text-white").evaluateAll((els) =>
       // Bảng màu cam–xanh: nền sáng không được có chữ trắng = brand-300/400/500 và accent-400/500
@@ -188,7 +188,7 @@ test("tất cả trang bài học của cả 8 khóa theo tuần (Toán, Tiếng
 
 test("các trang phụ mở được, không lỗi console", async ({ page }) => {
   const errors = trackErrors(page);
-  for (const p of ["/gioi-thieu", "/hoc-thu", "/tieng-viet", "/ky-thi", "/tai-lieu", "/hoc-sinh", "/huong-dan", "/thanh-toan", "/chinh-sach-rieng-tu", "/dieu-khoan"]) {
+  for (const p of ["/gioi-thieu", "/tieng-viet", "/tai-lieu", "/huong-dan", "/thanh-toan", "/chinh-sach-rieng-tu", "/dieu-khoan"]) {
     const res = await page.goto(p);
     expect(res?.status(), p).toBe(200);
     await expect(page.locator("h1")).toBeVisible();
@@ -228,7 +228,7 @@ test("mạng chậm (giả lập 3G): trang chủ và trang khóa học vẫn t�
 
 test("đo tương phản màu thật bằng axe (chuẩn WCAG AA) trên các trang chính", async ({ page }) => {
   const { default: AxeBuilder } = await import("@axe-core/playwright");
-  for (const p of ["/", "/toan", "/toan/lop-4", "/toan/lop-4/theo-tuan", "/toan/lop-4/theo-tuan/tuan-5/video-bai-giang-1", "/hoc-thu", "/ky-thi", "/de-thi", "/de-thi/toan", "/de-thi/toan/lop-4/danh-gia-nang-luc-thang-10", "/quan-tri/dang-nhap"]) {
+  for (const p of ["/", "/toan", "/toan/lop-4", "/toan/lop-4/theo-tuan", "/toan/lop-4/theo-tuan/tuan-5/video-bai-giang-1", "/gioi-thieu", "/de-thi", "/de-thi/toan", "/de-thi/toan/lop-4/danh-gia-nang-luc-thang-10", "/quan-tri/dang-nhap"]) {
     await page.goto(p);
     await page.getByRole("button", { name: "Tạm dừng" }).click({ timeout: 1000 }).catch(() => {});
     // Tắt nền chấm bi (rất mờ) và đầu trang dính, vì chúng khiến axe không xác định được màu nền
