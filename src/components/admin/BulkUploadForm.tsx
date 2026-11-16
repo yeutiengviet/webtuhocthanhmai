@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { useMemo, useState } from "react";
 import { createExam, saveLessonFiles } from "@/app/quan-tri/actions";
 import { discardPair, uploadPair, type UploadedIds } from "@/components/admin/FileSlot";
-import { courseMismatch, examGroupKey, examTarget, examTitleFromFileName, groupByExam, groupByItem, guessExamFromFileName, matchSummerSlot, parseExamTarget, routeBatch, validateTargets, type MatchProblem, type SlotInfo } from "@/lib/bulk-match";
+import { courseMismatch, examGroupKey, examTarget, examTitleFromFileName, groupByExam, groupByItem, guessExamFromFileName, guessSummerLevel, guessSummerTestNumber, matchSummerSlot, parseExamTarget, routeBatch, validateTargets, type MatchProblem, type SlotInfo } from "@/lib/bulk-match";
 import { checkFileContent, EXAM_CATEGORIES, EXAM_CATEGORY_LABELS, kindFromFileName, MAX_FILE_BYTES } from "@/lib/exam-meta";
 import type { SubjectSlug } from "@/lib/types";
 
@@ -164,7 +164,7 @@ export function BulkUploadForm({
           <span className="mt-2 block font-extrabold text-brand-700">Bấm để chọn nhiều file cùng lúc</span>
           {summer ? (
             <span className="mt-1 block text-sm text-gray-700">
-              Đặt tên file có <strong>số đề</strong>, ví dụ: <code>Đề 1.html</code>, <code>Đề 1.pdf</code>, <code>On he lop 3 - De 12.html</code>. Mỗi đề nhận 1 file tương tác (.html) và 1 file PDF.
+              Đặt tên file có <strong>số đề</strong> và <strong>cơ bản / nâng cao</strong> (viết tắt CB / NC được), ví dụ: <code>Đề 1 cơ bản.html</code>, <code>Đề 1 cơ bản.pdf</code>, <code>Đề 5 nâng cao.pdf</code>, <code>On he lop 3 - NC - De 12.html</code>. Mỗi phần 20 đề; mỗi đề nhận 1 file tương tác (.html) và 1 file PDF.
             </span>
           ) : (
           <span className="mt-1 block text-sm text-gray-700">
@@ -188,7 +188,8 @@ export function BulkUploadForm({
             {rows.map((r, i) => {
               const m = matches[i];
               const examNoTerm = !r.itemId && guessExamFromFileName(r.file.name).isExam;
-              const err = r.contentError ?? (examNoTerm ? "Đây là file đề thi nhưng tên chưa ghi rõ kì nào — cô chọn nhóm ở mục “Đề thi” trong ô bên dưới" : m.problem ? PROBLEM[m.problem] : null);
+              const summerNoLevel = summer && !r.itemId && guessSummerTestNumber(r.file.name) !== null && guessSummerLevel(r.file.name) === null;
+              const err = r.contentError ?? (summerNoLevel ? "Tên file chưa ghi “cơ bản” hay “nâng cao” — cô chọn đề ở ô bên dưới" : examNoTerm ? "Đây là file đề thi nhưng tên chưa ghi rõ kì nào — cô chọn nhóm ở mục “Đề thi” trong ô bên dưới" : m.problem ? PROBLEM[m.problem] : null);
               const old = r.itemId && m.kind ? existing[r.itemId]?.[m.kind] : false;
               return (
                 <li key={r.key} className={`rounded-2xl p-3 ring-1 ${err ? "bg-red-50 ring-red-200" : "bg-emerald-50/60 ring-emerald-200"}`}>
@@ -204,8 +205,12 @@ export function BulkUploadForm({
                     className="mt-2 block w-full rounded-xl border-2 border-gray-200 bg-white px-3 py-2 font-semibold"
                   >
                     <option value="">{summer ? "— Chọn đề —" : "— Chọn tuần và mục, hoặc Đề thi —"}</option>
-                    {summer ? slots.map((s) => (
-                      <option key={s.id} value={s.id}>{s.title}</option>
+                    {summer ? [1, 2].map((wk) => (
+                      <optgroup key={wk} label={wk === 1 ? "📗 Đề cơ bản" : "⭐ Đề nâng cao"}>
+                        {slots.filter((s) => s.week === wk).map((s) => (
+                          <option key={s.id} value={s.id}>{s.title}</option>
+                        ))}
+                      </optgroup>
                     )) : (
                       <>
                         <optgroup label="📝 Mục Đề thi">

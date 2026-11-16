@@ -77,10 +77,24 @@ export function guessSummerTestNumber(fileName: string): number | null {
   return nums.length === 1 ? nums[0] : null;
 }
 
-/** Xếp file vào đề ôn tập hè theo số đề (mục có slug "de-<số>"). */
+/** Đề ôn tập hè: tên file ghi "cơ bản"/"CB" hay "nâng cao"/"NC"; không ghi thì null. */
+export function guessSummerLevel(fileName: string): "co-ban" | "nang-cao" | null {
+  const s = ` ${normalize(fileName)} `;
+  const nc = / (nang ?cao|nc)(?= )/.test(s);
+  const cb = / (co ?ban|cb)(?= )/.test(s);
+  return nc === cb ? null : nc ? "nang-cao" : "co-ban";
+}
+
+/**
+ * Xếp file vào đề ôn tập hè theo số đề và phần (cơ bản = tuần 1, nâng cao = tuần 2; mục có slug "de-<số>").
+ * Tên file phải ghi rõ cơ bản hay nâng cao, nếu không thì để cô chọn.
+ */
 export function matchSummerSlot(fileName: string, slots: SlotInfo[]): SlotInfo | null {
   const n = guessSummerTestNumber(fileName);
-  return n === null ? null : (slots.find((x) => x.slug === `de-${n}`) ?? null);
+  const level = guessSummerLevel(fileName);
+  if (n === null || level === null) return null;
+  const week = level === "co-ban" ? 1 : 2;
+  return slots.find((x) => x.week === week && x.slug === `de-${n}`) ?? null;
 }
 
 export type MatchProblem = "khong-nhan-dien" | "sai-loai-file" | "trung";

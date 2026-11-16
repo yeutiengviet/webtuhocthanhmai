@@ -7,7 +7,7 @@ import {
   guessExamFromFileName,
   guessFromFileName,
   guessGradeSubject,
-  guessSummerTestNumber,
+  guessSummerLevel, guessSummerTestNumber,
   matchSlot,
   matchSummerSlot,
   routeBatch,
@@ -88,7 +88,7 @@ describe("khóa Toán: đề ôn tập tên \"de-N\"", () => {
 });
 
 describe("đề ôn tập hè: xếp file theo số đề", () => {
-  const slots = Array.from({ length: 20 }, (_, i) => ({ id: `t3-he-de-${i + 1}`, week: 1, slug: `de-${i + 1}`, title: `Đề ${i + 1}`, html: true, pdf: true }));
+  const slots = [1, 2].flatMap((week) => Array.from({ length: 20 }, (_, i) => ({ id: `t3-he-${week === 2 ? "nc-" : ""}de-${i + 1}`, week, slug: `de-${i + 1}`, title: `Đề ${i + 1}`, html: true, pdf: true })));
   it("đọc số đề từ tên file", () => {
     expect(guessSummerTestNumber("Đề 3.html")).toBe(3);
     expect(guessSummerTestNumber("de-12.pdf")).toBe(12);
@@ -96,9 +96,19 @@ describe("đề ôn tập hè: xếp file theo số đề", () => {
     expect(guessSummerTestNumber("ĐỀ 20 ôn hè.pdf")).toBe(20);
     expect(guessSummerTestNumber("on he lop 4.pdf")).toBeNull();
   });
-  it("xếp vào đúng đề, không có đề thì để trống", () => {
-    expect(matchSummerSlot("Đề 5.pdf", slots)?.id).toBe("t3-he-de-5");
-    expect(matchSummerSlot("Đề 25.pdf", slots)).toBeNull();
+  it("đọc phần cơ bản / nâng cao", () => {
+    expect(guessSummerLevel("Đề 3 cơ bản.html")).toBe("co-ban");
+    expect(guessSummerLevel("De 3 - CB.pdf")).toBe("co-ban");
+    expect(guessSummerLevel("Đề 3 nâng cao.pdf")).toBe("nang-cao");
+    expect(guessSummerLevel("On he lop 4 NC de 7.html")).toBe("nang-cao");
+    expect(guessSummerLevel("Đề 3.pdf")).toBeNull();
+  });
+  it("xếp vào đúng đề và đúng phần; thiếu phần hoặc không có đề thì để trống", () => {
+    expect(matchSummerSlot("Đề 5 cơ bản.pdf", slots)?.id).toBe("t3-he-de-5");
+    expect(matchSummerSlot("Đề 5 nâng cao.pdf", slots)?.id).toBe("t3-he-nc-de-5");
+    expect(matchSummerSlot("Lop 3 - NC - De 20.html", slots)?.id).toBe("t3-he-nc-de-20");
+    expect(matchSummerSlot("Đề 5.pdf", slots)).toBeNull();
+    expect(matchSummerSlot("Đề 25 cơ bản.pdf", slots)).toBeNull();
   });
 });
 
