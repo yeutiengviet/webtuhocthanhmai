@@ -121,20 +121,23 @@ export interface ExamGuess {
 export function guessExamFromFileName(fileName: string): ExamGuess {
   const s = ` ${normalize(fileName)} `;
   if (/ de cuong(?= )/.test(s)) return { isExam: false, category: null };
-  const onTap = / on tap(?= )/.test(s);
+  const onTap = / on (?:tap|thi)(?= )/.test(s);
   const pick = (half: "giua" | "cuoi", term: 1 | 2): ExamCategory =>
     half === "giua" ? (term === 1 ? (onTap ? "on-tap-giua-ki-1" : "giua-ki-1") : onTap ? "on-tap-giua-ki-2" : "giua-ki-2") : term === 1 ? (onTap ? "on-tap-cuoi-ki-1" : "cuoi-ki-1") : onTap ? "on-tap-cuoi-nam" : "cuoi-nam";
   const termNo = (t: string): 1 | 2 => (t === "2" || t === "ii" ? 2 : 1);
 
   // "giữa/cuối (học) kì|kỳ 1|2|I|II"   (kì 2 cuối cùng = cuối năm)
-  let m = / (giua|cuoi) ?(?:hoc ?)?(?:ki|ky) ?(1|2|ii|i)(?= )/.exec(s);
+  let m = / (giua|cuoi) ?(?:hoc ?)?(?:ki|ky|hk) ?(1|2|ii|i)(?= )/.exec(s);
   if (m) return { isExam: true, category: pick(m[1] as "giua" | "cuoi", termNo(m[2])) };
-  // viết tắt "GK1", "CK2", "CKI"
-  m = / (gk|ck) ?(1|2|ii|i)(?= )/.exec(s);
-  if (m) return { isExam: true, category: pick(m[1] === "gk" ? "giua" : "cuoi", termNo(m[2])) };
+  // viết tắt "GK1", "CK2", "CKI", "GHK1", "CHKI"
+  m = / (g|c)h?k ?(1|2|ii|i)(?= )/.exec(s);
+  if (m) return { isExam: true, category: pick(m[1] === "g" ? "giua" : "cuoi", termNo(m[2])) };
   if (/ cuoi nam(?= )/.test(s)) return { isExam: true, category: pick("cuoi", 2) };
   if (/ danh gia thang(?= )/.test(s)) return { isExam: true, category: "danh-gia-thang" };
   if (/ (luyen thi|thi thu)(?= )/.test(s)) return { isExam: true, category: "luyen-thi" };
+  // "Đề thi học kì 1", "Kiểm tra HK2" (không ghi giữa/cuối) = đề cuối kì; "Ôn tập HK1" thì để cô chọn giữa/cuối
+  m = / (?:hoc ?)?(?:ki|ky|hk) ?(1|2|ii|i)(?= )/.exec(s);
+  if (m && / (?:thi|kiem tra|on tap|on thi)(?= )/.test(s)) return { isExam: true, category: / (?:thi|kiem tra)(?= )/.test(s) && !onTap ? pick("cuoi", termNo(m[1])) : null };
   // có chữ giữa/cuối kì nhưng thiếu kì 1 hay 2, hoặc "ôn tập học kì": là đề thi, để cô chọn loại
   if (/ (giua|cuoi) ?(?:hoc ?)?(?:ki|ky)(?= )/.test(s) || / on tap hoc (?:ki|ky)(?= )/.test(s)) return { isExam: true, category: null };
   return { isExam: false, category: null };
