@@ -182,7 +182,8 @@ export function BulkUploadForm({
           <ul className="mt-3 space-y-2">
             {rows.map((r, i) => {
               const m = matches[i];
-              const err = r.contentError ?? (m.problem ? PROBLEM[m.problem] : null);
+              const examNoTerm = !r.itemId && guessExamFromFileName(r.file.name).isExam;
+              const err = r.contentError ?? (examNoTerm ? "Đây là file đề thi nhưng tên chưa ghi rõ kì nào — cô chọn nhóm ở mục “Đề thi” trong ô bên dưới" : m.problem ? PROBLEM[m.problem] : null);
               const old = r.itemId && m.kind ? existing[r.itemId]?.[m.kind] : false;
               return (
                 <li key={r.key} className={`rounded-2xl p-3 ring-1 ${err ? "bg-red-50 ring-red-200" : "bg-emerald-50/60 ring-emerald-200"}`}>
@@ -230,8 +231,6 @@ export function BulkUploadForm({
                   )}
                   {err ? (
                     <p className="mt-1 text-sm font-bold text-red-700">{err}</p>
-                  ) : !r.itemId && guessExamFromFileName(r.file.name).isExam ? (
-                    <p className="mt-1 text-sm font-bold text-red-700">Đây là file đề thi nhưng tên chưa ghi rõ kì nào — cô chọn nhóm ở mục “Đề thi” trong ô trên</p>
                   ) : parseExamTarget(r.itemId) ? (
                     <p className="mt-1 text-sm font-semibold text-emerald-800">
                       Sẽ tạo đề mới ở mục Đề thi – {course.subject === "toan" ? "Toán" : "Tiếng Việt"} lớp {course.grade}.
