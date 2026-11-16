@@ -24,18 +24,14 @@ import {
 } from "@/lib/content";
 import { formatRange } from "@/lib/dates";
 import { getPublishedLessonFiles } from "@/lib/lesson-files";
+import { getViewer } from "@/lib/supabase/server";
 import type { LessonFileInfo, LessonMedia } from "@/lib/content";
 import type { Item } from "@/lib/types";
 import { safeDocumentUrl } from "@/lib/urls";
 
-// LƯU Ý GIAI ĐOẠN 3: khi kiểm tra gói học theo người đăng nhập, BẮT BUỘC chuyển sang render động (dynamic)
-// + Cache-Control: private, no-store, để trang của người đã trả phí không bao giờ bị lưu đệm rồi phát cho người khác.
-// Hiện tại: trang dựng ở lần mở đầu rồi lưu sẵn, tự làm mới mỗi 60 giây; cô tải phiếu lên thì làm mới ngay (revalidatePath).
-export const revalidate = 60;
-
-export function generateStaticParams() {
-  return [];
-}
+// Trang kiểm tra người xem đã đăng nhập chưa (phụ huynh có tài khoản miễn phí xem được mọi bài)
+// → BẮT BUỘC render động, không lưu đệm chung, để trang của người đã đăng nhập không bị phát cho khách.
+export const dynamic = "force-dynamic";
 
 type Params = Promise<{ mon: string; lop: string; track: string; tuan: string; bai: string }>;
 
@@ -59,8 +55,10 @@ export default async function LessonPage({ params }: { params: Params }) {
   if (!d) notFound();
   const { subject, grade, course, week, item } = d;
   // Mọi nội dung (mã video, link phiếu) chỉ lấy qua lessonMedia() — mục bị khóa không có dữ liệu này.
-  const files = await getPublishedLessonFiles(week.items.map((i) => i.id));
-  const media = lessonMedia(item, canViewItem, files.get(item.id));
+  const [files, viewer] = await Promise.all([getPublishedLessonFiles(week.items.map((i) => i.id)), getViewer()]);
+  const loggedIn = Boolean(viewer);
+  const canView = (it: Item) => canViewItem(it, loggedIn);
+  const media = lessonMedia(item, canView, files.get(item.id));
 
   // Phiếu luyện tập gắn với bài giảng video: phiếu cơ bản của tuần
   const practice: Item | undefined =
@@ -85,7 +83,7 @@ export default async function LessonPage({ params }: { params: Params }) {
           <header className="relative overflow-hidden rounded-[2rem] bg-gradient-to-br from-brand-100 via-brand-50 to-accent-50 p-5 ring-1 ring-brand-200 sm:p-7">
             <span aria-hidden className="absolute -right-8 -top-8 h-32 w-32 rounded-full bg-brand-200/60" />
             <p className="relative text-sm font-bold text-brand-700">
-              {weekLabel(course, week)}{course.track === "nang-cao" || week.kind !== "hoc" ? "" : ` (${formatRange(week.startDate, week.endDate)})`} · {ITEM_TYPE_LABELS[item.type]}
+              {weekLabel(course, week)}{course.track !== "theo-tuan" || week.kind !== "hoc" ? "" : ` (${formatRange(week.startDate, week.endDate)})`} · {ITEM_TYPE_LABELS[item.type]}
             </p>
             <h1 className="relative mt-1 text-3xl text-gray-900 sm:text-4xl">{item.title}</h1>
             <div className="relative mt-3 flex flex-wrap items-center gap-2 text-sm font-semibold">
@@ -130,7 +128,7 @@ export default async function LessonPage({ params }: { params: Params }) {
             <section className="mt-8">
               <h2 className="text-2xl text-gray-900"><span aria-hidden>✏️</span> Luyện tập sau bài giảng</h2>
               <p className="mb-3 text-sm text-gray-600">{practice.title}</p>
-              <PracticeBlock item={practice} file={files.get(practice.id)} />
+              <PracticeBlock item={practice} file={files.get(practice.id)} canView={canView} />
             </section>
           )}
 
@@ -153,7 +151,7 @@ export default async function LessonPage({ params }: { params: Params }) {
                   >
                     <ItemIcon type={it.type} />
                     <span className="min-w-0 flex-1">{it.title}</span>
-                    {(it.isFree || files.get(it.id)?.isFree) && <FreeBadge />}
+                    {(loggedIn || it.isFree || files.get(it.id)?.isFree) && <FreeBadge />}
                   </Link>
                 </li>
               ))}
@@ -180,8 +178,8 @@ export default async function LessonPage({ params }: { params: Params }) {
   );
 }
 
-function PracticeBlock({ item, file }: { item: Item; file?: LessonFileInfo }) {
-  const m = lessonMedia(item, canViewItem, file);
+function PracticeBlock({ item, file, canView }: { item: Item; file?: LessonFileInfo; canView: (it: Item) => boolean }) {
+  const m = lessonMedia(item, canView, file);
   if (m.kind !== "worksheet") return <LockedNotice />;
   return (
     <div className="space-y-3">
@@ -203,10 +201,11 @@ function LockedNotice() {
   return (
     <div className="rounded-[2rem] border-2 border-dashed border-brand-300 bg-white p-8 text-center">
       <p className="mx-auto grid h-16 w-16 place-items-center rounded-full bg-brand-100 text-3xl" aria-hidden>🔒</p>
-      <p className="mt-3 font-display text-2xl font-extrabold text-brand-700">Bài này dành cho học sinh đã đăng ký gói học</p>
-      <p className="mt-1 text-gray-700">Phụ huynh đăng ký gói Toán lớp này để mở toàn bộ bài giảng và phiếu luyện tập.</p>
+      <p className="mt-3 font-display text-2xl font-extrabold text-brand-700">Đăng nhập để học bài này</p>
+      <p className="mt-1 text-gray-700">Phụ huynh tạo tài khoản <strong>miễn phí</strong> (bằng số điện thoại hoặc email) để mở toàn bộ bài giảng và phiếu luyện tập cho con.</p>
       <div className="mt-4 flex flex-wrap justify-center gap-3">
-        <Link href="/thanh-toan" className="btn-toy rounded-full bg-brand-600 px-6 py-3 font-extrabold text-white">Đăng ký gói học</Link>
+        <Link href="/dang-nhap?tab=dang-ky" className="btn-toy rounded-full bg-brand-600 px-6 py-3 font-extrabold text-white">Tạo tài khoản miễn phí</Link>
+        <Link href="/dang-nhap" className="rounded-full bg-white px-6 py-3 font-extrabold text-brand-700 ring-2 ring-brand-200">Đăng nhập</Link>
       </div>
     </div>
   );

@@ -6,6 +6,7 @@ import { Breadcrumbs, Container, FreeBadge, ItemIcon, LevelBadge, LockBadge, Pag
 import { allCourses, canViewItem, getCourse, getSubject, gradeSlug, isReady, isTrack, itemHref, parseGradeSlug, publishedWeeks, TRACK_LABELS, unitName, weekSlug } from "@/lib/content";
 import { formatRange } from "@/lib/dates";
 import { getPublishedLessonFiles } from "@/lib/lesson-files";
+import { lessonFileHref } from "@/lib/exam-meta";
 import type { Week } from "@/lib/types";
 
 // Tự làm mới mỗi 60 giây (cô tải phiếu lên thì làm mới ngay) để hiện đúng mục đã có phiếu.
@@ -50,6 +51,77 @@ export default async function CoursePage({ params }: { params: Params }) {
   const totalLessons = weeks.reduce((a, w) => a + w.items.length, 0);
 
 
+  if (course.track === "on-tap-he") {
+    const items = weeks.flatMap((w) => w.items.map((it) => ({ w, it })));
+    const readyCount = items.filter(({ it }) => {
+      const f = files.get(it.id);
+      return Boolean(f && (f.hasHtml || f.hasPdf));
+    }).length;
+    const other = subject.slug === "toan" ? { slug: "tieng-viet", name: "Tiếng Việt" } : { slug: "toan", name: "Toán" };
+    return (
+      <>
+        <PageHero badge="☀️ Ôn tập hè" title={`Đề ôn tập hè ${subject.name} lớp ${grade}`} subtitle={`${weeks[0]?.title ?? ""}. Mỗi đề có bài làm tương tác trên web và phiếu PDF tải về in.`}>
+          <div className="mb-2">
+            <Breadcrumbs items={[{ href: `/${subject.slug}`, label: subject.name }, { href: `/${subject.slug}/${lop}`, label: `Lớp ${grade}` }, { label: TRACK_LABELS[course.track].name }]} />
+          </div>
+        </PageHero>
+        <Container className="py-6">
+          <div className="mb-5 grid gap-3 sm:grid-cols-2">
+            <div className="rounded-3xl bg-white p-4 shadow-sm ring-1 ring-brand-100">
+              <h2 className="text-lg font-extrabold text-gray-900">Cách ôn hè hiệu quả</h2>
+              <ul className="mt-2 space-y-1.5 text-sm text-gray-800">
+                <li><span aria-hidden>✏️</span> <strong>Làm trên web:</strong> con làm bài, nộp là có điểm ngay.</li>
+                <li><span aria-hidden>⬇️</span> <strong>Tải PDF:</strong> phụ huynh in ra cho con làm trên giấy.</li>
+                <li><span aria-hidden>📅</span> Mỗi tuần 2–3 đề, làm theo thứ tự từ Đề 1.</li>
+              </ul>
+            </div>
+            <div className="rounded-3xl bg-amber-50 p-4 ring-1 ring-amber-200">
+              <p className="font-extrabold text-amber-900">Đã có {readyCount} / {items.length} đề</p>
+              <p className="mt-1 text-sm text-amber-900">Cô đang cập nhật dần các đề còn lại.</p>
+              <Link href={`/${other.slug}/${lop}/on-tap-he`} className="mt-3 inline-flex min-h-11 items-center rounded-full bg-white px-4 font-extrabold text-amber-900 ring-1 ring-amber-300">
+                ☀️ Ôn hè {other.name} lớp {grade} →
+              </Link>
+            </div>
+          </div>
+          <ul className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+            {items.map(({ w, it }) => {
+              const f = files.get(it.id);
+              const hasHtml = Boolean(f?.hasHtml);
+              const hasPdf = Boolean(f?.hasPdf);
+              return (
+                <li key={it.id} className="flex flex-col rounded-3xl bg-white p-4 shadow-sm ring-1 ring-amber-200">
+                  <p className="flex items-center gap-2">
+                    <span className="grid h-12 w-12 shrink-0 place-items-center rounded-2xl bg-amber-500 font-display text-xl font-extrabold text-white">{it.order}</span>
+                    <span className="min-w-0">
+                      <span className="block font-display text-lg font-extrabold text-gray-900">Đề {it.order}</span>
+                      <span className="block text-xs font-semibold text-gray-600">{subject.name} lớp {grade}</span>
+                    </span>
+                  </p>
+                  <div className="mt-3 flex flex-1 flex-wrap items-end gap-2">
+                    {hasHtml && (
+                      <Link href={itemHref(course, w, it)} className="btn-toy inline-flex min-h-11 items-center gap-1.5 rounded-full bg-brand-600 px-4 font-extrabold text-white">
+                        <span aria-hidden>✏️</span> Làm trên web
+                      </Link>
+                    )}
+                    {hasPdf && (
+                      <a href={lessonFileHref(it.id, "pdf")} target="_blank" rel="noopener" className="inline-flex min-h-11 items-center gap-1.5 rounded-full bg-white px-4 font-extrabold text-brand-700 ring-2 ring-brand-200">
+                        <span aria-hidden>⬇️</span> Tải PDF
+                      </a>
+                    )}
+                    {!hasHtml && !hasPdf && <span className="text-sm font-semibold text-gray-500">Đang cập nhật</span>}
+                  </div>
+                </li>
+              );
+            })}
+          </ul>
+          <p className="mt-6 text-sm text-gray-600">
+            <Link href={`/${subject.slug}/${lop}`} className="font-bold text-brand-700 underline">← Các mục khác của {subject.name} lớp {grade}</Link>
+          </p>
+        </Container>
+      </>
+    );
+  }
+
   if (isTopics) {
     return (
       <>
@@ -80,9 +152,9 @@ export default async function CoursePage({ params }: { params: Params }) {
               <section className="rounded-3xl bg-white p-5 shadow-sm ring-1 ring-brand-100">
                 <h2 className="text-2xl font-extrabold uppercase text-brand-800">Toán nâng cao – Toán tư duy lớp {grade}</h2>
                 <p className="mt-2 text-gray-700">
-                  Các chuyên đề nâng cao toán lớp {grade}: từ bài giảng học thử đến từng dạng toán tư duy. Mỗi bài giảng là một video có hướng dẫn giải; học xong con làm thêm bài luyện tập để nhớ lâu.
+                  Các chuyên đề nâng cao toán lớp {grade}: từ bài giảng mở đầu đến từng dạng toán tư duy. Mỗi bài giảng là một video có hướng dẫn giải; học xong con làm thêm bài luyện tập để nhớ lâu.
                 </p>
-                <p className="mt-2 flex flex-wrap items-center gap-2 text-sm font-semibold"><FreeBadge /> học thử miễn phí <LockBadge /> cần đăng ký gói</p>
+                <p className="mt-2 flex flex-wrap items-center gap-2 text-sm font-semibold"><FreeBadge /> ai cũng xem được <LockBadge /> đăng nhập (tài khoản miễn phí) để học</p>
               </section>
               {weeks.map((w, idx) => (
                 <details key={w.id} id={weekSlug(w)} className="scroll-mt-28 overflow-hidden rounded-3xl bg-white shadow-sm ring-1 ring-brand-100 open:ring-2 open:ring-brand-300" open={idx === 0}>
@@ -110,7 +182,7 @@ export default async function CoursePage({ params }: { params: Params }) {
                                 {!ready && <span className="text-xs text-gray-500">· đang cập nhật</span>}
                               </span>
                             </span>
-                            <span className="sr-only">{open ? "Xem được" : "Cần đăng ký gói"}</span>
+                            <span className="sr-only">{open ? "Xem được" : "Cần đăng nhập"}</span>
                           </Link>
                         </li>
                       );
@@ -151,8 +223,8 @@ export default async function CoursePage({ params }: { params: Params }) {
         </div>
         <div className="mb-5 flex flex-wrap items-center gap-3 rounded-3xl bg-white p-3 text-sm font-semibold shadow-sm ring-1 ring-brand-100">
           {!isTopics && <CurrentWeekButton weeks={weeks.filter((w) => w.kind === "hoc").map((w) => ({ number: w.number, startDate: w.startDate, endDate: w.endDate }))} />}
-          <span className="flex items-center gap-1"><FreeBadge /> học thử miễn phí</span>
-          <span className="flex items-center gap-1"><LockBadge /> cần đăng ký gói</span>
+          <span className="flex items-center gap-1"><FreeBadge /> ai cũng xem được</span>
+          <span className="flex items-center gap-1"><LockBadge /> đăng nhập (tài khoản miễn phí) để học</span>
         </div>
 
         <ol className="relative space-y-4 before:absolute before:bottom-4 before:left-[2.1rem] before:top-4 before:w-1 before:rounded-full before:bg-brand-200">
@@ -198,7 +270,7 @@ export default async function CoursePage({ params }: { params: Params }) {
                               </span>
                             )}
                           </span>
-                          <span className="sr-only">{open ? "Xem được" : "Cần đăng ký gói"}</span>
+                          <span className="sr-only">{open ? "Xem được" : "Cần đăng nhập"}</span>
                         </Link>
                       </li>
                     );

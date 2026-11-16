@@ -23,4 +23,5 @@ export async function proxy(request: NextRequest) {
   return response;
 }
 
-export const config = { matcher: ["/quan-tri/:path*", "/phieu/:path*"] };
+// Trang bài học / đề thi kiểm tra đăng nhập để mở bài cho phụ huynh có tài khoản.
+export const config = { matcher: ["/quan-tri/:path*", "/phieu/:path*", "/tai-khoan/:path*", "/dang-nhap", "/doi-mat-khau", "/(toan|tieng-viet)/:lop/:track/:tuan/:bai", "/de-thi/:mon/:lop/:de"] };

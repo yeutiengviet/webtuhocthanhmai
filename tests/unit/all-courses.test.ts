@@ -9,8 +9,8 @@ describe("đủ 8 khóa: Toán và Tiếng Việt lớp 2–5", () => {
         expect(getCourse(subject, grade, "theo-tuan"), `${subject} ${grade}`).toBeDefined();
       }
     }
-    // 8 khóa học theo tuần + 4 khóa Toán nâng cao theo chuyên đề
-    expect(allCourses()).toHaveLength(12);
+    // 8 khóa học theo tuần + 4 khóa Toán nâng cao theo chuyên đề + 8 khóa Đề ôn tập hè
+    expect(allCourses()).toHaveLength(20);
     for (const grade of [2, 3, 4, 5]) expect(getCourse("toan", grade, "nang-cao"), `nâng cao ${grade}`).toBeDefined();
   });
 
@@ -37,7 +37,7 @@ describe("đủ 8 khóa: Toán và Tiếng Việt lớp 2–5", () => {
         }
     expect(new Set(ids).size).toBe(ids.length);
     expect(new Set(hrefs).size).toBe(hrefs.length);
-    expect(new Set(allCourses().map(courseHref)).size).toBe(12);
+    expect(new Set(allCourses().map(courseHref)).size).toBe(20);
   });
 
   it("Toán 2–5 theo tuần: tên tuần là tên bài, không còn 'đang cập nhật'", () => {
@@ -80,11 +80,29 @@ describe("đủ 8 khóa: Toán và Tiếng Việt lớp 2–5", () => {
 
   it("tuần 1–2 của mọi khóa được học thử; tuần khác thì không (trừ phiếu tháng 10 Toán 4)", () => {
     for (const { course, week, item } of freeItems()) {
-      expect(course.track === "nang-cao" || (week.kind === "hoc" && week.number <= 2) || item.slug === "danh-gia-thang-10", `${course.id} ${week.number} ${item.slug}`).toBe(true);
+      expect(course.track === "nang-cao" || course.track === "on-tap-he" || (week.kind === "hoc" && week.number <= 2) || item.slug === "danh-gia-thang-10", `${course.id} ${week.number} ${item.slug}`).toBe(true);
     }
     for (const c of allCourses().filter((c) => c.track === "theo-tuan")) {
       expect(c.weeks[0].items.every((i) => i.isFree)).toBe(true);
       expect(c.weeks[12].items.some((i) => i.isFree)).toBe(false);
+    }
+  });
+
+  it("Đề ôn tập hè: Toán và Tiếng Việt lớp 2–5, mỗi khóa 20 đề nhận cả phiếu tương tác và PDF, ai cũng xem được", () => {
+    for (const subject of ["toan", "tieng-viet"]) {
+      for (const grade of [2, 3, 4, 5]) {
+        const c = getCourse(subject, grade, "on-tap-he");
+        expect(c, `${subject} ${grade}`).toBeDefined();
+        const items = c!.weeks.flatMap((w) => w.items);
+        expect(items).toHaveLength(20);
+        expect(items.map((i) => i.slug)).toEqual(Array.from({ length: 20 }, (_, i) => `de-${i + 1}`));
+        for (const it of items) {
+          expect(it.type).toBe("test");
+          expect(it.isFree).toBe(true);
+          expect(it.id).toMatch(/^[a-z0-9]+(-[a-z0-9]+)*$/);
+        }
+        expect(courseHref(c!)).toBe(`/${subject}/lop-${grade}/on-tap-he`);
+      }
     }
   });
 });

@@ -65,6 +65,22 @@ export function guessFromFileName(fileName: string): Guess {
   return { week, slug };
 }
 
+/** Đề ôn tập hè: tên file có số đề, vd "Đề 3.html", "de-12.pdf", "On he lop 3 - De 07.html" → số đề (1–99). */
+export function guessSummerTestNumber(fileName: string): number | null {
+  let s = ` ${normalize(fileName)} `;
+  s = s.replace(/ (lop|l) ?[1-6](?= )/g, " ");
+  const de = / (?:de|d) ?0*(\d{1,2})(?= )/.exec(s);
+  if (de) return Number(de[1]) || null;
+  const nums = [...s.matchAll(/ 0*(\d{1,2})(?= )/g)].map((m) => Number(m[1])).filter((n) => n >= 1);
+  return nums.length === 1 ? nums[0] : null;
+}
+
+/** Xếp file vào đề ôn tập hè theo số đề (mục có slug "de-<số>"). */
+export function matchSummerSlot(fileName: string, slots: SlotInfo[]): SlotInfo | null {
+  const n = guessSummerTestNumber(fileName);
+  return n === null ? null : (slots.find((x) => x.slug === `de-${n}`) ?? null);
+}
+
 export type MatchProblem = "khong-nhan-dien" | "sai-loai-file" | "trung";
 
 export interface FileMatch {

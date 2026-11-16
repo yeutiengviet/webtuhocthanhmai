@@ -22,7 +22,9 @@ test("trang chủ đủ các phần theo mục 5.2, không lỗi console", async
   await expect(page.locator("main a[href='/tieng-viet']").filter({ hasText: "Vào xem" })).toBeVisible();
   await expect(page.getByRole("heading", { name: "Con đang học lớp mấy?" })).toBeVisible();
   for (const g of ["2", "3", "4", "5"]) await expect(page.locator("main a").filter({ hasText: new RegExp(`Lớp\\s*${g}`) }).first()).toBeVisible();
-  await expect(page.getByRole("heading", { name: "Hướng dẫn nộp phí" })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Tạo tài khoản miễn phí" })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Đề ôn tập hè – chuẩn bị lên lớp" })).toBeVisible();
+  await expect(page.locator("body")).not.toContainText(/dùng thử/i);
   await expect(page.locator("footer")).toContainText("Chính sách quyền riêng tư");
   expect(errors).toEqual([]);
 });
@@ -35,7 +37,7 @@ test("menu điện thoại mở được và đủ mục theo 5.1", async ({ pag
     await expect(menu.getByRole("link", { name: label, exact: true })).toBeVisible();
   }
   await expect(page.getByRole("link", { name: "Hướng dẫn", exact: true })).toBeVisible();
-  await expect(page.getByRole("link", { name: "Thanh toán", exact: true })).toBeVisible();
+  await expect(page.getByRole("link", { name: "Tạo tài khoản", exact: true })).toBeVisible();
 });
 
 test("đi từ trang chủ → Toán → Lớp 4 → Học theo tuần → 35 tuần", async ({ page }) => {
@@ -47,7 +49,7 @@ test("đi từ trang chủ → Toán → Lớp 4 → Học theo tuần → 35 tu
   await expect(page).toHaveURL(/\/toan\/lop-4$/);
   // Chỉ hiện hướng học có nội dung, không có bước chọn bộ sách
   await expect(page.getByText("Học theo tuần")).toBeVisible();
-  await expect(page.getByText("Ôn tập hè")).toHaveCount(0);
+  await expect(page.getByRole("link", { name: /Đề ôn tập hè/ })).toBeVisible();
   await expect(page.getByText(/Cánh diều|Chân trời sáng tạo/)).toHaveCount(0);
   await page.getByRole("link", { name: /Học theo tuần/ }).click();
   await expect(page).toHaveURL(/\/toan\/lop-4\/theo-tuan$/);
@@ -90,10 +92,11 @@ test("bài Free dạng video: có khung video và phiếu luyện tập bên dư
   await expect(page.getByRole("heading", { name: "Luyện tập sau bài giảng" })).toBeVisible();
 });
 
-test("bài trả phí: hiện khóa, KHÔNG có video/phiếu trong mã HTML trả về", async ({ page, request }) => {
+test("khách chưa đăng nhập: bài hiện khóa, KHÔNG có video/phiếu trong mã HTML trả về", async ({ page, request }) => {
   const path = "/toan/lop-4/theo-tuan/tuan-5/video-bai-giang-1";
   await page.goto(path);
-  await expect(page.getByText("Bài này dành cho học sinh đã đăng ký gói học")).toBeVisible();
+  await expect(page.getByText("Đăng nhập để học bài này")).toBeVisible();
+  await expect(page.locator("#bai-lam").getByRole("link", { name: "Tạo tài khoản miễn phí" })).toBeVisible();
   await expect(page.locator("iframe")).toHaveCount(0);
   // Kiểm tra cả mã HTML thô (không chỉ giao diện)
   const html = await (await request.get(path)).text();
@@ -146,7 +149,7 @@ test("đường dẫn đoán bừa trả về 404, tiêu đề tab không gây h
   await expect(page).toHaveTitle(/Không tìm thấy trang/);
   await page.goto("/toan/lop-6");
   await expect(page).toHaveTitle(/Không tìm thấy trang/);
-  for (const p of ["/toan/lop-4/constructor", "/toan/lop-4/__proto__", "/toan/lop-6", "/tieng-viet/lop-1", "/toan/lop-4/theo-tuan/tuan-36/video-bai-giang-1", "/toan/lop-4/theo-tuan/tuan-1/khong-co", "/van/lop-4", "/toan/lop-4/on-tap-he"]) {
+  for (const p of ["/toan/lop-4/constructor", "/toan/lop-4/__proto__", "/toan/lop-6", "/tieng-viet/lop-1", "/toan/lop-4/theo-tuan/tuan-36/video-bai-giang-1", "/toan/lop-4/theo-tuan/tuan-1/khong-co", "/van/lop-4", "/toan/lop-4/ky-thi", "/toan/lop-4/on-tap-he/de-on-tap-he/de-21"]) {
     expect((await request.get(p)).status(), p).toBe(404);
   }
 });
@@ -289,6 +292,24 @@ test("nút Đăng nhập trên menu mở khung đăng nhập có nút Tạo tài
   await expect(page).toHaveURL(/\/dang-nhap$/);
   await expect(page.getByRole("tab", { name: "Tạo tài khoản" })).toBeVisible();
   await page.getByRole("tab", { name: "Tạo tài khoản" }).click();
-  await expect(page.getByRole("button", { name: "Tạo tài khoản" }).last()).toBeVisible();
-  await expect(page.getByLabel("Email")).toBeVisible();
+  await expect(page.getByRole("button", { name: "Tạo tài khoản miễn phí" })).toBeVisible();
+  await expect(page.getByLabel("Họ tên phụ huynh")).toBeVisible();
+  await expect(page.getByLabel("Số điện thoại hoặc email")).toBeVisible();
+});
+
+test("Đề ôn tập hè: có ở cả Toán và Tiếng Việt mọi lớp, mỗi khóa 20 đề", async ({ page }) => {
+  for (const mon of ["toan", "tieng-viet"]) {
+    for (const g of [2, 5]) {
+      await page.goto(`/${mon}/lop-${g}`);
+      await page.getByRole("link", { name: /Đề ôn tập hè/ }).click();
+      await expect(page).toHaveURL(new RegExp(`/${mon}/lop-${g}/on-tap-he$`));
+      await expect(page.getByRole("heading", { level: 1 })).toContainText(`lớp ${g}`);
+      await expect(page.getByText(/^Đề \d+$/)).toHaveCount(20);
+    }
+  }
+});
+
+test("trang tài khoản: chưa đăng nhập thì chuyển về đăng nhập", async ({ page }) => {
+  await page.goto("/tai-khoan");
+  await expect(page).toHaveURL(/\/dang-nhap\?next=%2Ftai-khoan$|\/dang-nhap\?next=\/tai-khoan$/);
 });

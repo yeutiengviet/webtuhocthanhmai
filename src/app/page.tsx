@@ -128,11 +128,30 @@ export default function HomePage() {
                 <p className="relative text-sm font-bold text-gray-600">Lớp</p>
                 <p className={`relative font-display text-6xl font-extrabold leading-none ${has ? t.text : "text-gray-400"}`}>{g}</p>
                 <p className={`relative mt-2 inline-block rounded-full px-3 py-1 text-xs font-extrabold ${has ? `${t.bg} text-white` : "bg-gray-100 text-gray-600"}`}>
-                  {has ? "Bản dùng thử" : "Sắp ra mắt"}
+                  {has ? "Vào học" : "Sắp ra mắt"}
                 </p>
               </Link>
             );
           })}
+        </div>
+      </Container>
+
+      {/* Đề ôn tập hè */}
+      <Container className="pt-12">
+        <SectionTitle kicker="Ôn tập hè" title="Đề ôn tập hè – chuẩn bị lên lớp" />
+        <div className="rounded-[2rem] bg-gradient-to-br from-amber-50 via-white to-emerald-50 p-5 shadow-sm ring-2 ring-amber-200 sm:p-6">
+          <p className="text-gray-800"><span aria-hidden>☀️</span> Mỗi lớp có bộ <strong>đề ôn tập hè Toán và Tiếng Việt</strong>: con làm bài tương tác ngay trên web (chấm điểm tự động), hoặc phụ huynh <strong>tải phiếu PDF</strong> về in.</p>
+          <ul className="mt-4 grid grid-cols-2 gap-2 sm:grid-cols-4">
+            {GRADES.map((g) => (
+              <li key={g} className="rounded-2xl bg-white p-3 ring-1 ring-amber-200">
+                <p className="font-display text-xl font-extrabold text-gray-900">Lớp {g}</p>
+                <div className="mt-2 flex flex-col gap-1.5 text-sm font-extrabold">
+                  <Link href={`/toan/${gradeSlug(g)}/on-tap-he`} className="rounded-full bg-brand-600 px-3 py-2 text-center text-white">Toán</Link>
+                  <Link href={`/tieng-viet/${gradeSlug(g)}/on-tap-he`} className="rounded-full bg-accent-600 px-3 py-2 text-center text-white">Tiếng Việt</Link>
+                </div>
+              </li>
+            ))}
+          </ul>
         </div>
       </Container>
 
@@ -181,17 +200,17 @@ export default function HomePage() {
             <Link href="/huong-dan" className="mt-4 inline-block py-2 font-extrabold text-brand-700 underline">Xem chi tiết</Link>
           </div>
           <div className="rounded-[2rem] bg-white p-6 shadow-sm ring-1 ring-accent-100">
-            <h2 className="flex items-center gap-2 text-2xl text-gray-900"><span aria-hidden>💳</span> Hướng dẫn nộp phí</h2>
-            <p className="mt-3 rounded-2xl bg-amber-50 p-3 text-sm font-bold text-amber-900 ring-1 ring-amber-200">Bản dùng thử: chưa mở đăng ký gói, vui lòng chưa chuyển khoản.</p>
+            <h2 className="flex items-center gap-2 text-2xl text-gray-900"><span aria-hidden>🎁</span> Tạo tài khoản miễn phí</h2>
+            <p className="mt-3 rounded-2xl bg-emerald-50 p-3 text-sm font-bold text-emerald-900 ring-1 ring-emerald-200">Hiện tại toàn bộ bài học miễn phí — phụ huynh không cần chuyển khoản.</p>
             <ol className="mt-4 space-y-3">
-              {["Đăng ký tài khoản phụ huynh, thêm hồ sơ của con.", "Chọn gói học (môn + lớp + số tháng).", "Chuyển khoản đúng số tiền và nội dung website đưa ra.", "Cô xác nhận, bài học được mở cho con."].map((t, i) => (
+              {["Bấm “Tạo tài khoản”, nhập họ tên phụ huynh, số điện thoại (hoặc email) và mật khẩu.", "Không cần mã xác nhận — tạo xong là vào học ngay.", "Đăng nhập — mọi bài giảng, phiếu luyện tập và đề ôn tập hè đều mở.", "Tải phiếu PDF về in cho con làm thêm."].map((t, i) => (
                 <li key={t} className="flex items-start gap-3">
                   <span className="grid h-8 w-8 shrink-0 place-items-center rounded-full bg-accent-600 font-display font-extrabold text-white">{i + 1}</span>
                   <span className="pt-1 text-gray-800">{t}</span>
                 </li>
               ))}
             </ol>
-            <Link href="/thanh-toan" className="mt-4 inline-block py-2 font-extrabold text-accent-700 underline">Xem chi tiết</Link>
+            <Link href="/dang-nhap?tab=dang-ky" className="btn-toy mt-4 inline-block rounded-full bg-accent-600 px-6 py-3 font-extrabold text-white">Tạo tài khoản miễn phí</Link>
           </div>
         </div>
       </Container>

@@ -5,6 +5,7 @@
 // lỡ bị import vào một component chạy trên trình duyệt ("use client"), build sẽ BÁO LỖI ngay.
 import "server-only";
 import { SKELETON_COURSES } from "@/data/khung-khoa-hoc";
+import { ON_TAP_HE } from "@/data/on-tap-he";
 import { TOAN_NANG_CAO, TOAN_THEO_TUAN } from "@/data/toan-theo-tuan";
 import { lessonFileHref } from "@/lib/exam-meta";
 import type { Course, Item, ItemType, Subject, SubjectSlug, Track, Week } from "@/lib/types";
@@ -18,7 +19,7 @@ export const GRADES = [2, 3, 4, 5] as const;
 
 export const TRACK_LABELS: Record<Track, { name: string; description: string }> = {
   "theo-tuan": { name: "Học theo tuần", description: "Bám sát sách Kết nối tri thức, khoảng 35 tuần" },
-  "on-tap-he": { name: "Ôn tập hè", description: "Củng cố kiến thức, chuẩn bị lên lớp" },
+  "on-tap-he": { name: "Đề ôn tập hè", description: "Đề làm trên web và phiếu PDF tải về in — củng cố kiến thức, chuẩn bị lên lớp" },
   "nang-cao": { name: "Nâng cao theo chuyên đề", description: "Chuyên đề nâng cao, toán tư duy" },
   "ky-thi": { name: "Kỳ thi", description: "Bài giảng chữa đề và đề thi thử" },
   "tai-lieu": { name: "Tài liệu", description: "Phiếu, đề, tài liệu tải về" },
@@ -31,9 +32,12 @@ export const ITEM_TYPE_LABELS: Record<ItemType, string> = {
   test: "Đề kiểm tra",
 };
 
-// Thứ tự: môn, rồi lớp.
-const COURSES: Course[] = [...TOAN_THEO_TUAN, ...SKELETON_COURSES, ...TOAN_NANG_CAO].sort(
-  (a, b) => a.subject.localeCompare(b.subject) || a.grade - b.grade || a.track.localeCompare(b.track),
+/** Thứ tự hướng học trong một lớp. */
+const TRACK_ORDER: Track[] = ["theo-tuan", "on-tap-he", "nang-cao", "ky-thi", "tai-lieu"];
+
+// Thứ tự: môn, rồi lớp, rồi hướng học.
+const COURSES: Course[] = [...TOAN_THEO_TUAN, ...SKELETON_COURSES, ...TOAN_NANG_CAO, ...ON_TAP_HE].sort(
+  (a, b) => a.subject.localeCompare(b.subject) || a.grade - b.grade || TRACK_ORDER.indexOf(a.track) - TRACK_ORDER.indexOf(b.track),
 );
 
 export function getSubject(slug: string): Subject | undefined {
@@ -71,9 +75,9 @@ export function publishedWeeks(course: Course): Week[] {
   return course.weeks.filter((w) => w.published);
 }
 
-/** Tên đơn vị của một khóa: "Tuần" hoặc "Chuyên đề" (mục nâng cao). */
+/** Tên đơn vị của một khóa: "Tuần", "Chuyên đề" (mục nâng cao) hoặc "Đề" (ôn tập hè). */
 export function unitName(course: Course): string {
-  return course.track === "nang-cao" ? "Chuyên đề" : "Tuần";
+  return course.track === "nang-cao" ? "Chuyên đề" : course.track === "on-tap-he" ? "Đề" : "Tuần";
 }
 
 export function weekSlug(w: Week): string {
@@ -100,11 +104,12 @@ export function isReady(item: Item): boolean {
 
 /**
  * Quyền xem nội dung một mục.
- * GIAI ĐOẠN 1: chưa có đăng nhập, nên chỉ mục `isFree` xem được.
- * Giai đoạn 3 sẽ kiểm tra gói còn hạn ở phía máy chủ/cơ sở dữ liệu.
+ * - Khách chưa đăng nhập: chỉ mục `isFree`.
+ * - Phụ huynh đã đăng nhập (tài khoản miễn phí): xem được tất cả.
+ * Khi có gói học trả phí, thay điều kiện thứ hai bằng kiểm tra gói còn hạn ở phía máy chủ.
  */
-export function canViewItem(item: Item): boolean {
-  return item.isFree;
+export function canViewItem(item: Item, loggedIn = false): boolean {
+  return loggedIn || item.isFree;
 }
 
 /** File cô tải lên cho một mục (bảng lesson_files) — chỉ cờ, không kèm đường dẫn kho. */
@@ -186,7 +191,7 @@ export function courseStats(course: Course) {
   const weeks = publishedWeeks(course);
   const items = weeks.flatMap((w) => w.items);
   return {
-    weeks: weeks.filter((w) => w.kind === "hoc").length,
+    weeks: course.track === "on-tap-he" ? 0 : weeks.filter((w) => w.kind === "hoc").length,
     videos: items.filter((i) => i.type === "video").length,
     worksheets: items.filter((i) => i.type === "worksheet").length,
     tests: items.filter((i) => i.type === "test").length,

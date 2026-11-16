@@ -1,24 +1,21 @@
+import Link from "next/link";
 import { Container, PageHero } from "@/components/ui";
-import { site } from "@/data/site";
 
-export const metadata = { title: "Thanh toán" };
+export const metadata = { title: "Học phí" };
 
 export default function PaymentGuidePage() {
   return (
     <>
-      <PageHero title="Hướng dẫn nộp phí" subtitle="Chuyển khoản ngân hàng — cô xác nhận rồi mở bài cho con." />
+      <PageHero title="Học phí" subtitle="Hiện tại toàn bộ bài học trên website đều miễn phí." />
       <Container className="max-w-3xl space-y-4 py-8">
-        <div className="rounded-2xl border-2 border-accent-200 bg-accent-50 p-4 text-accent-700">
-          <strong>Bản dùng thử:</strong> chức năng đăng ký gói và thanh toán chưa mở (Giai đoạn 3). Vui lòng chưa chuyển khoản.
+        <div className="rounded-2xl border-2 border-emerald-200 bg-emerald-50 p-4 font-semibold text-emerald-900">
+          <span aria-hidden>🎁</span> Phụ huynh <strong>không cần chuyển khoản</strong>. Chỉ cần tạo tài khoản miễn phí là con học được tất cả bài giảng, phiếu luyện tập và đề ôn tập hè.
         </div>
         <ol className="space-y-3">
           {[
-            "Đăng ký tài khoản phụ huynh và thêm hồ sơ của con (tên, lớp).",
-            "Chọn gói: môn + lớp + số tháng (tối thiểu 1 tháng).",
-            "Website hiện số tài khoản, số tiền chính xác, nội dung chuyển khoản riêng của con và mã QR.",
-            "Chuyển khoản đúng số tiền và đúng nội dung.",
-            "Cô Thanh Mai kiểm tra tiền về và bấm xác nhận — bài học được mở ngay.",
-            "Hết hạn gói, bài trả phí tự khóa; phụ huynh có thể gia hạn bất cứ lúc nào (cộng dồn thời gian còn lại).",
+            "Bấm “Tạo tài khoản miễn phí”, nhập họ tên phụ huynh, số điện thoại (hoặc email) và mật khẩu.",
+            "Không cần mã xác nhận — tạo xong là vào học ngay.",
+            "Đăng nhập, chọn môn và lớp của con để bắt đầu học.",
           ].map((t, i) => (
             <li key={i} className="flex gap-3 rounded-2xl bg-white p-4 shadow-sm">
               <span className="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-brand-600 font-bold text-white">{i + 1}</span>
@@ -26,7 +23,8 @@ export default function PaymentGuidePage() {
             </li>
           ))}
         </ol>
-        <p className="rounded-2xl bg-white p-4 text-gray-800 shadow-sm"><strong>Chính sách hoàn tiền:</strong> {site.refundPolicy}</p>
+        <Link href="/dang-nhap?tab=dang-ky" className="btn-toy inline-block rounded-full bg-brand-600 px-6 py-3 text-lg font-extrabold text-white">Tạo tài khoản miễn phí</Link>
+        <p className="text-sm text-gray-600">Nếu sau này có gói học trả phí, cô sẽ thông báo trước cho phụ huynh.</p>
       </Container>
     </>
   );

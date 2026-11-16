@@ -2,10 +2,12 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Icon } from "@/components/art";
 import { Logo } from "@/components/Logo";
 import { site } from "@/data/site";
+import { createSupabaseBrowser } from "@/lib/supabase/browser";
+import { supabaseEnv } from "@/lib/supabase/env";
 import { telHref } from "@/lib/urls";
 
 export const MAIN_MENU = [
@@ -16,8 +18,23 @@ export const MAIN_MENU = [
   { href: "/tai-lieu", label: "Tài liệu", emoji: "📚" },
 ];
 
+/** Đã đăng nhập chưa (chỉ để đổi nút "Đăng nhập" ↔ "Tài khoản"; quyền xem bài vẫn do máy chủ kiểm tra). */
+function useLoggedIn(): boolean {
+  const [loggedIn, setLoggedIn] = useState(false);
+  useEffect(() => {
+    if (!supabaseEnv() || !document.cookie.includes("sb-")) return;
+    const supabase = createSupabaseBrowser();
+    supabase.auth.getSession().then(({ data }) => setLoggedIn(Boolean(data.session)));
+    const { data } = supabase.auth.onAuthStateChange((_e, session) => setLoggedIn(Boolean(session)));
+    return () => data.subscription.unsubscribe();
+  }, []);
+  return loggedIn;
+}
+
 export function SiteHeader() {
   const [open, setOpen] = useState(false);
+  const loggedIn = useLoggedIn();
+  const account = loggedIn ? { href: "/tai-khoan", label: "Tài khoản" } : { href: "/dang-nhap", label: "Đăng nhập" };
   const pathname = usePathname();
   const isActive = (href: string) => pathname === href || pathname.startsWith(href + "/");
   const tel = site.hotline ? telHref(site.hotline) : null;
@@ -29,7 +46,7 @@ export function SiteHeader() {
         <div className="mx-auto flex max-w-6xl items-center justify-between gap-3 px-4 py-1">
           <nav className="flex shrink-0 gap-4 whitespace-nowrap" aria-label="Liên kết nhanh">
             <Link href="/huong-dan" className="py-1 hover:underline">Hướng dẫn</Link>
-            <Link href="/thanh-toan" className="py-1 hover:underline">Thanh toán</Link>
+            {!loggedIn && <Link href="/dang-nhap?tab=dang-ky" className="py-1 hover:underline">Tạo tài khoản</Link>}
           </nav>
           <div className="truncate">
             {site.hotline && tel ? (
@@ -54,8 +71,8 @@ export function SiteHeader() {
               {m.label}
             </Link>
           ))}
-          <Link href="/dang-nhap" className="btn-toy ml-2 rounded-full bg-brand-600 px-5 py-2 font-extrabold text-white">
-            Đăng nhập
+          <Link href={account.href} className="btn-toy ml-2 rounded-full bg-brand-600 px-5 py-2 font-extrabold text-white">
+            {account.label}
           </Link>
         </nav>
         <button
@@ -86,8 +103,8 @@ export function SiteHeader() {
               </li>
             ))}
             <li className="col-span-2">
-              <Link href="/dang-nhap" onClick={() => setOpen(false)} className="btn-toy block rounded-2xl bg-brand-600 px-4 py-3 text-center font-extrabold text-white">
-                Đăng nhập
+              <Link href={account.href} onClick={() => setOpen(false)} className="btn-toy block rounded-2xl bg-brand-600 px-4 py-3 text-center font-extrabold text-white">
+                {account.label}
               </Link>
             </li>
           </ul>

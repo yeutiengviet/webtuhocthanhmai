@@ -30,3 +30,18 @@ export async function getAdmin() {
   const { data } = await supabase.from("profiles").select("role").eq("id", auth.user.id).maybeSingle();
   return { supabase, user: auth.user, isAdmin: data?.role === "admin" } as const;
 }
+
+/**
+ * Người đang xem có đăng nhập không (bất kỳ tài khoản nào — phụ huynh hoặc quản trị).
+ * Chưa cấu hình Supabase hoặc lỗi mạng → coi như khách (không đăng nhập).
+ * LƯU Ý: gọi hàm này làm trang thành trang động (đọc cookie) — không bị lưu đệm chung giữa người xem.
+ */
+export async function getViewer() {
+  try {
+    const supabase = await createSupabaseServer();
+    const { data } = await supabase.auth.getUser();
+    return data.user ?? null;
+  } catch {
+    return null;
+  }
+}
