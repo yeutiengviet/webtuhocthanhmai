@@ -36,10 +36,32 @@ const DATA: Record<Grade, Block[]> = {
 /** Tuần 1–2 được học thử miễn phí toàn bộ. */
 const FREE_WEEKS = new Set([1, 2]);
 
-/** Kiểm tra cuối tháng: cứ 4 tuần học là 1 tháng, tuần cuối của tháng (tuần 4, 8, 12…) có đề kiểm tra cuối tháng. */
-export const WEEKS_PER_MONTH = 4;
-export function monthlyTest(n: number): { month: number; fromWeek: number } | null {
-  return n % WEEKS_PER_MONTH === 0 ? { month: n / WEEKS_PER_MONTH, fromWeek: n - WEEKS_PER_MONTH + 1 } : null;
+/**
+ * Kiểm tra cuối tháng theo THÁNG DƯƠNG LỊCH của lịch học: tuần thuộc tháng của ngày thứ Hai đầu tuần;
+ * tuần học cuối cùng của mỗi tháng có đề kiểm tra cuối tháng đó (vd tuần 4 = cuối tháng 9, tuần 8 = cuối tháng 10).
+ * Trả về Map: số tuần → tháng (1–12).
+ */
+export function monthEndWeeks(calendar: { startDate: string }[]): Map<number, number> {
+  const month = (d: string) => Number(d.slice(5, 7));
+  const out = new Map<number, number>();
+  calendar.forEach((c, i) => {
+    const next = calendar[i + 1];
+    if (!next || month(next.startDate) !== month(c.startDate)) out.set(i + 1, month(c.startDate));
+  });
+  return out;
+}
+
+/** Số đề kiểm tra cuối tháng mỗi tháng (Đề 1 … Đề 5). Đề 2 trở đi chỉ hiện cho phụ huynh khi cô đã tải file. */
+export const SO_DE_CUOI_THANG = 5;
+
+export function monthlyTestItems(month: number) {
+  return Array.from({ length: SO_DE_CUOI_THANG }, (_, i) => ({
+    slug: `kiem-tra-cuoi-thang-${i + 1}`,
+    type: "test" as const,
+    title: `Đề kiểm tra cuối tháng ${month} – Đề ${i + 1}`,
+    level: "co-ban" as const,
+    durationMinutes: 40,
+  }));
 }
 
 /** Phiếu tương tác có thật do chủ dự án cung cấp (Toán 4, tuần 8). */
@@ -56,7 +78,7 @@ const REAL_WORKSHEETS: Partial<Record<Grade, Record<number, { slug: string; titl
   },
 };
 
-function teachingItems(grade: Grade, b: TeachingBlock): Item[] {
+function teachingItems(grade: Grade, b: TeachingBlock, monthEnd: number | undefined): Item[] {
   const n = b.tuan;
   const free = FREE_WEEKS.has(n);
   const id = (slug: string) => `t${grade}-w${n}-${slug}`;
@@ -78,10 +100,7 @@ function teachingItems(grade: Grade, b: TeachingBlock): Item[] {
   for (const w of REAL_WORKSHEETS[grade]?.[n] ?? []) {
     push({ slug: w.slug, type: "worksheet", title: w.title, level: "co-ban", isFree: w.isFree, url: w.url });
   }
-  const mt = monthlyTest(n);
-  if (mt) {
-    push({ slug: "kiem-tra-cuoi-thang", type: "test", title: `Đề kiểm tra cuối tháng ${mt.month} (tuần ${mt.fromWeek}–${n})`, level: "co-ban", isFree: free, durationMinutes: 40 });
-  }
+  if (monthEnd) for (const t of monthlyTestItems(monthEnd)) push({ ...t, isFree: free });
   (b.thuVi ?? []).forEach((t, i) =>
     push({ slug: `thu-vi-${i + 1}`, type: "video", title: `[Toán học thú vị] ${t}`, level: "nang-cao", isFree: free, isExtension: true, videoProvider: "youtube" }),
   );
@@ -116,6 +135,7 @@ function buildTheoTuan(grade: Grade): Course {
   const blocks = DATA[grade];
   const teaching = blocks.filter(isTeaching);
   const calendar = buildWeekCalendar(SCHOOL_YEAR_START, teaching.length, HOLIDAY_MONDAYS);
+  const monthEnds = monthEndWeeks(calendar);
   const weeks: Week[] = [];
   let r = 0;
   let last = { number: 0, startDate: calendar[0].startDate, endDate: calendar[0].endDate };
@@ -123,7 +143,7 @@ function buildTheoTuan(grade: Grade): Course {
     if (isTeaching(b)) {
       const c = calendar[b.tuan - 1];
       last = { number: b.tuan, startDate: c.startDate, endDate: c.endDate };
-      weeks.push({ id: `t${grade}-w${b.tuan}`, number: b.tuan, startDate: c.startDate, endDate: c.endDate, title: b.baiHoc.join(" · "), kind: "hoc", published: true, items: teachingItems(grade, b) });
+      weeks.push({ id: `t${grade}-w${b.tuan}`, number: b.tuan, startDate: c.startDate, endDate: c.endDate, title: b.baiHoc.join(" · "), kind: "hoc", published: true, items: teachingItems(grade, b, monthEnds.get(b.tuan)) });
     } else {
       r++;
       const kind: WeekKind = b.kind === "giua-ky" ? "on-tap-giua-ky" : "on-tap-cuoi-ky";

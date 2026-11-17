@@ -13,7 +13,7 @@ export default function GuidePage() {
             ["Mở đúng tuần", "Bấm “Đến tuần hiện tại” để mở tuần đang học trên lớp."],
             ["Xem video bài giảng", "Con xem video, có thể dừng và xem lại nhiều lần."],
             ["Làm phiếu luyện tập", "Làm phiếu cơ bản trước, phiếu nâng cao sau. Phiếu chấm điểm ngay."],
-            ["Làm đề kiểm tra", "Cứ 4 tuần là 1 tháng: tuần cuối tháng (tuần 4, 8, 12…) có đề kiểm tra cuối tháng; tuần ôn tập có đề cương và bộ đề."],
+            ["Làm đề kiểm tra", "Tuần học cuối cùng của mỗi tháng có đề kiểm tra cuối tháng (vd cuối tháng 9, cuối tháng 10…); tuần ôn tập có đề cương và bộ đề."],
           ].map(([t, d], i) => (
             <li key={t} className="flex gap-3 rounded-2xl bg-white p-4 shadow-sm">
               <span className="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-brand-600 font-bold text-white">{i + 1}</span>

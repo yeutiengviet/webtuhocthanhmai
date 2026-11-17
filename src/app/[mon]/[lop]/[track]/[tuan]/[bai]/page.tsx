@@ -20,6 +20,7 @@ import {
   lessonMedia,
   publishedWeeks,
   unitName,
+  visibleItems,
   weekLabel,
   weekSlug,
 } from "@/lib/content";
@@ -154,7 +155,7 @@ export default async function LessonPage({ params }: { params: Params }) {
           <div className="rounded-3xl bg-white p-4 shadow-sm ring-1 ring-brand-100">
             <h2 className="text-xl text-gray-900"><span aria-hidden>📚</span> Cùng bài học</h2>
             <ul className="mt-2 space-y-1">
-              {week.items.map((it) => (
+              {visibleItems(week.items, files).map((it) => (
                 <li key={it.id}>
                   <Link
                     href={itemHref(course, week, it)}

@@ -4,7 +4,7 @@ import { notFound } from "next/navigation";
 import { CurrentWeekButton, OpenWeekFromHash } from "@/components/CurrentWeekButton";
 import { Breadcrumbs, Container, FreeBadge, ItemIcon, LevelBadge, LockBadge, PageHero } from "@/components/ui";
 import { features } from "@/data/site";
-import { allCourses, canViewItem, getCourse, isCourseLocked, getSubject, gradeSlug, isReady, isTrack, itemHref, parseGradeSlug, publishedWeeks, TRACK_LABELS, unitName, weekSlug } from "@/lib/content";
+import { allCourses, canViewItem, getCourse, isCourseLocked, getSubject, gradeSlug, isReady, isTrack, itemHref, parseGradeSlug, publishedWeeks, TRACK_LABELS, unitName, visibleItems, weekSlug } from "@/lib/content";
 import { formatRange } from "@/lib/dates";
 import { getPublishedLessonFiles } from "@/lib/lesson-files";
 import { lessonFileHref } from "@/lib/exam-meta";
@@ -288,7 +288,7 @@ export default async function CoursePage({ params }: { params: Params }) {
                   <span aria-hidden className="chevron mt-3 grid h-8 w-8 shrink-0 place-items-center rounded-full bg-brand-50 text-brand-700 transition-transform">▾</span>
                 </summary>
                 <ul className="grid gap-2 border-t-2 border-dashed border-brand-100 bg-brand-50/40 p-3 sm:grid-cols-2">
-                  {w.items.map((it) => {
+                  {visibleItems(w.items, files).map((it) => {
                     const scored = it.type === "worksheet" || it.type === "test";
                     const f = files.get(it.id);
                     const open = canViewItem(it) || Boolean(f?.isFree);

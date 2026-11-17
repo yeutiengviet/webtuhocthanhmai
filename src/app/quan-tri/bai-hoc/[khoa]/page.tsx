@@ -6,6 +6,7 @@ import { requireAdminPage } from "@/lib/admin";
 import { adminLessonFiles } from "@/lib/admin-lessons";
 import { attemptStats } from "@/lib/admin-stats";
 import { getCourseById, itemTakesUploads } from "@/lib/content";
+import { isMonthlySlug } from "@/lib/bulk-match";
 import { imagePathsOf } from "@/lib/lesson-files";
 import { formatRange } from "@/lib/dates";
 
@@ -18,6 +19,7 @@ export default async function AdminCourseLessons({ params }: { params: Promise<{
   const course = /^[a-z0-9-]{1,60}$/.test(khoa) ? getCourseById(khoa) : undefined;
   if (!course) notFound();
   const [{ rows, error }, attempts] = await Promise.all([adminLessonFiles(supabase, course), attemptStats(supabase)]);
+  const months = course.weeks.map((w) => ({ w, items: w.items.filter((i) => isMonthlySlug(i.slug)) })).filter((m) => m.items.length > 0);
   const name = `${course.subject === "toan" ? "Toán" : "Tiếng Việt"} lớp ${course.grade}${course.track === "on-tap-he" ? " – Ôn tập hè" : ""}`;
 
   return (
@@ -31,6 +33,48 @@ export default async function AdminCourseLessons({ params }: { params: Promise<{
           </Link>
         </div>
         {error && <p role="alert" className="rounded-2xl bg-red-50 p-3 font-bold text-red-800">Chưa tải được trạng thái phiếu. Cô tải lại trang sau ít phút.</p>}
+        {months.length > 0 && (
+          <section className="rounded-3xl bg-accent-50 p-4 shadow-sm ring-2 ring-accent-200" aria-labelledby="de-cuoi-thang">
+            <h2 id="de-cuoi-thang" className="font-display text-xl font-extrabold text-gray-900">📝 Đề kiểm tra cuối tháng</h2>
+            <p className="mt-1 text-sm font-semibold text-gray-700">Đề nằm ở tuần học cuối cùng của mỗi tháng, mỗi tháng tối đa {months[0].items.length} đề. Bấm <strong>Chọn nhiều file</strong> để tải nhiều đề một lần; phụ huynh chỉ thấy những đề đã có file.</p>
+            <ul className="mt-3 space-y-2">
+              {months.map(({ w, items }) => {
+                const done = items.filter((i) => rows.has(i.id)).length;
+                return (
+                  <li key={w.id}>
+                    <details className="rounded-2xl bg-white ring-1 ring-accent-100">
+                      <summary className="flex cursor-pointer flex-wrap items-center gap-2 p-3">
+                        <span className="min-w-0 flex-1">
+                          <span className="block font-extrabold text-gray-900">{items[0].title.replace(/^Đề kiểm tra cuối t(háng \d+).*$/, "T$1")} <span className="font-semibold text-gray-600">· Tuần {w.number}</span></span>
+                          <span className="text-xs font-semibold text-gray-700">Đã có {done}/{items.length} đề</span>
+                        </span>
+                        <Link href={`/quan-tri/bai-hoc/${course.id}/tai-hang-loat?thang=${w.number}`} className="btn-toy inline-flex min-h-11 items-center gap-1.5 rounded-full bg-brand-600 px-4 text-sm font-extrabold text-white">
+                          <span aria-hidden>📂</span> Chọn nhiều file
+                        </Link>
+                      </summary>
+                      <ul className="space-y-1 border-t border-dashed border-accent-100 p-2">
+                        {items.map((it) => {
+                          const r = rows.get(it.id);
+                          return (
+                            <li key={it.id}>
+                              <Link href={`/quan-tri/bai-hoc/${course.id}/${it.id}`} className="flex min-h-11 items-center gap-3 rounded-xl p-2 hover:bg-brand-50">
+                                <span className="min-w-0 flex-1">
+                                  <span className="block font-bold text-gray-900">{it.title.replace(/^.*– /, "")}</span>
+                                  <span className="text-xs font-semibold text-gray-700">{r ? [r.html_path ? "✏️ Tương tác" : null, r.pdf_path ? "⬇️ PDF" : null, r.published ? null : "đang ẩn"].filter(Boolean).join(" · ") : "Chưa có đề"}</span>
+                                </span>
+                                <span className="rounded-full bg-brand-600 px-3 py-1 text-sm font-extrabold text-white">{r ? "Sửa" : "Tải lên"}</span>
+                              </Link>
+                            </li>
+                          );
+                        })}
+                      </ul>
+                    </details>
+                  </li>
+                );
+              })}
+            </ul>
+          </section>
+        )}
         {course.weeks.map((w) => {
           const items = w.items.filter(itemTakesUploads);
           const done = items.filter((i) => rows.has(i.id)).length;
