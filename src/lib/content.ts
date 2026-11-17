@@ -78,12 +78,10 @@ export function isTrack(value: string): value is Track {
 
 /**
  * Các tuần đã công khai, như trang công khai nhìn thấy.
- * Đang tắt tải PDF (features.allowPdfDownload = false): bỏ các mục "Tài liệu" (chỉ là file PDF tải về) khỏi tuần.
- * Trang quản trị đọc course.weeks trực tiếp nên vẫn thấy và tải phiếu cho các mục này như cũ.
+ * Mục "Tài liệu" (PDF) vẫn hiện; đang tắt tải PDF thì phụ huynh chỉ XEM trên web (nút tải xám).
  */
-export function publishedWeeks(course: Course, allowPdf: boolean = features.allowPdfDownload): Week[] {
-  const weeks = course.weeks.filter((w) => w.published);
-  return allowPdf ? weeks : weeks.map((w) => (w.items.some((i) => i.type === "document") ? { ...w, items: w.items.filter((i) => i.type !== "document") } : w));
+export function publishedWeeks(course: Course): Week[] {
+  return course.weeks.filter((w) => w.published);
 }
 
 /** Tên đơn vị của một khóa: "Tuần", "Chuyên đề" (mục nâng cao) hoặc "Đề" (ôn tập hè). */
@@ -163,10 +161,8 @@ export function lessonMedia(
   item: Item,
   canView: (it: Item) => boolean = canViewItem,
   file?: LessonFileInfo | null,
-  allowPdf: boolean = features.allowPdfDownload,
 ): LessonMedia {
-  const accepts = { ...itemAcceptsFiles(item) };
-  if (!allowPdf) accepts.pdf = false;
+  const accepts = itemAcceptsFiles(item);
   const imageCount = accepts.images ? (file?.imageCount ?? 0) : 0;
   const uploaded = file && (file.hasHtml || file.hasPdf || imageCount > 0) ? file : null;
   if (!canView(item) && !uploaded?.isFree) return { kind: "locked" };

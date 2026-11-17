@@ -87,9 +87,8 @@ test("bài Free: phiếu tương tác nhúng trong iframe sandbox an toàn", asy
   // Phiếu phải ở tên miền KHÁC website
   const src = new URL((await frame.getAttribute("src")) ?? "");
   expect(src.origin).not.toBe(new URL(page.url()).origin);
-  // Chỉ làm bài trên web: không có nút tải PDF / in bài
-  await expect(page.getByRole("button", { name: "In bài" })).toHaveCount(0);
-  await expect(page.getByText("Tải phiếu PDF")).toHaveCount(0);
+  // Đang tắt tải PDF: nút "In bài" vẫn hiện nhưng xám, bấm không được
+  await expect(page.getByRole("button", { name: "In bài" })).toBeDisabled();
   await expect(page.getByRole("link", { name: "Luyện tập", exact: true })).toBeVisible();
   await expect(page.getByRole("heading", { name: "Cùng bài học" })).toBeVisible();
   await expect(page.getByRole("heading", { name: "Cùng lớp học" })).toBeVisible();
@@ -184,7 +183,6 @@ test("tất cả trang bài học của cả 8 khóa theo tuần (Toán, Tiếng
       total += hrefs.length;
     }
   }
-  // (đang tắt tải PDF nên không còn mục "Tài liệu in (PDF) của tuần")
   expect(total).toBeGreaterThan(1300);
   // Toán nâng cao theo chuyên đề: đang tạm khóa — trang khóa học và trang bài chỉ báo khóa, không có danh sách bài
   for (const lop of [2, 3, 4, 5]) {
@@ -195,16 +193,18 @@ test("tất cả trang bài học của cả 8 khóa theo tuần (Toán, Tiếng
   }
 });
 
-test("chỉ làm bài trên web: không có nút/đường dẫn tải PDF, file PDF bị chặn", async ({ page, request }) => {
+test("PDF chỉ xem, không tải: không có đường dẫn tải thẳng, mở thẳng file PDF bị chặn", async ({ page, request }) => {
   await page.goto("/toan/lop-4/on-tap-he");
   await expect(page.getByText("Tải PDF")).toHaveCount(0);
-  await expect(page.locator("a[href*='/pdf']")).toHaveCount(0);
+  await expect(page.locator("a[href*='/pdf'], a[download]")).toHaveCount(0);
   for (const p of ["/phieu/bai/t4-w1-luyen-tap-co-ban/pdf", "/phieu/00000000-0000-0000-0000-000000000000/pdf"]) {
     expect((await request.get(p)).status(), p).toBe(404);
+    // giả làm khung xem nhưng mở như một trang → vẫn chặn
+    expect((await request.get(p, { headers: { "x-xem-pdf": "1", "sec-fetch-dest": "document" } })).status(), p).toBe(404);
   }
-  // Mục "Tài liệu in (PDF) của tuần" không còn ở trang công khai
+  // Mục "Tài liệu in (PDF) của tuần" vẫn hiện ở trang công khai
   await page.goto("/toan/lop-4/theo-tuan");
-  await expect(page.getByText("Tài liệu in (PDF) của tuần")).toHaveCount(0);
+  await expect(page.getByText("Tài liệu in (PDF) của tuần").first()).toBeAttached();
 });
 
 test("các trang phụ mở được, không lỗi console", async ({ page }) => {

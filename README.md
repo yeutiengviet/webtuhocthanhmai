@@ -19,7 +19,7 @@ Nội dung theo sách **Kết nối tri thức với cuộc sống**.
   Lưu ý: đây là số lần **mở đề để làm**, chưa phải số bài đã nộp (điểm vẫn gửi về Google Sheet của phiếu); bấm tải lại trang cũng tính thêm một lượt.
 - **Cần chạy một lần**: `supabase/migrations/0005_thong_ke_phu_huynh_va_luot_lam.sql` trong Supabase → SQL Editor. Chưa chạy thì trang thống kê hiện hướng dẫn, website vẫn chạy bình thường. Lượt làm chỉ được đếm từ lúc chạy file này.
 - **Công tắc** trong `src/data/site.ts` → `features`:
-  - `allowPdfDownload: false` — học sinh chỉ làm bài trên web: ẩn mọi nút tải/xem PDF, nút "In bài", mục "Tài liệu in (PDF) của tuần" và menu "Tài liệu"; máy chủ chặn đường dẫn file PDF (chỉ quản trị mở được). Cô vẫn tải PDF lên được để dành. Đề chỉ có PDF (chưa có phiếu tương tác) hiện "đang cập nhật".
+  - `allowPdfDownload: false` — PDF **chỉ xem, không tải**: phiếu/đề PDF vẫn hiện, phụ huynh bấm **Xem PDF** để xem ngay trên trang (khung "chỉ xem" vẽ từng trang, không có nút tải/in của trình duyệt, xem được cả trên điện thoại). Nút **Tải phiếu PDF** và **In bài** vẫn hiện nhưng **màu xám, bấm không được**. Máy chủ không trả file khi bấm/dán thẳng đường dẫn PDF (chỉ khung xem trên trang và quản trị lấy được). Lưu ý: người rành máy tính vẫn có thể chụp màn hình — không có cách chặn tuyệt đối việc sao chép nội dung đã hiện trên màn hình.
   - `openToanNangCao: false` — ô "Nâng cao theo chuyên đề" của Toán vẫn hiện nhưng mờ, ghi "Tạm khóa", không bấm được; mở đường dẫn trực tiếp cũng chỉ thấy thông báo khóa.
 
 ## Trang quản trị — tải đề lên (Giai đoạn 2, đã chạy)

@@ -1,7 +1,6 @@
 // Thông tin chung và kiểm tra dữ liệu cho khu "Đề thi". File thuần (không truy cập mạng) — dùng được ở
 // cả trình duyệt (form tải đề) và máy chủ (kiểm tra lại trước khi ghi). Có kiểm thử đơn vị.
 
-import { features } from "@/data/site";
 import type { ExamCategory, SubjectSlug } from "@/lib/types";
 
 export const EXAM_CATEGORY_LABELS: Record<ExamCategory, string> = {
@@ -161,6 +160,9 @@ export function lessonFileHref(itemId: string, which: "html" | "pdf"): string {
   return which === "pdf" ? `/phieu/bai/${itemId}/pdf` : `/phieu/bai/${itemId}`;
 }
 
+/** Header khung xem PDF gửi kèm. Đang tắt tải PDF: máy chủ chỉ trả file PDF cho yêu cầu có header này (bấm/mở thẳng đường dẫn thì không). */
+export const PDF_VIEW_HEADER = "x-xem-pdf";
+
 /** Đường dẫn file mà khung phiếu / nút PDF được phép dùng (chỉ file của chính website). */
 export function isOwnFileHref(src: string): boolean {
   return /^\/phieu\/(?:[0-9a-f-]{36}(?:\/pdf)?|bai\/[a-z0-9]+(?:-[a-z0-9]+)*(?:\/pdf)?)$/.test(src);
@@ -177,14 +179,9 @@ export type ExamMedia = { kind: "locked" } | { kind: "open"; main: MainMedia; pd
  */
 export function examMedia(
   e: { id: string; isFree: boolean; externalUrl: string | null; hasFile: boolean; fileKind: FileKind | null; hasPdf: boolean },
-  allowPdf: boolean = features.allowPdfDownload,
 ): ExamMedia {
   if (!e.isFree) return { kind: "locked" };
-  // Tắt tải PDF: chỉ còn bài làm trực tuyến; đề chỉ có PDF coi như "đang cập nhật".
-  if (!allowPdf) {
-    const main: MainMedia = e.hasFile && e.fileKind === "html" ? { type: "html", src: examFileHref(e.id) } : e.externalUrl ? { type: "external", url: e.externalUrl } : null;
-    return { kind: "open", main, pdf: null };
-  }
+  // Đang tắt tải PDF (features.allowPdfDownload = false): PDF vẫn đưa ra để XEM; nút tải hiện xám, máy chủ chỉ trả file cho khung xem.
   // PDF tải về: ô PDF riêng; đề cũ chỉ có 1 file PDF thì dùng luôn file đó.
   const pdf = e.hasPdf ? examFileHref(e.id, "pdf") : e.hasFile && e.fileKind === "pdf" ? examFileHref(e.id) : null;
   let main: MainMedia = null;

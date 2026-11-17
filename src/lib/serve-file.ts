@@ -1,5 +1,6 @@
 import "server-only";
-import { IMAGE_MIME, isImageExt } from "@/lib/exam-meta";
+import { features } from "@/data/site";
+import { IMAGE_MIME, isImageExt, PDF_VIEW_HEADER } from "@/lib/exam-meta";
 import { STORAGE_BUCKET } from "@/lib/supabase/env";
 import type { createSupabaseServer } from "@/lib/supabase/server";
 
@@ -76,6 +77,19 @@ export async function viewerIsAdmin(supabase: Server): Promise<boolean> {
   if (!data.user) return false;
   const { data: p } = await supabase.from("profiles").select("role").eq("id", data.user.id).maybeSingle();
   return p?.role === "admin";
+}
+
+/**
+ * Được trả file PDF không.
+ * - Cho phép tải PDF (features.allowPdfDownload): luôn được (quyền xem vẫn do Row Level Security quyết định).
+ * - Đang tắt tải: chỉ khung "chỉ xem" trên trang (gửi header riêng, không phải mở trang/tải file) — hoặc quản trị.
+ *   Bấm hay dán thẳng đường dẫn file vào trình duyệt sẽ không tải được.
+ */
+export async function pdfRequestAllowed(req: Request, supabase: Server): Promise<boolean> {
+  if (features.allowPdfDownload) return true;
+  const dest = req.headers.get("sec-fetch-dest");
+  if (req.headers.get(PDF_VIEW_HEADER) === "1" && (!dest || dest === "empty")) return true;
+  return viewerIsAdmin(supabase);
 }
 
 /**
