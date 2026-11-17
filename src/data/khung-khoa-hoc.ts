@@ -4,7 +4,7 @@
 // (nhập file CSV / trang quản trị ở Giai đoạn 2).
 
 import "server-only";
-import { HOLIDAY_MONDAYS, SCHOOL_YEAR_START, monthlyTest } from "@/data/toan-theo-tuan";
+import { HOLIDAY_MONDAYS, SCHOOL_YEAR_START, monthEndWeeks, monthlyTestItem } from "@/data/toan-theo-tuan";
 import { buildWeekCalendar } from "@/lib/dates";
 import type { Course, Item, SubjectSlug, Week, WeekKind } from "@/lib/types";
 
@@ -32,7 +32,7 @@ const VIDEO_SLOTS: Record<SubjectSlug, { slug: string; title: string }[]> = {
   ],
 };
 
-function buildItems(subject: SubjectSlug, grade: number, n: number): Item[] {
+function buildItems(subject: SubjectSlug, grade: number, n: number, monthEnd: number | undefined): Item[] {
   const id = (slug: string) => `${CODE[subject]}${grade}-w${n}-${slug}`;
   const free = FREE_WEEKS.has(n);
   const items: Item[] = [];
@@ -47,6 +47,7 @@ function buildItems(subject: SubjectSlug, grade: number, n: number): Item[] {
       push({ slug: `de-on-tap-${k}`, type: "test", title: `Đề ôn tập ${review.label} – Đề ${k}`, level: k === 3 ? "nang-cao" : "co-ban", isFree: free, durationMinutes: 40 });
     }
     push({ slug: "video-chua-de", type: "video", title: `Video chữa đề ${review.label}`, level: "nang-cao", isFree: free, videoProvider: "youtube" });
+    if (monthEnd) push({ ...monthlyTestItem(monthEnd), isFree: free });
     return items;
   }
 
@@ -63,16 +64,14 @@ function buildItems(subject: SubjectSlug, grade: number, n: number): Item[] {
     push({ slug: "luyen-tap-co-ban", type: "worksheet", title: "Bài tập luyện tập cơ bản", level: "co-ban", isFree: free });
     push({ slug: "luyen-tap-nang-cao", type: "worksheet", title: "Bài tập luyện tập nâng cao", level: "nang-cao", isFree: free });
   }
-  const mt = monthlyTest(n);
-  if (mt) {
-    push({ slug: "kiem-tra-cuoi-thang", type: "test", title: `Đề kiểm tra cuối tháng ${mt.month} (tuần ${mt.fromWeek}–${n})`, level: "co-ban", isFree: free, durationMinutes: 40 });
-  }
+  if (monthEnd) push({ ...monthlyTestItem(monthEnd), isFree: free });
   push({ slug: "tai-lieu-tuan", type: "document", title: "Tài liệu in (PDF) của tuần", level: null, isFree: free });
   return items;
 }
 
 export function buildSkeletonCourse(subject: SubjectSlug, grade: 2 | 3 | 4 | 5): Course {
   const calendar = buildWeekCalendar(SCHOOL_YEAR_START, TOTAL_WEEKS, HOLIDAY_MONDAYS);
+  const monthEnds = monthEndWeeks(calendar);
   const subjectName = subject === "toan" ? "Toán" : "Tiếng Việt";
   const weeks: Week[] = calendar.map((c, i) => {
     const n = i + 1;
@@ -85,7 +84,7 @@ export function buildSkeletonCourse(subject: SubjectSlug, grade: 2 | 3 | 4 | 5):
       title: review ? `Ôn tập và kiểm tra ${review.label}` : `Bài học tuần ${n} (tên bài đang cập nhật)`,
       kind: review?.kind ?? "hoc",
       published: true,
-      items: buildItems(subject, grade, n),
+      items: buildItems(subject, grade, n, monthEnds.get(n)),
     };
   });
   return {
