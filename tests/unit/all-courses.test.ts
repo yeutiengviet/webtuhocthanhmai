@@ -51,13 +51,15 @@ describe("đủ 8 khóa: Toán và Tiếng Việt lớp 2–5", () => {
   });
 
   it("Toán nâng cao: đủ 4 lớp, số chuyên đề và số bài khớp mathx", () => {
-    const expected: Record<number, [number, number]> = { 2: [12, 58], 3: [13, 99], 4: [15, 113], 5: [23, 176] };
+    // đã bỏ chuyên đề "Bài giảng học thử" và "Học toán tư duy (livestream)"
+    const expected: Record<number, [number, number]> = { 2: [10, 51], 3: [11, 91], 4: [14, 100], 5: [21, 156] };
     for (const grade of [2, 3, 4, 5]) {
       const c = getCourse("toan", grade, "nang-cao")!;
       expect([c.weeks.length, c.weeks.reduce((a, w) => a + w.items.length, 0)]).toEqual(expected[grade]);
-      // chuyên đề học thử đầu tiên mở miễn phí, còn lại khóa
-      expect(c.weeks[0].items.every((i) => i.isFree)).toBe(true);
-      expect(c.weeks.slice(1).every((w) => w.items.every((i) => !i.isFree))).toBe(true);
+      expect(c.weeks.map((w) => w.number)).toEqual(c.weeks.map((_, i) => i + 1));
+      expect(c.weeks.some((w) => /học thử|livestream/i.test(w.title))).toBe(false);
+      // không còn phần học thử
+      expect(c.weeks.every((w) => w.items.every((i) => !i.isFree))).toBe(true);
     }
   });
 

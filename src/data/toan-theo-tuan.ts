@@ -80,7 +80,6 @@ function teachingItems(grade: Grade, b: TeachingBlock): Item[] {
   if (hasTest15(grade, n)) {
     push({ slug: "kiem-tra-15-phut", type: "test", title: `Đề kiểm tra 15 phút Tuần ${n}`, level: "co-ban", isFree: free, durationMinutes: 15 });
   }
-  push({ slug: "toan-tu-duy", type: "video", title: `Toán tư duy lớp ${grade} – Tuần ${n}`, level: "nang-cao", isFree: free, isExtension: true, videoProvider: "youtube" });
   (b.thuVi ?? []).forEach((t, i) =>
     push({ slug: `thu-vi-${i + 1}`, type: "video", title: `[Toán học thú vị] ${t}`, level: "nang-cao", isFree: free, isExtension: true, videoProvider: "youtube" }),
   );
@@ -151,14 +150,18 @@ function buildTheoTuan(grade: Grade): Course {
   };
 }
 
-interface NangCaoData { lop: number; chuyenDe: { ten: string; hocThu?: boolean; bai: string[] }[] }
+interface NangCaoData { lop: number; chuyenDe: { ten: string; bai: string[] }[] }
 const NC: Record<Grade, NangCaoData> = { 2: nc2, 3: nc3, 4: nc4, 5: nc5 };
 
-/** Toán nâng cao theo chuyên đề: mỗi "tuần" của khóa là một chuyên đề, mỗi bài giảng là một video. */
+/** Chuyên đề không đưa lên web: bài giảng học thử và học qua livestream. */
+const HIDDEN_CHUYEN_DE = /học thử|livestream/i;
+
+/** Toán nâng cao theo chuyên đề: mỗi "tuần" của khóa là một chuyên đề, mỗi bài giảng là một video.
+ *  Mã (id) giữ theo vị trí gốc trong file JSON để phiếu/file đã tải lên không bị lệch. */
 function buildNangCao(grade: Grade): Course {
-  const calendar = buildWeekCalendar(SCHOOL_YEAR_START, NC[grade].chuyenDe.length, []);
-  const weeks: Week[] = NC[grade].chuyenDe.map((cd, i) => {
-    const c = i + 1;
+  const list = NC[grade].chuyenDe.map((cd, i) => ({ cd, c: i + 1 })).filter(({ cd }) => !HIDDEN_CHUYEN_DE.test(cd.ten));
+  const calendar = buildWeekCalendar(SCHOOL_YEAR_START, list.length, []);
+  const weeks: Week[] = list.map(({ cd, c }, i) => {
     const items: Item[] = cd.bai.map((title, k) => ({
       id: `t${grade}-nc${c}-b${k + 1}`,
       slug: `bai-${k + 1}`,
@@ -166,12 +169,12 @@ function buildNangCao(grade: Grade): Course {
       title,
       level: "nang-cao",
       order: k + 1,
-      isFree: Boolean(cd.hocThu),
+      isFree: false,
       videoProvider: "youtube",
       videoRef: null,
       url: null,
     }));
-    return { id: `t${grade}-nc${c}`, number: c, startDate: calendar[i].startDate, endDate: calendar[i].endDate, title: cd.ten, kind: "hoc", published: true, items };
+    return { id: `t${grade}-nc${c}`, number: i + 1, startDate: calendar[i].startDate, endDate: calendar[i].endDate, title: cd.ten, kind: "hoc", published: true, items };
   });
   return {
     id: `toan-${grade}-nang-cao`,
