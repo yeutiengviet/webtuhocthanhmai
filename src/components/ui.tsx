@@ -8,6 +8,7 @@ export function Container({ children, className = "" }: { children: React.ReactN
 
 /** Màu riêng cho từng lớp — giúp trẻ nhận ra lớp của mình. Chữ trắng trên các nền này đều ≥ 4.5:1. */
 export const GRADE_THEME: Record<number, { bg: string; soft: string; text: string; ring: string; emoji: string }> = {
+  1: { bg: "bg-rose-700", soft: "bg-rose-50", text: "text-rose-800", ring: "ring-rose-200", emoji: "🐣" },
   2: { bg: "bg-emerald-700", soft: "bg-emerald-50", text: "text-emerald-800", ring: "ring-emerald-200", emoji: "🌱" },
   3: { bg: "bg-sky-700", soft: "bg-sky-50", text: "text-sky-800", ring: "ring-sky-200", emoji: "🚀" },
   4: { bg: "bg-brand-600", soft: "bg-brand-50", text: "text-brand-700", ring: "ring-brand-200", emoji: "⭐" },

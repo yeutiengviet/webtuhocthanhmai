@@ -3,6 +3,9 @@
 
 export type SubjectSlug = "toan" | "tieng-viet";
 
+/** Các lớp của website (lớp 1–5). */
+export type Grade = 1 | 2 | 3 | 4 | 5;
+
 export interface Subject {
   slug: SubjectSlug;
   name: string;
@@ -15,7 +18,7 @@ export type Track = "theo-tuan" | "on-tap-he" | "nang-cao" | "ky-thi" | "tai-lie
 export interface Course {
   id: string;
   subject: SubjectSlug;
-  grade: 2 | 3 | 4 | 5;
+  grade: Grade;
   track: Track;
   /** Luôn là Kết nối tri thức; giữ cột để mở rộng sau, giao diện không hiển thị lựa chọn. */
   textbook: "ket-noi-tri-thuc";
@@ -85,7 +88,7 @@ export interface Exam {
   id: string;
   slug: string;
   subject: SubjectSlug;
-  grade: 2 | 3 | 4 | 5;
+  grade: Grade;
   category: ExamCategory;
   title: string;
   durationMinutes: number | null;

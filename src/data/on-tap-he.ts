@@ -1,4 +1,4 @@
-// ĐỀ ÔN TẬP HÈ — Toán và Tiếng Việt lớp 2–5.
+// ĐỀ ÔN TẬP HÈ — Toán và Tiếng Việt lớp 1–5.
 // Mỗi khóa có một mục "Đề ôn tập hè" gồm 2 phần, mỗi phần SO_DE_ON_HE đề:
 //   • Đề cơ bản  (mã cũ "t3-he-de-5" — giữ nguyên để phiếu đã tải không bị mất), đường dẫn …/on-tap-he/de-co-ban/de-5
 //   • Đề nâng cao (mã "t3-he-nc-de-5"), đường dẫn …/on-tap-he/de-nang-cao/de-5
@@ -9,7 +9,7 @@
 // Muốn thêm đề: tăng SO_DE_ON_HE (mã đề cũ giữ nguyên nên phiếu đã tải không bị mất).
 
 import "server-only";
-import type { Course, Item, Level, SubjectSlug, Week } from "@/lib/types";
+import type { Course, Grade, Item, Level, SubjectSlug, Week } from "@/lib/types";
 
 export const SO_DE_ON_HE = 20;
 
@@ -20,7 +20,7 @@ const PHAN: { level: Level; code: string; slug: string; label: string; name: str
   { level: "nang-cao", code: "nc-", slug: "de-nang-cao", label: "Đề nâng cao", name: "nâng cao" },
 ];
 
-export function buildOnTapHe(subject: SubjectSlug, grade: 2 | 3 | 4 | 5): Course {
+export function buildOnTapHe(subject: SubjectSlug, grade: Grade): Course {
   const subjectName = subject === "toan" ? "Toán" : "Tiếng Việt";
   const next = grade === 5 ? "lớp 6" : `lớp ${grade + 1}`;
   const weeks: Week[] = PHAN.map((p, idx) => {
@@ -63,4 +63,4 @@ export function buildOnTapHe(subject: SubjectSlug, grade: 2 | 3 | 4 | 5): Course
   };
 }
 
-export const ON_TAP_HE: Course[] = (["toan", "tieng-viet"] as const).flatMap((s) => ([2, 3, 4, 5] as const).map((g) => buildOnTapHe(s, g)));
+export const ON_TAP_HE: Course[] = (["toan", "tieng-viet"] as const).flatMap((s) => ([1, 2, 3, 4, 5] as const).map((g) => buildOnTapHe(s, g)));

@@ -216,7 +216,7 @@ export function guessExamFromFileName(fileName: string): ExamGuess {
 /** Lớp và môn ghi trong tên file ("Lớp 3", "L3", "Toán", "Tiếng Việt", "TV"); không ghi thì null. */
 export function guessGradeSubject(fileName: string): { grade: number | null; subject: SubjectSlug | null } {
   const s = ` ${normalize(fileName)} `;
-  const g = [...s.matchAll(/ (?:lop|l) ?([2-5])(?= )/g)].map((m) => Number(m[1]));
+  const g = [...s.matchAll(/ (?:lop|l) ?([1-5])(?= )/g)].map((m) => Number(m[1]));
   const grade = new Set(g).size === 1 ? g[0] : null;
   const toan = / toan(?= )/.test(s);
   const tv = / (tieng viet|tv)(?= )/.test(s);

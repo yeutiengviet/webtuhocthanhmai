@@ -16,7 +16,7 @@ export const SUBJECTS: Subject[] = [
   { slug: "tieng-viet", name: "Tiếng Việt", shortDescription: "Đọc, viết, luyện từ và câu, tập làm văn" },
 ];
 
-export const GRADES = [2, 3, 4, 5] as const;
+export const GRADES = [1, 2, 3, 4, 5] as const;
 
 export const TRACK_LABELS: Record<Track, { name: string; description: string }> = {
   "theo-tuan": { name: "Học theo tuần", description: "Bám sát sách Kết nối tri thức, khoảng 35 tuần" },
@@ -54,7 +54,7 @@ export function gradeSlug(grade: number): string {
 }
 
 export function parseGradeSlug(slug: string): number | null {
-  const m = /^lop-([2-5])$/.exec(slug);
+  const m = /^lop-([1-5])$/.exec(slug);
   return m ? Number(m[1]) : null;
 }
 

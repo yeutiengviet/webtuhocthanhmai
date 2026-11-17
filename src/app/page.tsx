@@ -42,7 +42,7 @@ export default function HomePage() {
         <Container className="relative grid items-center gap-6 py-8 sm:py-12 md:grid-cols-[1.1fr_1fr]">
           <div>
             <p className="inline-flex items-center gap-2 rounded-full bg-white px-3 py-1 text-sm font-extrabold text-brand-700 shadow-sm">
-              <Icon name="spark" className="h-4 w-4" /> Toán · Tiếng Việt lớp 2–5
+              <Icon name="spark" className="h-4 w-4" /> Toán · Tiếng Việt lớp 1–5
             </p>
             <h1 className="mt-3 text-4xl text-gray-900 sm:text-5xl">
               Mỗi ngày <span className="text-brand-600">một bài nhỏ</span>,<br />
@@ -113,7 +113,7 @@ export default function HomePage() {
       {/* 6. Lưới chọn lớp */}
       <Container className="pt-12">
         <SectionTitle kicker="Chọn lớp" title="Con đang học lớp mấy?" />
-        <div className="grid grid-cols-2 gap-3 sm:grid-cols-4 sm:gap-4">
+        <div className="grid grid-cols-2 gap-3 sm:grid-cols-5 sm:gap-4">
           {GRADES.map((g) => {
             const t = GRADE_THEME[g];
             const has = getCourses("toan", g).length > 0 || getCourses("tieng-viet", g).length > 0;
@@ -141,7 +141,7 @@ export default function HomePage() {
         <SectionTitle kicker="Ôn tập hè" title="Đề ôn tập hè – chuẩn bị lên lớp" />
         <div className="rounded-[2rem] bg-gradient-to-br from-amber-50 via-white to-emerald-50 p-5 shadow-sm ring-2 ring-amber-200 sm:p-6">
           <p className="text-gray-800"><span aria-hidden>☀️</span> Mỗi lớp có bộ <strong>đề ôn tập hè Toán và Tiếng Việt</strong>: con làm bài tương tác ngay trên web, nộp là được chấm điểm tự động.</p>
-          <ul className="mt-4 grid grid-cols-2 gap-2 sm:grid-cols-4">
+          <ul className="mt-4 grid grid-cols-2 gap-2 sm:grid-cols-5">
             {GRADES.map((g) => (
               <li key={g} className="rounded-2xl bg-white p-3 ring-1 ring-amber-200">
                 <p className="font-display text-xl font-extrabold text-gray-900">Lớp {g}</p>

@@ -2,7 +2,7 @@
 // cả trình duyệt (form tải đề) và máy chủ (kiểm tra lại trước khi ghi). Có kiểm thử đơn vị.
 
 import { parseDateField, type DateRange } from "@/lib/download-access";
-import type { ExamCategory, SubjectSlug } from "@/lib/types";
+import type { ExamCategory, Grade, SubjectSlug } from "@/lib/types";
 
 export const EXAM_CATEGORY_LABELS: Record<ExamCategory, string> = {
   "danh-gia-thang": "Đánh giá tháng",
@@ -21,12 +21,18 @@ export const EXAM_CATEGORIES = Object.keys(EXAM_CATEGORY_LABELS) as ExamCategory
 export const MAX_FILE_BYTES = 10 * 1024 * 1024; // khớp giới hạn của kho "phieu" trong Supabase
 export type FileKind = "html" | "pdf";
 
+/** Lớp hợp lệ (1–5). */
+export function isGrade(v: unknown): v is Grade {
+  return typeof v === "number" && Number.isInteger(v) && v >= 1 && v <= 5;
+}
+
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/;
 export function isUuid(v: unknown): v is string {
   return typeof v === "string" && UUID.test(v);
 }
 
-export type StorageFolder = "exams" | "lessons";
+export type StorageFolder = "exams" | "lessons" | "documents";
+export const STORAGE_FOLDERS: readonly StorageFolder[] = ["exams", "lessons", "documents"];
 
 /** Ảnh tải lên cho mục ảnh (vd. sơ đồ tư duy): lưu theo đuôi chuẩn. */
 export type ImageExt = "jpg" | "png" | "webp";
@@ -62,7 +68,7 @@ export function isLessonImagePath(v: unknown): v is string {
 /** Đường dẫn file trong kho — luôn do hệ thống đặt (mã ngẫu nhiên), không dùng tên file của người tải lên. */
 export function storagePath(fileId: string, kind: StoredKind, folder: StorageFolder = "exams"): string {
   if (!isUuid(fileId)) throw new Error("Mã file không hợp lệ");
-  if (folder !== "exams" && folder !== "lessons") throw new Error("Thư mục không hợp lệ");
+  if (!STORAGE_FOLDERS.includes(folder)) throw new Error("Thư mục không hợp lệ");
   if (kind !== "html" && kind !== "pdf" && !isImageExt(kind)) throw new Error("Loại file không hợp lệ");
   return `${folder}/${fileId}.${kind}`;
 }
@@ -115,7 +121,7 @@ export function checkFileContent(bytes: Uint8Array, kind: FileKind): string | nu
 
 export interface ExamInput {
   subject: SubjectSlug;
-  grade: 2 | 3 | 4 | 5;
+  grade: Grade;
   category: ExamCategory;
   title: string;
   durationMinutes: number | null;
@@ -131,7 +137,7 @@ export function validateExamInput(raw: Record<string, unknown>): { ok: true; dat
   const subject = raw.subject;
   if (subject !== "toan" && subject !== "tieng-viet") errors.subject = "Chọn môn.";
   const grade = Number(raw.grade);
-  if (![2, 3, 4, 5].includes(grade)) errors.grade = "Chọn lớp 2–5.";
+  if (!isGrade(grade)) errors.grade = "Chọn lớp 1–5.";
   const category = raw.category as ExamCategory;
   if (!EXAM_CATEGORIES.includes(category)) errors.category = "Chọn loại đề.";
   const title = typeof raw.title === "string" ? raw.title.replace(/\s+/g, " ").trim() : "";
@@ -156,7 +162,7 @@ export function validateExamInput(raw: Record<string, unknown>): { ok: true; dat
     else if (from && to) range = { from, to };
   }
   if (Object.keys(errors).length) return { ok: false, errors };
-  return { ok: true, data: { subject: subject as SubjectSlug, grade: grade as 2 | 3 | 4 | 5, category, title, durationMinutes, isFree, published, range } };
+  return { ok: true, data: { subject: subject as SubjectSlug, grade: grade as Grade, category, title, durationMinutes, isFree, published, range } };
 }
 
 export function examHref(e: { subject: SubjectSlug; grade: number; slug: string }): string {
@@ -178,7 +184,7 @@ export const PDF_VIEW_HEADER = "x-xem-pdf";
 
 /** Đường dẫn file mà khung phiếu / nút PDF được phép dùng (chỉ file của chính website). */
 export function isOwnFileHref(src: string): boolean {
-  return /^\/phieu\/(?:[0-9a-f-]{36}(?:\/pdf)?|bai\/[a-z0-9]+(?:-[a-z0-9]+)*(?:\/pdf)?)$/.test(src);
+  return /^\/phieu\/(?:[0-9a-f-]{36}(?:\/pdf)?|bai\/[a-z0-9]+(?:-[a-z0-9]+)*(?:\/pdf)?|tai-lieu\/[0-9a-f-]{36})$/.test(src);
 }
 
 /** Phần làm bài chính: phiếu tương tác (link ngoài hoặc file .html), hoặc chỉ có PDF thì xem PDF. */

@@ -30,6 +30,9 @@ export default async function AdminHome() {
           <Link href="/quan-tri/bai-hoc" className="btn-toy inline-flex items-center gap-2 rounded-full bg-accent-600 px-6 py-3 text-lg font-extrabold text-white">
             <span aria-hidden>📚</span> Phiếu bài học (theo tuần · ôn tập hè)
           </Link>
+          <Link href="/quan-tri/tai-lieu" className="btn-toy inline-flex items-center gap-2 rounded-full bg-violet-700 px-6 py-3 text-lg font-extrabold text-white">
+            <span aria-hidden>📁</span> Tài liệu theo lớp
+          </Link>
           <SignOutButton />
         </div>
         <section aria-labelledby="thong-ke" className="rounded-3xl bg-white p-4 shadow-sm ring-1 ring-brand-100">
@@ -41,7 +44,7 @@ export default async function AdminHome() {
                   <span className="block text-sm font-bold text-brand-800">Phụ huynh đã đăng ký</span>
                   <span className="block font-display text-4xl font-extrabold text-gray-900">{parentsRes.parents.length}</span>
                   <span className="text-sm font-semibold text-gray-700">
-                    {[2, 3, 4, 5].map((g) => `Lớp ${g}: ${parentsRes.parents.filter((p) => p.grade === g).length}`).join(" · ")} — xem tên, SĐT →
+                    {[1, 2, 3, 4, 5].map((g) => `Lớp ${g}: ${parentsRes.parents.filter((p) => p.grade === g).length}`).join(" · ")} — xem tên, SĐT →
                   </span>
                 </Link>
               </li>

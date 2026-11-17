@@ -1,6 +1,6 @@
 import "server-only";
 import { createSupabasePublic } from "@/lib/supabase/public";
-import type { Exam, ExamCategory, SubjectSlug } from "@/lib/types";
+import type { Exam, ExamCategory, Grade, SubjectSlug } from "@/lib/types";
 import { EXAM_CATEGORIES } from "@/lib/exam-meta";
 
 // Đọc đề thi từ Supabase cho trang công khai: kết nối KHÔNG kèm phiên đăng nhập và LUÔN lọc published = true,
@@ -12,7 +12,7 @@ export interface ExamRow {
   id: string;
   slug: string;
   subject: SubjectSlug;
-  grade: 2 | 3 | 4 | 5;
+  grade: Grade;
   category: ExamCategory;
   title: string;
   duration_minutes: number | null;

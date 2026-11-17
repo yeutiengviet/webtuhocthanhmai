@@ -7,7 +7,7 @@ import { createExam, saveLessonFiles } from "@/app/quan-tri/actions";
 import { discardPair, uploadPair, type UploadedIds } from "@/components/admin/FileSlot";
 import { courseMismatch, examGroupKey, examTarget, examTitleFromFileName, groupByExam, groupByItem, guessExamFromFileName, guessSummerLevel, guessSummerTestNumber, isMonthlySlug, matchSummerSlot, parseExamTarget, routeBatch, routeMonthly, validateTargets, type MatchProblem, type SlotInfo } from "@/lib/bulk-match";
 import { checkFileContent, EXAM_CATEGORIES, EXAM_CATEGORY_LABELS, kindFromFileName, MAX_FILE_BYTES } from "@/lib/exam-meta";
-import type { SubjectSlug } from "@/lib/types";
+import type { Grade, SubjectSlug } from "@/lib/types";
 
 interface Row {
   key: string;
@@ -38,7 +38,7 @@ export function BulkUploadForm({
   existing: Record<string, { html: boolean; pdf: boolean }>;
   summer?: boolean;
   /** môn + lớp của khóa đang tải (dùng khi file thuộc khu Đề thi) */
-  course: { subject: SubjectSlug; grade: 2 | 3 | 4 | 5 };
+  course: { subject: SubjectSlug; grade: Grade };
   existingExams?: { title: string; category: string }[];
   /** Trang "chọn nhiều file" của một tháng: chỉ có các ô Đề 1…Đề 5 của tháng đó */
   monthly?: { label: string } | null;

@@ -38,7 +38,7 @@ export const site = {
   testimonials: [] as { name: string; text: string }[],
   banners: [
     { title: "Toán lớp 4 theo tuần", text: "35 tuần bám sát sách Kết nối tri thức", href: "/toan/lop-4/theo-tuan" },
-    { title: "Đề ôn tập hè", text: "Toán và Tiếng Việt lớp 2–5, làm bài và chấm điểm ngay trên web", href: "/toan/lop-4/on-tap-he" },
+    { title: "Đề ôn tập hè", text: "Toán và Tiếng Việt lớp 1–5, làm bài và chấm điểm ngay trên web", href: "/toan/lop-4/on-tap-he" },
     { title: "Phiếu bài tập tương tác", text: "Làm thử Phiếu đánh giá tháng 10 – Toán lớp 4", href: "/toan/lop-4/theo-tuan/tuan-8/danh-gia-thang-10" },
   ],
   refundPolicy: "Không hoàn tiền sau khi gói học đã được kích hoạt.",
