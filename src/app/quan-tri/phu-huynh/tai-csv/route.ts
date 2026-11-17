@@ -18,8 +18,8 @@ export async function GET() {
   if (error) return new Response("Chưa tải được danh sách", { status: 500, headers: { "Cache-Control": "no-store" } });
   const vn = (iso: string | null) => (iso ? new Date(iso).toLocaleString("vi-VN", { timeZone: "Asia/Ho_Chi_Minh", hour12: false }) : "");
   const lines = [
-    ["STT", "Họ tên phụ huynh", "Số điện thoại", "Lớp của con", "Email", "Ngày đăng ký", "Đăng nhập gần nhất"].map(cell).join(","),
-    ...parents.map((p, i) => [i + 1, p.fullName, p.phone, p.grade ? `Lớp ${p.grade}` : null, p.email, vn(p.createdAt), vn(p.lastSignInAt)].map(cell).join(",")),
+    ["STT", "Họ tên phụ huynh", "Số điện thoại", "Lớp của con", "Email", "Ngày đăng ký", "Đăng nhập gần nhất", "Được tải PDF đến"].map(cell).join(","),
+    ...parents.map((p, i) => [i + 1, p.fullName, p.phone, p.grade ? `Lớp ${p.grade}` : null, p.email, vn(p.createdAt), vn(p.lastSignInAt), vn(p.taiDen)].map(cell).join(",")),
   ];
   // Thêm BOM để Excel đọc đúng tiếng Việt.
   return new Response("﻿" + lines.join("\r\n"), {

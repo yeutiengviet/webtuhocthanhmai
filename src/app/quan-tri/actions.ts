@@ -16,6 +16,7 @@ import {
   type FileKind,
   type StorageFolder,
 } from "@/lib/exam-meta";
+import { EXTEND_MONTHS } from "@/lib/download-access";
 import { imagePathsOf, LESSON_FILE_COLUMNS, type LessonFileRow } from "@/lib/lesson-files";
 import { STORAGE_BUCKET } from "@/lib/supabase/env";
 import { getAdmin } from "@/lib/supabase/server";
@@ -67,6 +68,10 @@ async function verifyPair(supabase: Awaited<ReturnType<typeof getAdmin>>["supaba
   return { html: html as { path: string } | null, pdf: pdf as { path: string } | null };
 }
 
+/** Cột thời gian áp dụng (migration 0007). Chưa chạy migration thì lưu đề như cũ, bỏ qua 2 cột này. */
+const rangeColumns = (r: { from: string; to: string } | null) => ({ ap_dung_tu: r?.from ?? null, ap_dung_den: r?.to ?? null });
+const isMissingColumn = (e: { code?: string; message?: string } | null) => Boolean(e && (e.code === "PGRST204" || e.code === "42703" || /ap_dung_/.test(e.message ?? "")));
+
 function revalidateExamPages() {
   revalidatePath("/de-thi", "layout");
   revalidatePath("/quan-tri", "layout");
@@ -81,7 +86,7 @@ export async function createExam(input: Record<string, unknown>): Promise<Action
   const files = await verifyPair(ctx.supabase, input, "exams");
   if ("error" in files) return { ok: false, message: files.error! };
   const slug = await uniqueSlug(ctx.supabase, v.data.subject, v.data.grade, slugify(v.data.title));
-  const { error } = await ctx.supabase.from("exams").insert({
+  const row = {
     subject: v.data.subject,
     grade: v.data.grade,
     category: v.data.category,
@@ -93,7 +98,9 @@ export async function createExam(input: Record<string, unknown>): Promise<Action
     file_path: files.html?.path ?? null,
     file_kind: files.html ? "html" : null,
     pdf_path: files.pdf?.path ?? null,
-  });
+  };
+  let { error } = await ctx.supabase.from("exams").insert({ ...row, ...rangeColumns(v.data.range) });
+  if (isMissingColumn(error)) ({ error } = await ctx.supabase.from("exams").insert(row));
   if (error) return { ok: false, message: "Chưa lưu được đề. Cô thử lại sau ít phút." };
   revalidateExamPages();
   return { ok: true, message: `Đã tải đề “${v.data.title}” lên.`, href: `/de-thi/${v.data.subject}/lop-${v.data.grade}/${slug}` };
@@ -140,7 +147,8 @@ export async function updateExam(id: string, input: Record<string, unknown>): Pr
     if (legacyPdf) clearMain();
   }
   patch.slug = await uniqueSlug(ctx.supabase, v.data.subject, v.data.grade, slugify(v.data.title), id);
-  const { error } = await ctx.supabase.from("exams").update(patch).eq("id", id);
+  let { error } = await ctx.supabase.from("exams").update({ ...patch, ...rangeColumns(v.data.range) }).eq("id", id);
+  if (isMissingColumn(error)) ({ error } = await ctx.supabase.from("exams").update(patch).eq("id", id));
   if (error) return { ok: false, message: "Chưa lưu được thay đổi. Cô thử lại sau ít phút." };
   if (oldFiles.length) await ctx.supabase.storage.from(STORAGE_BUCKET).remove(oldFiles);
   revalidateExamPages();
@@ -297,6 +305,40 @@ export async function saveLessonFiles(itemId: string, input: Record<string, unkn
   revalidatePath(courseHref(found.course), "layout");
   revalidatePath("/quan-tri", "layout");
   return { ok: true, message: empty ? "Đã gỡ hết file của mục này." : accepts.images ? `Đã lưu ${images.paths.length} ảnh.` : "Đã lưu phiếu." };
+}
+
+/** Gia hạn quyền tải PDF cho một tài khoản phụ huynh: +1 / +3 / +6 tháng (cộng dồn; đã hết hạn thì tính từ hôm nay). */
+export async function extendDownload(userId: string, months: number): Promise<ActionResult> {
+  const { ctx, err } = await adminOrError();
+  if (!ctx) return err!;
+  if (!isUuid(userId)) return { ok: false, message: "Mã tài khoản không hợp lệ." };
+  if (!(EXTEND_MONTHS as readonly number[]).includes(months)) return { ok: false, message: "Chỉ gia hạn 1, 3 hoặc 6 tháng." };
+  const { data, error } = await ctx.supabase.rpc("quan_tri_gia_han_tai", { p_user: userId, p_thang: months });
+  if (error) return { ok: false, message: downloadRpcError(error) };
+  revalidatePath("/quan-tri/phu-huynh");
+  return { ok: true, message: `Đã gia hạn ${months} tháng — được tải đến ${formatVnDate(data as string)}.` };
+}
+
+/** Thu hồi quyền tải ngay (hạn tải = bây giờ). */
+export async function revokeDownload(userId: string): Promise<ActionResult> {
+  const { ctx, err } = await adminOrError();
+  if (!ctx) return err!;
+  if (!isUuid(userId)) return { ok: false, message: "Mã tài khoản không hợp lệ." };
+  const { error } = await ctx.supabase.rpc("quan_tri_thu_hoi_tai", { p_user: userId });
+  if (error) return { ok: false, message: downloadRpcError(error) };
+  revalidatePath("/quan-tri/phu-huynh");
+  return { ok: true, message: "Đã thu hồi quyền tải." };
+}
+
+function downloadRpcError(e: { code?: string; message?: string }): string {
+  if (e.code === "PGRST202" || e.code === "42883" || /could not find the function/i.test(e.message ?? "")) {
+    return "Chưa bật chức năng gia hạn trong cơ sở dữ liệu: cần chạy file supabase/migrations/0007_han_tai_xuong.sql.";
+  }
+  return "Chưa lưu được. Cô thử lại sau ít phút.";
+}
+
+function formatVnDate(iso: string): string {
+  return new Intl.DateTimeFormat("vi-VN", { timeZone: "Asia/Ho_Chi_Minh", day: "2-digit", month: "2-digit", year: "numeric" }).format(new Date(iso));
 }
 
 export async function signOut(): Promise<void> {

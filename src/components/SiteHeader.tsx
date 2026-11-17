@@ -15,7 +15,7 @@ export const MAIN_MENU = [
   { href: "/toan", label: "Toán", emoji: "🔢" },
   { href: "/tieng-viet", label: "Tiếng Việt", emoji: "📖" },
   { href: "/de-thi", label: "Đề thi", emoji: "📝" },
-  ...(features.allowPdfDownload ? [{ href: "/tai-lieu", label: "Tài liệu", emoji: "📚" }] : []),
+  ...(features.showDownloadInfo ? [{ href: "/tai-lieu", label: "Tài liệu", emoji: "📚" }] : []),
 ];
 
 /** Đã đăng nhập chưa (chỉ để đổi nút "Đăng nhập" ↔ "Tài khoản"; quyền xem bài vẫn do máy chủ kiểm tra). */

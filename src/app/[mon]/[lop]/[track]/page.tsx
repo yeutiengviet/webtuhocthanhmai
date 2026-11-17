@@ -80,7 +80,7 @@ export default async function CoursePage({ params }: { params: Params }) {
     const other = subject.slug === "toan" ? { slug: "tieng-viet", name: "Tiếng Việt" } : { slug: "toan", name: "Toán" };
     return (
       <>
-        <PageHero badge="☀️ Ôn tập hè" title={`Đề ôn tập hè ${subject.name} lớp ${grade}`} subtitle={`${items.length} đề: ${weeks.map((w) => `${w.items.length} ${w.label?.toLowerCase()}`).join(" và ")}. ${features.allowPdfDownload ? "Mỗi đề có bài làm tương tác trên web và phiếu PDF tải về in." : "Con làm bài trực tiếp trên web, nộp là có điểm ngay."}`}>
+        <PageHero badge="☀️ Ôn tập hè" title={`Đề ôn tập hè ${subject.name} lớp ${grade}`} subtitle={`${items.length} đề: ${weeks.map((w) => `${w.items.length} ${w.label?.toLowerCase()}`).join(" và ")}. ${features.showDownloadInfo ? "Mỗi đề có bài làm tương tác trên web và phiếu PDF tải về in." : "Con làm bài trực tiếp trên web, nộp là có điểm ngay."}`}>
           <div className="mb-2">
             <Breadcrumbs items={[{ href: `/${subject.slug}`, label: subject.name }, { href: `/${subject.slug}/${lop}`, label: `Lớp ${grade}` }, { label: TRACK_LABELS[course.track].name }]} />
           </div>
@@ -91,7 +91,7 @@ export default async function CoursePage({ params }: { params: Params }) {
               <h2 className="text-lg font-extrabold text-gray-900">Cách ôn hè hiệu quả</h2>
               <ul className="mt-2 space-y-1.5 text-sm text-gray-800">
                 <li><span aria-hidden>✏️</span> <strong>Làm trên web:</strong> con làm bài, nộp là có điểm ngay.</li>
-                {features.allowPdfDownload ? <li><span aria-hidden>⬇️</span> <strong>Tải PDF:</strong> phụ huynh in ra cho con làm trên giấy.</li> : <li><span aria-hidden>📄</span> <strong>Xem PDF:</strong> phụ huynh xem phiếu ngay trên web (không tải về).</li>}
+                {features.showDownloadInfo ? <li><span aria-hidden>⬇️</span> <strong>Tải PDF:</strong> phụ huynh in ra cho con làm trên giấy.</li> : <li><span aria-hidden>📄</span> <strong>Xem PDF:</strong> phụ huynh xem phiếu ngay trên web (không tải về).</li>}
                 <li><span aria-hidden>📅</span> Mỗi tuần 2–3 đề: làm đề cơ bản trước, vững rồi chuyển sang đề nâng cao.</li>
               </ul>
             </div>
@@ -138,12 +138,12 @@ export default async function CoursePage({ params }: { params: Params }) {
                               <span aria-hidden>✏️</span> Làm trên web
                             </Link>
                           )}
-                          {hasPdf && !features.allowPdfDownload && (
+                          {hasPdf && !features.showDownloadInfo && (
                             <Link href={`${itemHref(course, w, it)}#phieu-pdf`} className="inline-flex min-h-11 items-center gap-1.5 rounded-full bg-white px-4 font-extrabold text-brand-700 ring-2 ring-brand-200">
                               <span aria-hidden>📄</span> Xem PDF
                             </Link>
                           )}
-                          {hasPdf && features.allowPdfDownload && (
+                          {hasPdf && features.showDownloadInfo && (
                             <a href={lessonFileHref(it.id, "pdf")} target="_blank" rel="noopener" className="inline-flex min-h-11 items-center gap-1.5 rounded-full bg-white px-4 font-extrabold text-brand-700 ring-2 ring-brand-200">
                               <span aria-hidden>⬇️</span> Tải PDF
                             </a>

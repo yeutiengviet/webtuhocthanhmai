@@ -18,7 +18,7 @@ const ALL_SYSTEM = [
   { title: "Nội dung cơ bản và nâng cao – phù hợp với từng học sinh", text: "Các nhóm tài liệu đều có nội dung cơ bản và nâng cao. Phần cơ bản giúp học sinh nắm chắc kiến thức, rèn kĩ năng thiết yếu; phần nâng cao khuyến khích các con suy nghĩ sâu hơn, vận dụng linh hoạt và thử sức với những yêu cầu mới. Bố mẹ có thể bắt đầu từ mức độ phù hợp với con, sau đó từng bước tăng yêu cầu khi con đã sẵn sàng." },
 ];
 // Đang tắt tải tài liệu: không giới thiệu mục "Tải tài liệu về in".
-const SYSTEM = features.allowPdfDownload ? ALL_SYSTEM : ALL_SYSTEM.filter((s) => !s.title.startsWith("Tải tài liệu"));
+const SYSTEM = features.showDownloadInfo ? ALL_SYSTEM : ALL_SYSTEM.filter((s) => !s.title.startsWith("Tải tài liệu"));
 
 export default function AboutPage() {
   return (
@@ -35,7 +35,7 @@ export default function AboutPage() {
           </p>
           <p className="mt-4 leading-relaxed text-gray-800">
             Với mong muốn giúp việc học tại nhà trở nên thuận tiện và hiệu quả hơn,{" "}
-            <strong>THANH MAI mang đến hệ thống bài tập từ cơ bản đến nâng cao, kết hợp luyện tập trực tuyến có chấm điểm tự động{features.allowPdfDownload ? " và tài liệu có thể tải về, in cho con làm" : ""}.</strong>{" "}
+            <strong>THANH MAI mang đến hệ thống bài tập từ cơ bản đến nâng cao, kết hợp luyện tập trực tuyến có chấm điểm tự động{features.showDownloadInfo ? " và tài liệu có thể tải về, in cho con làm" : ""}.</strong>{" "}
             Đây là nơi học sinh rèn luyện kiến thức, đồng thời giúp phụ huynh dễ dàng lựa chọn nội dung phù hợp để đồng hành cùng con trong suốt năm học.
           </p>
         </section>

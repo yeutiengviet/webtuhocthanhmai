@@ -1,8 +1,9 @@
 import { isItemId } from "@/lib/exam-meta";
+import { lessonItemRange } from "@/lib/download-access-server";
 import { notFoundResponse, serveStoredFile, pdfRequestAllowed } from "@/lib/serve-file";
 import { createSupabaseServer } from "@/lib/supabase/server";
 
-// Phiếu PDF (tải về in) của một mục trong bài học. Đang tắt tải PDF thì chỉ khung "chỉ xem" trên trang (và quản trị) lấy được file.
+// Phiếu PDF (tải về in) của một mục trong bài học. Ai cũng xem được trong khung "chỉ xem"; tải về chỉ khi tài khoản có quyền tải tuần đó.
 export const dynamic = "force-dynamic";
 
 export async function GET(req: Request, ctx: { params: Promise<{ item: string }> }) {
@@ -14,7 +15,7 @@ export async function GET(req: Request, ctx: { params: Promise<{ item: string }>
   } catch {
     return notFoundResponse();
   }
-  if (!(await pdfRequestAllowed(req, supabase))) return notFoundResponse();
+  if (!(await pdfRequestAllowed(req, supabase, () => lessonItemRange(item)))) return notFoundResponse();
   const { data } = await supabase.from("lesson_files").select("pdf_path").eq("item_id", item).maybeSingle();
   return serveStoredFile(supabase, data?.pdf_path, `${item}.pdf`);
 }

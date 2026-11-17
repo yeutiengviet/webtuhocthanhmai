@@ -3,7 +3,6 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { PdfDownloadButton, UploadedPdf, UploadedWorksheetFrame, VideoEmbed, WorksheetFrame } from "@/components/LessonMedia";
 import { PrintButton } from "@/components/PrintButton";
-import { features } from "@/data/site";
 import { Breadcrumbs, Container, FreeBadge, ItemIcon, LevelBadge, LockBadge } from "@/components/ui";
 import {
   canViewItem,
@@ -25,6 +24,8 @@ import {
   weekSlug,
 } from "@/lib/content";
 import { formatRange } from "@/lib/dates";
+import { blockedMessage, type DownloadDecision } from "@/lib/download-access";
+import { lessonDecision } from "@/lib/download-access-server";
 import { getPublishedLessonFiles } from "@/lib/lesson-files";
 import { getViewer } from "@/lib/supabase/server";
 import type { LessonFileInfo, LessonMedia } from "@/lib/content";
@@ -58,7 +59,7 @@ export default async function LessonPage({ params }: { params: Params }) {
   const { subject, grade, course, week, item } = d;
   if (isCourseLocked(course)) return <LockedCourse subject={subject.slug} grade={grade} />;
   // Mọi nội dung (mã video, link phiếu) chỉ lấy qua lessonMedia() — mục bị khóa không có dữ liệu này.
-  const [files, viewer] = await Promise.all([getPublishedLessonFiles(week.items.map((i) => i.id)), getViewer()]);
+  const [files, viewer, dl] = await Promise.all([getPublishedLessonFiles(week.items.map((i) => i.id)), getViewer(), lessonDecision(item.id)]);
   const loggedIn = Boolean(viewer);
   const canView = (it: Item) => canViewItem(it, loggedIn);
   const media = lessonMedia(item, canView, files.get(item.id));
@@ -112,9 +113,10 @@ export default async function LessonPage({ params }: { params: Params }) {
                   fileName={`${item.id}.pdf`}
                   title={item.title}
                   viewHref={media.kind === "document" || (!media.htmlSrc && !media.url) ? "#bai-lam" : undefined}
+                  decision={dl}
                 />
               ) : (
-                <PrintButton />
+                <PrintButton decision={dl} />
               )}
             </div>
           </header>
@@ -125,7 +127,7 @@ export default async function LessonPage({ params }: { params: Params }) {
             ) : media.kind === "video" ? (
               <VideoEmbed videoRef={media.videoRef} title={item.title} />
             ) : media.kind === "document" ? (
-              <DocumentBox url={media.url} pdf={media.pdf} />
+              <DocumentBox url={media.url} pdf={media.pdf} decision={dl} />
             ) : media.kind === "images" ? (
               <ImageGallery images={media.images} title={item.title} />
             ) : (
@@ -138,7 +140,7 @@ export default async function LessonPage({ params }: { params: Params }) {
             <section className="mt-8">
               <h2 className="text-2xl text-gray-900"><span aria-hidden>✏️</span> Luyện tập sau bài giảng</h2>
               <p className="mb-3 text-sm text-gray-600">{practice.title}</p>
-              <PracticeBlock item={practice} file={files.get(practice.id)} canView={canView} />
+              <PracticeBlock item={practice} file={files.get(practice.id)} canView={canView} decision={dl} />
             </section>
           )}
 
@@ -188,13 +190,14 @@ export default async function LessonPage({ params }: { params: Params }) {
   );
 }
 
-function PracticeBlock({ item, file, canView }: { item: Item; file?: LessonFileInfo; canView: (it: Item) => boolean }) {
+// Phiếu luyện tập cùng tuần với bài giảng → cùng khoảng thời gian, dùng chung quyền tải.
+function PracticeBlock({ item, file, canView, decision }: { item: Item; file?: LessonFileInfo; canView: (it: Item) => boolean; decision: DownloadDecision }) {
   const m = lessonMedia(item, canView, file);
   if (m.kind !== "worksheet") return <LockedNotice />;
   return (
     <div className="space-y-3">
       <WorksheetView media={m} title={item.title} />
-      {m.pdf && (m.htmlSrc || m.url) && <PdfDownloadButton src={m.pdf} fileName={`${item.id}.pdf`} title={item.title} />}
+      {m.pdf && (m.htmlSrc || m.url) && <PdfDownloadButton src={m.pdf} fileName={`${item.id}.pdf`} title={item.title} decision={decision} />}
     </div>
   );
 }
@@ -260,7 +263,7 @@ function LockedCourse({ subject, grade }: { subject: string; grade: number }) {
   );
 }
 
-function DocumentBox({ url: raw, pdf }: { url: string | null; pdf?: string }) {
+function DocumentBox({ url: raw, pdf, decision }: { url: string | null; pdf?: string; decision: DownloadDecision }) {
   if (pdf) {
     return (
       <div className="space-y-3">
@@ -272,12 +275,12 @@ function DocumentBox({ url: raw, pdf }: { url: string | null; pdf?: string }) {
   return (
     <div className="rounded-[2rem] bg-white p-8 text-center ring-1 ring-gray-100">
       <p className="text-4xl" aria-hidden>📄</p>
-      {url && features.allowPdfDownload ? (
+      {url && decision.ok ? (
         <a href={url} target="_blank" rel="noopener noreferrer" className="mt-3 inline-block rounded-full bg-brand-600 px-5 py-2.5 font-semibold text-white">
           Tải tài liệu
         </a>
       ) : url ? (
-        <button type="button" disabled aria-disabled="true" title="Tài liệu chỉ xem trên web, không tải về được" className="mt-3 inline-block cursor-not-allowed rounded-full bg-gray-300 px-5 py-2.5 font-semibold text-gray-600">
+        <button type="button" disabled aria-disabled="true" title={decision.ok ? undefined : blockedMessage(decision.reason)} className="mt-3 inline-block cursor-not-allowed rounded-full bg-gray-300 px-5 py-2.5 font-semibold text-gray-600">
           Tải tài liệu
         </button>
       ) : (
