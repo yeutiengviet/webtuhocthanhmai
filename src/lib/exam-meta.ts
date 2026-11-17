@@ -1,6 +1,7 @@
 // Thông tin chung và kiểm tra dữ liệu cho khu "Đề thi". File thuần (không truy cập mạng) — dùng được ở
 // cả trình duyệt (form tải đề) và máy chủ (kiểm tra lại trước khi ghi). Có kiểm thử đơn vị.
 
+import { features } from "@/data/site";
 import type { ExamCategory, SubjectSlug } from "@/lib/types";
 
 export const EXAM_CATEGORY_LABELS: Record<ExamCategory, string> = {
@@ -142,8 +143,16 @@ export type ExamMedia = { kind: "locked" } | { kind: "open"; main: MainMedia; pd
  * Trang làm đề được đưa gì ra trình duyệt. Đề trả phí: chỉ { kind: "locked" } (Giai đoạn 3 sẽ thêm kiểm tra gói).
  * Kể cả khi trang lỡ đưa đường dẫn /phieu/..., máy chủ và kho file vẫn chặn đề trả phí (Row Level Security).
  */
-export function examMedia(e: { id: string; isFree: boolean; externalUrl: string | null; hasFile: boolean; fileKind: FileKind | null; hasPdf: boolean }): ExamMedia {
+export function examMedia(
+  e: { id: string; isFree: boolean; externalUrl: string | null; hasFile: boolean; fileKind: FileKind | null; hasPdf: boolean },
+  allowPdf: boolean = features.allowPdfDownload,
+): ExamMedia {
   if (!e.isFree) return { kind: "locked" };
+  // Tắt tải PDF: chỉ còn bài làm trực tuyến; đề chỉ có PDF coi như "đang cập nhật".
+  if (!allowPdf) {
+    const main: MainMedia = e.hasFile && e.fileKind === "html" ? { type: "html", src: examFileHref(e.id) } : e.externalUrl ? { type: "external", url: e.externalUrl } : null;
+    return { kind: "open", main, pdf: null };
+  }
   // PDF tải về: ô PDF riêng; đề cũ chỉ có 1 file PDF thì dùng luôn file đó.
   const pdf = e.hasPdf ? examFileHref(e.id, "pdf") : e.hasFile && e.fileKind === "pdf" ? examFileHref(e.id) : null;
   let main: MainMedia = null;

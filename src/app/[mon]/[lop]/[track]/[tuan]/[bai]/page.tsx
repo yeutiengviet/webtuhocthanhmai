@@ -3,10 +3,12 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { PdfDownloadButton, UploadedPdf, UploadedWorksheetFrame, VideoEmbed, WorksheetFrame } from "@/components/LessonMedia";
 import { PrintButton } from "@/components/PrintButton";
+import { features } from "@/data/site";
 import { Breadcrumbs, Container, FreeBadge, ItemIcon, LevelBadge, LockBadge } from "@/components/ui";
 import {
   canViewItem,
   courseHref,
+  isCourseLocked,
   findItem,
   findWeek,
   getCourse,
@@ -54,6 +56,7 @@ export default async function LessonPage({ params }: { params: Params }) {
   const d = load(await params);
   if (!d) notFound();
   const { subject, grade, course, week, item } = d;
+  if (isCourseLocked(course)) return <LockedCourse subject={subject.slug} grade={grade} />;
   // Mọi nội dung (mã video, link phiếu) chỉ lấy qua lessonMedia() — mục bị khóa không có dữ liệu này.
   const [files, viewer] = await Promise.all([getPublishedLessonFiles(week.items.map((i) => i.id)), getViewer()]);
   const loggedIn = Boolean(viewer);
@@ -105,9 +108,9 @@ export default async function LessonPage({ params }: { params: Params }) {
               ) : null}
               {(media.kind === "worksheet" || media.kind === "document") && media.pdf ? (
                 <PdfDownloadButton src={media.pdf} fileName={`${item.id}.pdf`} />
-              ) : (
+              ) : features.allowPdfDownload ? (
                 <PrintButton />
-              )}
+              ) : null}
             </div>
           </header>
 
@@ -211,6 +214,20 @@ function LockedNotice() {
   );
 }
 
+/** Khóa đang tạm khóa (Toán nâng cao): không đưa bất kỳ nội dung bài nào ra trang. */
+function LockedCourse({ subject, grade }: { subject: string; grade: number }) {
+  return (
+    <Container className="py-8">
+      <div className="rounded-[2rem] border-2 border-dashed border-brand-300 bg-white p-8 text-center">
+        <p className="mx-auto grid h-16 w-16 place-items-center rounded-full bg-brand-100 text-3xl" aria-hidden>🔒</p>
+        <p className="mt-3 font-display text-2xl font-extrabold text-brand-700">Mục nâng cao đang tạm khóa</p>
+        <p className="mt-1 text-gray-700">Phần Toán nâng cao chưa mở cho tài khoản miễn phí. Con học các mục khác của lớp {grade} nhé.</p>
+        <Link href={`/${subject}/${gradeSlug(grade)}`} className="btn-toy mt-4 inline-block rounded-full bg-brand-600 px-6 py-3 font-extrabold text-white">Về trang lớp {grade}</Link>
+      </div>
+    </Container>
+  );
+}
+
 function DocumentBox({ url: raw, pdf }: { url: string | null; pdf?: string }) {
   if (pdf) {
     return (
@@ -223,7 +240,7 @@ function DocumentBox({ url: raw, pdf }: { url: string | null; pdf?: string }) {
   return (
     <div className="rounded-[2rem] bg-white p-8 text-center ring-1 ring-gray-100">
       <p className="text-4xl" aria-hidden>📄</p>
-      {url ? (
+      {url && features.allowPdfDownload ? (
         <a href={url} target="_blank" rel="noopener noreferrer" className="mt-3 inline-block rounded-full bg-brand-600 px-5 py-2.5 font-semibold text-white">
           Tải tài liệu
         </a>

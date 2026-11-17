@@ -2,7 +2,8 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { Breadcrumbs, Container, PageHero } from "@/components/ui";
-import { courseHref, courseStats, getCourses, getSubject, gradeSlug, parseGradeSlug, SUBJECTS, TRACK_LABELS } from "@/lib/content";
+import { features } from "@/data/site";
+import { courseHref, courseStats, isCourseLocked, getCourses, getSubject, gradeSlug, parseGradeSlug, SUBJECTS, TRACK_LABELS } from "@/lib/content";
 
 export function generateStaticParams() {
   // Chỉ tạo trang cho lớp đã có nội dung
@@ -40,8 +41,9 @@ export default async function GradePage({ params }: { params: Promise<{ mon: str
           {courses.map((c) => {
             const s = courseStats(c);
             const label = TRACK_LABELS[c.track];
-            return (
-              <Link key={c.id} href={courseHref(c)} className="card-lift group relative overflow-hidden rounded-[2rem] bg-white p-6 shadow-md ring-2 ring-brand-200">
+            const locked = isCourseLocked(c);
+            const body = (
+              <>
                 <span aria-hidden className="absolute -right-8 -top-8 h-28 w-28 rounded-full bg-brand-100" />
                 <span aria-hidden className="absolute right-5 top-5 text-4xl">{c.track === "on-tap-he" ? "☀️" : "🎯"}</span>
                 <p className="relative text-xs font-extrabold uppercase tracking-wider text-accent-700">Kết nối tri thức</p>
@@ -52,7 +54,7 @@ export default async function GradePage({ params }: { params: Promise<{ mon: str
                     <>
                       <li className="rounded-full bg-amber-50 px-3 py-1 text-amber-900 ring-1 ring-amber-200">☀️ {s.tests} đề</li>
                       <li className="rounded-full bg-brand-50 px-3 py-1 text-brand-800 ring-1 ring-brand-200">✏️ Làm trên web</li>
-                      <li className="rounded-full bg-accent-50 px-3 py-1 text-accent-700 ring-1 ring-accent-200">⬇️ Tải PDF</li>
+                      {features.allowPdfDownload && <li className="rounded-full bg-accent-50 px-3 py-1 text-accent-700 ring-1 ring-accent-200">⬇️ Tải PDF</li>}
                     </>
                   ) : (
                     <>
@@ -63,7 +65,21 @@ export default async function GradePage({ params }: { params: Promise<{ mon: str
                     </>
                   )}
                 </ul>
-                <p className="btn-toy relative mt-5 inline-block rounded-full bg-brand-600 px-5 py-2 font-extrabold text-white">Vào học →</p>
+                {locked ? (
+                  <p className="relative mt-5 inline-flex items-center gap-1.5 rounded-full bg-gray-200 px-5 py-2 font-extrabold text-gray-700"><span aria-hidden>🔒</span> Tạm khóa</p>
+                ) : (
+                  <p className="btn-toy relative mt-5 inline-block rounded-full bg-brand-600 px-5 py-2 font-extrabold text-white">Vào học →</p>
+                )}
+              </>
+            );
+            return locked ? (
+              // Mục đang khóa: vẫn hiện ô nhưng không phải liên kết, không bấm vào được.
+              <div key={c.id} aria-disabled="true" title="Mục nâng cao đang tạm khóa" className="relative cursor-not-allowed select-none overflow-hidden rounded-[2rem] bg-gray-50 p-6 opacity-75 ring-2 ring-gray-200">
+                {body}
+              </div>
+            ) : (
+              <Link key={c.id} href={courseHref(c)} className="card-lift group relative overflow-hidden rounded-[2rem] bg-white p-6 shadow-md ring-2 ring-brand-200">
+                {body}
               </Link>
             );
           })}

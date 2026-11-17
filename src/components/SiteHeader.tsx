@@ -5,7 +5,7 @@ import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
 import { Icon } from "@/components/art";
 import { Logo } from "@/components/Logo";
-import { site } from "@/data/site";
+import { features, site } from "@/data/site";
 import { createSupabaseBrowser } from "@/lib/supabase/browser";
 import { supabaseEnv } from "@/lib/supabase/env";
 import { telHref } from "@/lib/urls";
@@ -15,7 +15,7 @@ export const MAIN_MENU = [
   { href: "/toan", label: "Toán", emoji: "🔢" },
   { href: "/tieng-viet", label: "Tiếng Việt", emoji: "📖" },
   { href: "/de-thi", label: "Đề thi", emoji: "📝" },
-  { href: "/tai-lieu", label: "Tài liệu", emoji: "📚" },
+  ...(features.allowPdfDownload ? [{ href: "/tai-lieu", label: "Tài liệu", emoji: "📚" }] : []),
 ];
 
 /** Đã đăng nhập chưa (chỉ để đổi nút "Đăng nhập" ↔ "Tài khoản"; quyền xem bài vẫn do máy chủ kiểm tra). */

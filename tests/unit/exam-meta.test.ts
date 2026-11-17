@@ -80,13 +80,21 @@ describe("trang làm đề được đưa gì ra trình duyệt", () => {
   });
   it("đề Free: phiếu tương tác + PDF tải về; đề cũ chỉ có PDF; link ngoài; chưa có file", () => {
     expect(examMedia(base)).toEqual({ kind: "open", main: { type: "html", src: examFileHref(ID) }, pdf: null });
-    expect(examMedia({ ...base, hasPdf: true })).toEqual({ kind: "open", main: { type: "html", src: `/phieu/${ID}` }, pdf: `/phieu/${ID}/pdf` });
+    expect(examMedia({ ...base, hasPdf: true }, true)).toEqual({ kind: "open", main: { type: "html", src: `/phieu/${ID}` }, pdf: `/phieu/${ID}/pdf` });
     // chỉ có PDF (ô riêng): xem PDF ngay trong trang + nút tải
-    expect(examMedia({ ...base, hasFile: false, fileKind: null, hasPdf: true })).toEqual({ kind: "open", main: { type: "pdf", src: `/phieu/${ID}/pdf` }, pdf: `/phieu/${ID}/pdf` });
+    expect(examMedia({ ...base, hasFile: false, fileKind: null, hasPdf: true }, true)).toEqual({ kind: "open", main: { type: "pdf", src: `/phieu/${ID}/pdf` }, pdf: `/phieu/${ID}/pdf` });
     // đề cũ: 1 file PDF ở ô chính
-    expect(examMedia({ ...base, fileKind: "pdf" })).toEqual({ kind: "open", main: { type: "pdf", src: `/phieu/${ID}` }, pdf: `/phieu/${ID}` });
+    expect(examMedia({ ...base, fileKind: "pdf" }, true)).toEqual({ kind: "open", main: { type: "pdf", src: `/phieu/${ID}` }, pdf: `/phieu/${ID}` });
     expect(examMedia({ ...base, hasFile: false, fileKind: null, externalUrl: "https://toantieuhoccothanhmai.github.io/a.html" })).toMatchObject({ kind: "open", main: { type: "external" } });
     expect(examMedia({ ...base, hasFile: false, fileKind: null })).toEqual({ kind: "open", main: null, pdf: null });
+  });
+  it("tắt tải PDF: không đưa đường dẫn PDF nào ra trang; đề chỉ có PDF coi như chưa có bài làm", () => {
+    expect(examMedia({ ...base, hasPdf: true }, false)).toEqual({ kind: "open", main: { type: "html", src: `/phieu/${ID}` }, pdf: null });
+    expect(examMedia({ ...base, hasFile: false, fileKind: null, hasPdf: true }, false)).toEqual({ kind: "open", main: null, pdf: null });
+    expect(examMedia({ ...base, fileKind: "pdf" }, false)).toEqual({ kind: "open", main: null, pdf: null });
+    expect(JSON.stringify(examMedia({ ...base, fileKind: "pdf", hasPdf: true }, false))).not.toContain("/phieu/");
+    // mặc định của website hiện tại: tắt tải PDF
+    expect(examMedia({ ...base, hasPdf: true })).toMatchObject({ pdf: null });
   });
   it("đề trả phí có PDF: vẫn chỉ báo khóa", () => {
     expect(JSON.stringify(examMedia({ ...base, isFree: false, hasPdf: true }))).not.toContain("/phieu/");
