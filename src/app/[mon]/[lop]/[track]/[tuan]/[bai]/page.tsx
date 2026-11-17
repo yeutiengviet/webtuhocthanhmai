@@ -101,7 +101,7 @@ export default async function LessonPage({ params }: { params: Params }) {
                 <Link href={itemHref(course, week, practice)} className="btn-toy inline-flex items-center gap-2 rounded-full bg-brand-600 px-6 py-3 font-extrabold text-white">
                   <span aria-hidden>✏️</span> Luyện tập
                 </Link>
-              ) : item.type !== "document" && !(media.kind === "worksheet" && !media.htmlSrc && !media.url && media.pdf) ? (
+              ) : item.type !== "document" && item.type !== "images" && !(media.kind === "worksheet" && !media.htmlSrc && !media.url && media.pdf) ? (
                 <a href="#bai-lam" className="btn-toy inline-flex items-center gap-2 rounded-full bg-brand-600 px-6 py-3 font-extrabold text-white">
                   <span aria-hidden>✏️</span> Luyện tập
                 </a>
@@ -126,6 +126,8 @@ export default async function LessonPage({ params }: { params: Params }) {
               <VideoEmbed videoRef={media.videoRef} title={item.title} />
             ) : media.kind === "document" ? (
               <DocumentBox url={media.url} pdf={media.pdf} />
+            ) : media.kind === "images" ? (
+              <ImageGallery images={media.images} title={item.title} />
             ) : (
               <WorksheetView media={media} title={item.title} />
             )}
@@ -203,6 +205,31 @@ function WorksheetView({ media, title }: { media: Extract<LessonMedia, { kind: "
   if (media.url) return <WorksheetFrame url={media.url} title={title} />;
   if (media.pdf) return <UploadedPdf src={media.pdf} title={title} />;
   return <WorksheetFrame url={null} title={title} />;
+}
+
+/** Ảnh cô tải lên (vd. sơ đồ tư duy), xếp lần lượt từ trên xuống; bấm vào ảnh để mở cỡ lớn. */
+function ImageGallery({ images, title }: { images: string[]; title: string }) {
+  if (images.length === 0) {
+    return (
+      <div className="rounded-[2rem] border-2 border-dashed border-brand-200 bg-white p-8 text-center">
+        <p className="text-3xl" aria-hidden>🧠</p>
+        <p className="mt-2 font-extrabold text-brand-700">Cô Thanh Mai đang cập nhật {title.toLowerCase()}.</p>
+      </div>
+    );
+  }
+  return (
+    <ol className="space-y-4">
+      {images.map((src, i) => (
+        <li key={src} className="overflow-hidden rounded-[2rem] bg-white p-2 shadow-sm ring-1 ring-brand-100">
+          <a href={src} target="_blank" rel="noopener" className="block">
+            {/* eslint-disable-next-line @next/next/no-img-element -- ảnh riêng tư phục vụ qua route có kiểm tra quyền */}
+            <img src={src} alt={`${title} – ảnh ${i + 1}/${images.length}`} loading={i === 0 ? "eager" : "lazy"} className="mx-auto h-auto w-full rounded-[1.5rem]" />
+          </a>
+          {images.length > 1 && <p className="mt-1 text-center text-sm font-semibold text-gray-600">Ảnh {i + 1}/{images.length}</p>}
+        </li>
+      ))}
+    </ol>
+  );
 }
 
 function LockedNotice() {

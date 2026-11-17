@@ -1,6 +1,6 @@
 import "server-only";
 import { features } from "@/data/site";
-import { PDF_VIEW_HEADER } from "@/lib/exam-meta";
+import { IMAGE_MIME, isImageExt, PDF_VIEW_HEADER } from "@/lib/exam-meta";
 import { STORAGE_BUCKET } from "@/lib/supabase/env";
 import type { createSupabaseServer } from "@/lib/supabase/server";
 
@@ -39,10 +39,16 @@ export async function serveStoredFile(
   pdfName = "phieu.pdf",
 ): Promise<Response> {
   if (!path) return notFoundResponse();
-  const kind = path.endsWith(".html") ? "html" : path.endsWith(".pdf") ? "pdf" : null;
+  const ext = path.split(".").pop() ?? "";
+  const kind = ext === "html" || ext === "pdf" ? ext : isImageExt(ext) ? "image" : null;
   if (!kind) return notFoundResponse();
   const { data: blob, error } = await supabase.storage.from(STORAGE_BUCKET).download(path);
   if (error || !blob) return notFoundResponse();
+  if (kind === "image" && isImageExt(ext)) {
+    return new Response(blob, {
+      headers: { ...COMMON, "Content-Type": IMAGE_MIME[ext], "Content-Security-Policy": "default-src 'none'; frame-ancestors 'self'" },
+    });
+  }
   if (kind === "html") {
     return new Response(injectStorageShim(await blob.text()), {
       headers: {

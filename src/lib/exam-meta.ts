@@ -27,10 +27,42 @@ export function isUuid(v: unknown): v is string {
 
 export type StorageFolder = "exams" | "lessons";
 
+/** Ảnh tải lên cho mục ảnh (vd. sơ đồ tư duy): lưu theo đuôi chuẩn. */
+export type ImageExt = "jpg" | "png" | "webp";
+export const IMAGE_EXTS: readonly ImageExt[] = ["jpg", "png", "webp"];
+export const IMAGE_MIME: Record<ImageExt, string> = { jpg: "image/jpeg", png: "image/png", webp: "image/webp" };
+/** Tối đa số ảnh trong một mục. */
+export const MAX_IMAGES = 30;
+export type StoredKind = FileKind | ImageExt;
+
+export function isImageExt(v: unknown): v is ImageExt {
+  return typeof v === "string" && (IMAGE_EXTS as readonly string[]).includes(v);
+}
+
+/** Loại ảnh theo NỘI DUNG file (byte đầu), không tin đuôi tên file. Không phải JPG/PNG/WEBP → null. */
+export function imageExtFromBytes(bytes: Uint8Array): ImageExt | null {
+  const b = (i: number) => bytes[i];
+  if (bytes.length >= 3 && b(0) === 0xff && b(1) === 0xd8 && b(2) === 0xff) return "jpg";
+  if (bytes.length >= 8 && b(0) === 0x89 && b(1) === 0x50 && b(2) === 0x4e && b(3) === 0x47 && b(4) === 0x0d && b(5) === 0x0a && b(6) === 0x1a && b(7) === 0x0a) return "png";
+  if (bytes.length >= 12 && String.fromCharCode(...bytes.slice(0, 4)) === "RIFF" && String.fromCharCode(...bytes.slice(8, 12)) === "WEBP") return "webp";
+  return null;
+}
+
+/** Đường dẫn ảnh thứ i (đếm từ 0) của một mục — route /phieu/bai/<mục>/anh/<số> kiểm tra quyền trước khi trả ảnh. */
+export function lessonImageHref(itemId: string, index: number): string {
+  return `/phieu/bai/${itemId}/anh/${index + 1}`;
+}
+
+/** Đường dẫn ảnh trong kho có hợp lệ không (lessons/<uuid>.jpg|png|webp). */
+export function isLessonImagePath(v: unknown): v is string {
+  return typeof v === "string" && /^lessons\/[0-9a-f-]{36}\.(jpg|png|webp)$/.test(v);
+}
+
 /** Đường dẫn file trong kho — luôn do hệ thống đặt (mã ngẫu nhiên), không dùng tên file của người tải lên. */
-export function storagePath(fileId: string, kind: FileKind, folder: StorageFolder = "exams"): string {
+export function storagePath(fileId: string, kind: StoredKind, folder: StorageFolder = "exams"): string {
   if (!isUuid(fileId)) throw new Error("Mã file không hợp lệ");
   if (folder !== "exams" && folder !== "lessons") throw new Error("Thư mục không hợp lệ");
+  if (kind !== "html" && kind !== "pdf" && !isImageExt(kind)) throw new Error("Loại file không hợp lệ");
   return `${folder}/${fileId}.${kind}`;
 }
 

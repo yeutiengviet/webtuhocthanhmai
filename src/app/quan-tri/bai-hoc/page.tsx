@@ -3,7 +3,7 @@ import { NotAdmin } from "@/components/admin/NotAdmin";
 import { Container, PageHero } from "@/components/ui";
 import { requireAdminPage } from "@/lib/admin";
 import { adminLessonFiles } from "@/lib/admin-lessons";
-import { allCourses, itemAcceptsFiles } from "@/lib/content";
+import { allCourses, itemTakesUploads } from "@/lib/content";
 
 export const metadata = { title: "Phiếu bài học theo tuần" };
 
@@ -21,7 +21,7 @@ export default async function AdminLessonsHome() {
         {error && <p role="alert" className="rounded-2xl bg-red-50 p-3 font-bold text-red-800">Chưa tải được trạng thái phiếu. Cô tải lại trang sau ít phút.</p>}
         <ul className="grid gap-3 sm:grid-cols-2">
           {courses.map((c) => {
-            const slots = c.weeks.flatMap((w) => w.items).filter((i) => itemAcceptsFiles(i).pdf);
+            const slots = c.weeks.flatMap((w) => w.items).filter(itemTakesUploads);
             const done = slots.filter((i) => rows.has(i.id)).length;
             return (
               <li key={c.id}>

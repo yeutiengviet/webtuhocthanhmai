@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { checkFileContent, examFileHref, examHref, examMedia, isItemId, isOwnFileHref, isUuid, kindFromFileName, lessonFileHref, MAX_FILE_BYTES, slugify, storagePath, validateExamInput } from "@/lib/exam-meta";
+import { checkFileContent, imageExtFromBytes, isLessonImagePath, lessonImageHref, examFileHref, examHref, examMedia, isItemId, isOwnFileHref, isUuid, kindFromFileName, lessonFileHref, MAX_FILE_BYTES, slugify, storagePath, validateExamInput } from "@/lib/exam-meta";
 
 const enc = (s: string) => new TextEncoder().encode(s);
 const ID = "5644eb66-6ca4-466e-92dc-c1b58e7ee6de";
@@ -104,5 +104,28 @@ describe("trang làm đề được đưa gì ra trình duyệt", () => {
   });
   it("đường dẫn đề", () => {
     expect(examHref({ subject: "tieng-viet", grade: 5, slug: "de-1" })).toBe("/de-thi/tieng-viet/lop-5/de-1");
+  });
+});
+
+describe("ảnh sơ đồ tư duy: nhận diện theo NỘI DUNG", () => {
+  const b = (...n: number[]) => new Uint8Array(n);
+  it("JPG, PNG, WEBP", () => {
+    expect(imageExtFromBytes(b(0xff, 0xd8, 0xff, 0xe0))).toBe("jpg");
+    expect(imageExtFromBytes(b(0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a))).toBe("png");
+    expect(imageExtFromBytes(new TextEncoder().encode("RIFF\0\0\0\0WEBPVP8 "))).toBe("webp");
+  });
+  it("không phải ảnh (PDF, HTML, HEIC) → null", () => {
+    expect(imageExtFromBytes(new TextEncoder().encode("%PDF-1.7"))).toBeNull();
+    expect(imageExtFromBytes(new TextEncoder().encode("<html>"))).toBeNull();
+    expect(imageExtFromBytes(new TextEncoder().encode("\0\0\0\x18ftypheic"))).toBeNull();
+    expect(imageExtFromBytes(b())).toBeNull();
+  });
+  it("đường dẫn kho và đường dẫn xem ảnh", () => {
+    const id = "123e4567-e89b-12d3-a456-426614174000";
+    expect(storagePath(id, "png", "lessons")).toBe(`lessons/${id}.png`);
+    expect(() => storagePath(id, "exe" as never, "lessons")).toThrow();
+    expect(isLessonImagePath(`lessons/${id}.jpg`)).toBe(true);
+    expect(isLessonImagePath(`lessons/${id}.html`)).toBe(false);
+    expect(lessonImageHref("tv3-w5-so-do-tu-duy", 0)).toBe("/phieu/bai/tv3-w5-so-do-tu-duy/anh/1");
   });
 });

@@ -40,6 +40,9 @@ describe("đoán tuần và mục từ tên file", () => {
     ["Lớp 4 Tuần 29 - Cơ bản.pdf", 29, "luyen-tap-co-ban"],
     ["Lớp 4 Tuần 32 - Nâng cao.html", 32, "luyen-tap-nang-cao"],
     ["Tuần 6 tổng hợp.html", 6, "luyen-tap-tong-hop"],
+    ["Phiếu tuần 5.html", 5, "phieu-tuan"],
+    ["Tiếng Việt 3 - Tuần 5 - Từ và câu.pdf", 5, "phieu-tu-va-cau"],
+    ["Tuan 7 tu cau.html", 7, "phieu-tu-va-cau"],
   ];
   for (const [name, week, slug] of cases) {
     it(name, () => expect(guessFromFileName(name)).toEqual({ week, slug }));

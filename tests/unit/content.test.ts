@@ -192,3 +192,27 @@ describe("phiếu cô tải lên cho bài học theo tuần", () => {
     expect(lessonMedia(vid, canViewItem, { hasHtml: true, hasPdf: true, isFree: true })).toEqual({ kind: "video", videoRef: null });
   });
 });
+
+describe("Tiếng Việt theo tuần: cấu trúc riêng", () => {
+  const tv = getCourse("tieng-viet", 3, "theo-tuan")!;
+  it("tuần học có 2 video buổi 1/buổi 2, phiếu tuần, phiếu từ và câu, sơ đồ tư duy (không cơ bản/nâng cao)", () => {
+    const w = tv.weeks.find((x) => x.kind === "hoc")!;
+    const slugs = w.items.map((i) => i.slug);
+    expect(w.items.filter((i) => i.type === "video").map((i) => i.title)).toEqual(["Video buổi 1", "Video buổi 2"]);
+    expect(slugs).toEqual(expect.arrayContaining(["phieu-tuan", "phieu-tu-va-cau", "so-do-tu-duy"]));
+    expect(slugs).not.toContain("luyen-tap-co-ban");
+    expect(slugs).not.toContain("luyen-tap-nang-cao");
+    expect(w.items.find((i) => i.slug === "so-do-tu-duy")?.type).toBe("images");
+  });
+  it("mục ảnh: hiện danh sách ảnh qua route kiểm tra quyền; chưa có ảnh và không Free thì khóa", () => {
+    const item = tv.weeks[10].items.find((i) => i.slug === "so-do-tu-duy")!;
+    expect(item.isFree).toBe(false);
+    expect(lessonMedia(item, canViewItem, null)).toEqual({ kind: "locked" });
+    expect(lessonMedia(item, canViewItem, { hasHtml: false, hasPdf: false, isFree: true, imageCount: 0 })).toEqual({ kind: "locked" });
+    expect(lessonMedia(item, canViewItem, { hasHtml: false, hasPdf: false, isFree: true, imageCount: 2 })).toEqual({
+      kind: "images",
+      images: [`/phieu/bai/${item.id}/anh/1`, `/phieu/bai/${item.id}/anh/2`],
+    });
+    expect(lessonMedia(item, () => true, { hasHtml: false, hasPdf: false, isFree: false, imageCount: 1 })).toEqual({ kind: "images", images: [`/phieu/bai/${item.id}/anh/1`] });
+  });
+});

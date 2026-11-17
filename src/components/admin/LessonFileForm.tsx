@@ -5,20 +5,26 @@ import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { saveLessonFiles, type ActionResult } from "@/app/quan-tri/actions";
 import { discardPair, FileSlot, uploadPair, useFilePair, type UploadedIds } from "@/components/admin/FileSlot";
+import { discardImages, ImageListEditor, initialImageEntries, uploadImage, type ImageEntry } from "@/components/admin/ImageListEditor";
+import type { ImageExt } from "@/lib/exam-meta";
 
 export function LessonFileForm({
   itemId,
   accepts,
   initial,
   publicHref,
+  images = [],
 }: {
   itemId: string;
-  accepts: { html: boolean; pdf: boolean };
+  accepts: { html: boolean; pdf: boolean; images: boolean };
   initial: { hasHtml: boolean; hasPdf: boolean; isFree: boolean; published: boolean } | null;
   publicHref: string;
+  /** Đường dẫn các ảnh đang có (mục ảnh), theo thứ tự. */
+  images?: string[];
 }) {
   const router = useRouter();
   const pair = useFilePair();
+  const [imageEntries, setImageEntries] = useState<ImageEntry[]>(() => initialImageEntries(images));
   const [busy, setBusy] = useState<string | null>(null);
   const [result, setResult] = useState<ActionResult | null>(null);
 
@@ -26,6 +32,7 @@ export function LessonFileForm({
     e.preventDefault();
     setResult(null);
     const fd = new FormData(e.currentTarget);
+    if (accepts.images) return submitImages(fd);
     if (!initial && !pair.html && !pair.pdf) {
       setResult({ ok: false, message: accepts.html ? "Cô chọn ít nhất một file: phiếu tương tác hoặc phiếu PDF." : "Cô chọn file PDF trước nhé." });
       return;
@@ -65,10 +72,56 @@ export function LessonFileForm({
     }
   }
 
+  /** Mục ảnh: tải các ảnh mới lên kho rồi lưu cả danh sách theo thứ tự cô sắp. */
+  async function submitImages(fd: FormData) {
+    if (!initial && imageEntries.length === 0) {
+      setResult({ ok: false, message: "Cô chọn ít nhất một ảnh nhé." });
+      return;
+    }
+    const uploaded: { fileId: string; ext: ImageExt }[] = [];
+    try {
+      const list: ({ keep: number } | { fileId: string; ext: ImageExt })[] = [];
+      const fresh = imageEntries.filter((e) => "file" in e).length;
+      for (const e of imageEntries) {
+        if ("keep" in e) {
+          list.push({ keep: e.keep });
+          continue;
+        }
+        setBusy(`Đang tải ảnh lên kho (${uploaded.length + 1}/${fresh})…`);
+        const fileId = await uploadImage(e.file, e.ext);
+        if (!fileId) {
+          setResult({ ok: false, message: "Chưa tải được ảnh lên. Cô kiểm tra mạng rồi thử lại." });
+          await discardImages(uploaded);
+          return;
+        }
+        uploaded.push({ fileId, ext: e.ext });
+        list.push({ fileId, ext: e.ext });
+      }
+      setBusy("Đang kiểm tra ảnh và lưu…");
+      const res = await saveLessonFiles(itemId, {
+        images: list,
+        isFree: fd.get("isFree") === "on",
+        published: fd.get("published") === "on",
+      });
+      setResult(res);
+      if (!res.ok) {
+        await discardImages(uploaded);
+        return;
+      }
+      router.refresh();
+    } catch {
+      setResult({ ok: false, message: "Có lỗi khi gửi. Cô thử lại sau ít phút." });
+      await discardImages(uploaded);
+    } finally {
+      setBusy(null);
+    }
+  }
+
   return (
     <form onSubmit={submit} className="space-y-4 rounded-[2rem] bg-white p-5 shadow-sm ring-1 ring-brand-100 sm:p-7" noValidate>
       {accepts.html && <FileSlot key={`html-${pair.generation}`} {...pair.slot("html", Boolean(initial?.hasHtml))} />}
       {accepts.pdf && <FileSlot key={`pdf-${pair.generation}`} {...pair.slot("pdf", Boolean(initial?.hasPdf))} />}
+      {accepts.images && <ImageListEditor entries={imageEntries} onChange={setImageEntries} />}
 
       <div className="space-y-1 rounded-2xl bg-gray-50 p-4">
         <label className="flex items-center gap-3 py-2 font-semibold">
@@ -89,7 +142,7 @@ export function LessonFileForm({
       )}
 
       <button type="submit" disabled={Boolean(busy)} className="btn-toy w-full rounded-full bg-brand-600 px-6 py-4 text-lg font-extrabold text-white disabled:opacity-60">
-        {busy ?? "Lưu phiếu"}
+        {busy ?? (accepts.images ? "Lưu ảnh" : "Lưu phiếu")}
       </button>
     </form>
   );

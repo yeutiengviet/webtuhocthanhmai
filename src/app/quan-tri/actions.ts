@@ -2,7 +2,21 @@
 
 import { revalidatePath } from "next/cache";
 import { courseHref, findItemById, itemAcceptsFiles } from "@/lib/content";
-import { checkFileContent, isItemId, isUuid, slugify, storagePath, validateExamInput, type FileKind, type StorageFolder } from "@/lib/exam-meta";
+import {
+  checkFileContent,
+  imageExtFromBytes,
+  isImageExt,
+  isItemId,
+  isUuid,
+  MAX_FILE_BYTES,
+  MAX_IMAGES,
+  slugify,
+  storagePath,
+  validateExamInput,
+  type FileKind,
+  type StorageFolder,
+} from "@/lib/exam-meta";
+import { imagePathsOf, LESSON_FILE_COLUMNS, type LessonFileRow } from "@/lib/lesson-files";
 import { STORAGE_BUCKET } from "@/lib/supabase/env";
 import { getAdmin } from "@/lib/supabase/server";
 
@@ -163,13 +177,66 @@ export async function deleteExam(id: string): Promise<ActionResult> {
 /** Xóa file đã tải lên kho nhưng chưa gắn vào đề / bài nào (khi cô hủy giữa chừng hoặc lưu bị lỗi). */
 export async function discardUpload(fileId: string, kind: string, folder: string = "exams"): Promise<void> {
   const { ctx } = await adminOrError();
-  if (!ctx || !isUuid(fileId) || (kind !== "html" && kind !== "pdf") || (folder !== "exams" && folder !== "lessons")) return;
+  if (!ctx || !isUuid(fileId) || (kind !== "html" && kind !== "pdf" && !isImageExt(kind)) || (folder !== "exams" && folder !== "lessons")) return;
   const path = storagePath(fileId, kind, folder);
+  if (isImageExt(kind)) {
+    if (folder !== "lessons") return;
+    const { data: l, error } = await ctx.supabase.from("lesson_files").select("item_id").contains("image_paths", [path]).limit(1);
+    if (!error && !l?.length) await ctx.supabase.storage.from(STORAGE_BUCKET).remove([path]);
+    return;
+  }
   const [{ data: e }, { data: l }] = await Promise.all([
     ctx.supabase.from("exams").select("id").or(`file_path.eq.${path},pdf_path.eq.${path}`).limit(1),
     ctx.supabase.from("lesson_files").select("item_id").or(`html_path.eq.${path},pdf_path.eq.${path}`).limit(1),
   ]);
   if (!e?.length && !l?.length) await ctx.supabase.storage.from(STORAGE_BUCKET).remove([path]);
+}
+
+/** Kiểm tra ảnh vừa tải lên kho: tồn tại, đúng là ảnh JPG/PNG/WEBP theo NỘI DUNG. Sai thì xóa khỏi kho. */
+async function verifyUploadedImage(
+  supabase: Awaited<ReturnType<typeof getAdmin>>["supabase"],
+  fileId: unknown,
+  ext: unknown,
+): Promise<{ path: string } | { error: string }> {
+  if (!isUuid(fileId) || !isImageExt(ext)) return { error: "Thông tin ảnh không hợp lệ." };
+  const path = storagePath(fileId, ext, "lessons");
+  const { data: blob, error } = await supabase.storage.from(STORAGE_BUCKET).download(path);
+  if (error || !blob) return { error: "Không tìm thấy ảnh vừa tải lên. Cô thử tải lại." };
+  const bytes = new Uint8Array(await blob.arrayBuffer());
+  if (bytes.length === 0 || bytes.length > MAX_FILE_BYTES || imageExtFromBytes(bytes) !== ext) {
+    await supabase.storage.from(STORAGE_BUCKET).remove([path]);
+    return { error: bytes.length > MAX_FILE_BYTES ? "Ảnh quá lớn (tối đa 10 MB)." : "File không phải ảnh JPG, PNG hoặc WEBP." };
+  }
+  return { path };
+}
+
+/**
+ * Danh sách ảnh mới của mục, theo thứ tự cô sắp: { keep: số thứ tự ảnh cũ (từ 0) } hoặc { fileId, ext } (ảnh vừa tải lên).
+ * Trả về đường dẫn ảnh theo thứ tự và các ảnh cũ bị bỏ (để xóa khỏi kho sau khi lưu).
+ */
+async function resolveImages(
+  supabase: Awaited<ReturnType<typeof getAdmin>>["supabase"],
+  list: unknown,
+  current: string[],
+): Promise<{ paths: string[]; removed: string[]; added: string[] } | { error: string; added: string[] }> {
+  if (!Array.isArray(list)) return { paths: current, removed: [], added: [] };
+  if (list.length > MAX_IMAGES) return { error: `Mỗi mục tối đa ${MAX_IMAGES} ảnh.`, added: [] };
+  const paths: string[] = [];
+  const added: string[] = [];
+  for (const [i, e] of list.entries()) {
+    const entry = (e ?? {}) as Record<string, unknown>;
+    if (typeof entry.keep === "number") {
+      const p = Number.isInteger(entry.keep) ? current[entry.keep] : undefined;
+      if (!p || paths.includes(p)) return { error: "Danh sách ảnh không hợp lệ. Cô tải lại trang rồi thử lại.", added };
+      paths.push(p);
+    } else {
+      const v = await verifyUploadedImage(supabase, entry.fileId, entry.ext);
+      if ("error" in v) return { error: `Ảnh thứ ${i + 1}: ${v.error}`, added };
+      paths.push(v.path);
+      added.push(v.path);
+    }
+  }
+  return { paths, removed: current.filter((p) => !paths.includes(p)), added };
 }
 
 /**
@@ -186,11 +253,20 @@ export async function saveLessonFiles(itemId: string, input: Record<string, unkn
   if (input.htmlFileId && !accepts.html) return { ok: false, message: "Mục này chỉ nhận file PDF." };
   if ((input.htmlFileId || input.pdfFileId) && !accepts.pdf) return { ok: false, message: "Mục này không nhận file." };
 
-  const { data: current } = await ctx.supabase.from("lesson_files").select("html_path, pdf_path").eq("item_id", itemId).maybeSingle();
+  if (input.images !== undefined && !accepts.images) return { ok: false, message: "Mục này không nhận ảnh." };
+
+  const { data: currentRow } = await ctx.supabase.from("lesson_files").select(LESSON_FILE_COLUMNS).eq("item_id", itemId).maybeSingle();
+  const current = currentRow as LessonFileRow | null;
   const files = await verifyPair(ctx.supabase, input, "lessons");
   if ("error" in files) return { ok: false, message: files.error! };
 
-  const oldFiles: string[] = [];
+  const images = accepts.images ? await resolveImages(ctx.supabase, input.images, imagePathsOf(current)) : { paths: [], removed: [], added: [] };
+  if ("error" in images) {
+    if (images.added.length) await ctx.supabase.storage.from(STORAGE_BUCKET).remove(images.added);
+    return { ok: false, message: images.error };
+  }
+
+  const oldFiles: string[] = [...images.removed];
   let htmlPath = current?.html_path ?? null;
   let pdfPath = current?.pdf_path ?? null;
   if (files.html || input.removeHtml === true) {
@@ -204,19 +280,23 @@ export async function saveLessonFiles(itemId: string, input: Record<string, unkn
   const isFree = input.isFree === true;
   const published = input.published === true;
 
+  const empty = !htmlPath && !pdfPath && images.paths.length === 0;
   let error;
-  if (!htmlPath && !pdfPath) {
+  if (empty) {
     ({ error } = await ctx.supabase.from("lesson_files").delete().eq("item_id", itemId));
   } else {
-    ({ error } = await ctx.supabase
-      .from("lesson_files")
-      .upsert({ item_id: itemId, html_path: htmlPath, pdf_path: pdfPath, is_free: isFree, published }, { onConflict: "item_id" }));
+    // Chỉ gửi cột image_paths với mục ảnh — mục phiếu vẫn lưu được khi cơ sở dữ liệu chưa chạy migration 0006.
+    const row = { item_id: itemId, html_path: htmlPath, pdf_path: pdfPath, is_free: isFree, published, ...(accepts.images ? { image_paths: images.paths } : {}) };
+    ({ error } = await ctx.supabase.from("lesson_files").upsert(row, { onConflict: "item_id" }));
   }
-  if (error) return { ok: false, message: "Chưa lưu được. Cô thử lại sau ít phút." };
+  if (error) {
+    if (images.added.length) await ctx.supabase.storage.from(STORAGE_BUCKET).remove(images.added);
+    return { ok: false, message: accepts.images ? "Chưa lưu được ảnh. Cô thử lại sau ít phút (nếu vẫn lỗi: cơ sở dữ liệu cần chạy bản cập nhật 0006)." : "Chưa lưu được. Cô thử lại sau ít phút." };
+  }
   if (oldFiles.length) await ctx.supabase.storage.from(STORAGE_BUCKET).remove(oldFiles);
   revalidatePath(courseHref(found.course), "layout");
   revalidatePath("/quan-tri", "layout");
-  return { ok: true, message: !htmlPath && !pdfPath ? "Đã gỡ hết file của mục này." : "Đã lưu phiếu." };
+  return { ok: true, message: empty ? "Đã gỡ hết file của mục này." : accepts.images ? `Đã lưu ${images.paths.length} ảnh.` : "Đã lưu phiếu." };
 }
 
 export async function signOut(): Promise<void> {

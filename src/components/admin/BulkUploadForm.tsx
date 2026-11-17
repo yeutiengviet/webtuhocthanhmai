@@ -169,7 +169,7 @@ export function BulkUploadForm({
           ) : (
           <span className="mt-1 block text-sm text-gray-700">
             Đặt tên file có <strong>số tuần</strong> và <strong>loại phiếu</strong> (không ghi loại phiếu thì xếp vào mục còn trống của tuần, một tuần nhận nhiều file), ví dụ: <code>Tuan 5 - Co ban.html</code>, <code>Tuần 5 nâng cao.pdf</code>,{" "}
-            <code>Tuần 4 kiểm tra 15 phút.html</code>, <code>Tuần 3 tài liệu.pdf</code>, <code>Tuần 9 đề 2.html</code>
+            <code>Tuần 4 kiểm tra 15 phút.html</code>, <code>Tuần 3 tài liệu.pdf</code>, <code>Tuần 9 đề 2.html</code>. Tiếng Việt: <code>Phiếu tuần 5.html</code>, <code>Tuần 5 từ và câu.pdf</code> (sơ đồ tư duy là ảnh: tải ở trang riêng của mục đó)
             <span className="mt-2 block rounded-xl bg-white p-3 text-left ring-1 ring-brand-100">
               <strong>Đề thi</strong> (vào mục Đề thi): tên file <strong>không có chữ “tuần”</strong> mà có <strong>giữa kì / cuối kì / ôn tập học kì / HK1</strong> (HK1 = cuối học kì 1, HK2 = cuối học kì 2), ví dụ:{" "}
               <code>Đề giữa kì 1.html</code>, <code>Đề cuối học kỳ 1.pdf</code>, <code>Ôn tập cuối học kì 1.pdf</code>, <code>Đề cuối năm.pdf</code>. Cùng tên thì file .html và .pdf ghép thành một đề.

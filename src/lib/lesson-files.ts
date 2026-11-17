@@ -9,15 +9,22 @@ export interface LessonFileRow {
   item_id: string;
   html_path: string | null;
   pdf_path: string | null;
+  /** Ảnh của mục ảnh (sơ đồ tư duy), theo thứ tự hiển thị. Cột thêm ở migration 0006 — chưa chạy thì không có. */
+  image_paths?: string[] | null;
   is_free: boolean;
   published: boolean;
   updated_at: string;
 }
 
-export const LESSON_FILE_COLUMNS = "item_id, html_path, pdf_path, is_free, published, updated_at";
+// Lấy "*" (không liệt kê cột) để trang vẫn chạy khi cơ sở dữ liệu chưa có cột image_paths (migration 0006).
+export const LESSON_FILE_COLUMNS = "*";
 
-export function toLessonFileInfo(r: Pick<LessonFileRow, "html_path" | "pdf_path" | "is_free">): LessonFileInfo {
-  return { hasHtml: Boolean(r.html_path), hasPdf: Boolean(r.pdf_path), isFree: r.is_free };
+export function imagePathsOf(r: Pick<LessonFileRow, "image_paths"> | null | undefined): string[] {
+  return Array.isArray(r?.image_paths) ? r.image_paths.filter((p): p is string => typeof p === "string") : [];
+}
+
+export function toLessonFileInfo(r: Pick<LessonFileRow, "html_path" | "pdf_path" | "is_free" | "image_paths">): LessonFileInfo {
+  return { hasHtml: Boolean(r.html_path), hasPdf: Boolean(r.pdf_path), isFree: r.is_free, imageCount: imagePathsOf(r).length };
 }
 
 /** File đã công khai của các mục. Lỗi mạng → trả bản đồ rỗng (trang vẫn hiện, coi như chưa có file). */
@@ -25,7 +32,7 @@ export async function getPublishedLessonFiles(itemIds: string[]): Promise<Map<st
   const out = new Map<string, LessonFileInfo>();
   if (itemIds.length === 0) return out;
   try {
-    let q = createSupabasePublic().from("lesson_files").select("item_id, html_path, pdf_path, is_free").eq("published", true);
+    let q = createSupabasePublic().from("lesson_files").select(LESSON_FILE_COLUMNS).eq("published", true);
     // Ít mục: hỏi đúng các mã. Nhiều mục (cả khóa): hỏi theo tiền tố khóa ("t4-w…") để đường dẫn truy vấn không quá dài.
     if (itemIds.length <= 40) q = q.in("item_id", itemIds);
     else {

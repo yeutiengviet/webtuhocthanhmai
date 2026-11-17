@@ -4,9 +4,9 @@ import { LessonFileForm } from "@/components/admin/LessonFileForm";
 import { NotAdmin } from "@/components/admin/NotAdmin";
 import { Container, PageHero } from "@/components/ui";
 import { requireAdminPage } from "@/lib/admin";
-import { findItemById, itemAcceptsFiles, itemHref } from "@/lib/content";
-import { isItemId } from "@/lib/exam-meta";
-import { LESSON_FILE_COLUMNS, type LessonFileRow } from "@/lib/lesson-files";
+import { findItemById, itemAcceptsFiles, itemHref, itemTakesUploads } from "@/lib/content";
+import { isItemId, lessonImageHref } from "@/lib/exam-meta";
+import { imagePathsOf, LESSON_FILE_COLUMNS, type LessonFileRow } from "@/lib/lesson-files";
 
 export const metadata = { title: "Tải phiếu" };
 
@@ -18,7 +18,7 @@ export default async function AdminLessonItem({ params }: { params: Promise<{ kh
   if (!found || found.course.id !== khoa) notFound();
   const { course, week, item } = found;
   const accepts = itemAcceptsFiles(item);
-  if (!accepts.pdf) notFound();
+  if (!itemTakesUploads(item)) notFound();
   const { data } = await supabase.from("lesson_files").select(LESSON_FILE_COLUMNS).eq("item_id", item.id).maybeSingle();
   const row = data as LessonFileRow | null;
   const name = `${course.subject === "toan" ? "Toán" : "Tiếng Việt"} lớp ${course.grade}${course.track === "on-tap-he" ? " – Ôn tập hè" : ""}`;
@@ -34,6 +34,7 @@ export default async function AdminLessonItem({ params }: { params: Promise<{ kh
           accepts={accepts}
           publicHref={itemHref(course, week, item)}
           initial={row ? { hasHtml: Boolean(row.html_path), hasPdf: Boolean(row.pdf_path), isFree: row.is_free, published: row.published } : null}
+          images={imagePathsOf(row).map((_, i) => lessonImageHref(item.id, i))}
         />
       </Container>
     </>
