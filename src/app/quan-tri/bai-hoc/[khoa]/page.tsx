@@ -19,6 +19,7 @@ export default async function AdminCourseLessons({ params }: { params: Promise<{
   if (!course) notFound();
   const [{ rows, error }, attempts] = await Promise.all([adminLessonFiles(supabase, course), attemptStats(supabase)]);
   const monthly = course.weeks.flatMap((w) => w.items).filter((i) => i.slug === "kiem-tra-cuoi-thang");
+  const weekOf = new Map(course.weeks.flatMap((w) => w.items.map((i) => [i.id, w.number] as const)));
   const name = `${course.subject === "toan" ? "Toán" : "Tiếng Việt"} lớp ${course.grade}${course.track === "on-tap-he" ? " – Ôn tập hè" : ""}`;
 
   return (
@@ -35,7 +36,7 @@ export default async function AdminCourseLessons({ params }: { params: Promise<{
         {monthly.length > 0 && (
           <section className="rounded-3xl bg-accent-50 p-4 shadow-sm ring-2 ring-accent-200" aria-labelledby="de-cuoi-thang">
             <h2 id="de-cuoi-thang" className="font-display text-xl font-extrabold text-gray-900">📝 Đề kiểm tra cuối tháng</h2>
-            <p className="mt-1 text-sm font-semibold text-gray-700">Cứ 4 tuần là 1 tháng, đề nằm ở tuần cuối của tháng. Bấm vào tháng để tải đề.</p>
+            <p className="mt-1 text-sm font-semibold text-gray-700">Đề nằm ở tuần học cuối cùng của mỗi tháng. Bấm vào tháng để tải đề.</p>
             <ul className="mt-3 grid gap-2 sm:grid-cols-2">
               {monthly.map((it) => {
                 const r = rows.get(it.id);
@@ -43,7 +44,7 @@ export default async function AdminCourseLessons({ params }: { params: Promise<{
                   <li key={it.id}>
                     <Link href={`/quan-tri/bai-hoc/${course.id}/${it.id}`} className="flex min-h-11 items-center gap-3 rounded-2xl bg-white p-2 ring-1 ring-accent-100 hover:bg-brand-50">
                       <span className="min-w-0 flex-1">
-                        <span className="block font-bold text-gray-900">{it.title.replace(/^Đề kiểm tra cuối t/, "T")}</span>
+                        <span className="block font-bold text-gray-900">{it.title.replace(/^Đề kiểm tra cuối t/, "T")} <span className="font-semibold text-gray-600">· Tuần {weekOf.get(it.id)}</span></span>
                         <span className="text-xs font-semibold text-gray-700">{r ? [r.html_path ? "✏️ Tương tác" : null, r.pdf_path ? "⬇️ PDF" : null, r.published ? null : "đang ẩn"].filter(Boolean).join(" · ") : "Chưa có đề"}</span>
                       </span>
                       <span className="rounded-full bg-brand-600 px-3 py-1 text-sm font-extrabold text-white">{r ? "Sửa" : "Tải lên"}</span>
