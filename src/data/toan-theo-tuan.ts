@@ -51,8 +51,17 @@ export function monthEndWeeks(calendar: { startDate: string }[]): Map<number, nu
   return out;
 }
 
-export function monthlyTestItem(month: number) {
-  return { slug: "kiem-tra-cuoi-thang", type: "test" as const, title: `Đề kiểm tra cuối tháng ${month}`, level: "co-ban" as const, durationMinutes: 40 };
+/** Số đề kiểm tra cuối tháng mỗi tháng (Đề 1 … Đề 5). Đề 2 trở đi chỉ hiện cho phụ huynh khi cô đã tải file. */
+export const SO_DE_CUOI_THANG = 5;
+
+export function monthlyTestItems(month: number) {
+  return Array.from({ length: SO_DE_CUOI_THANG }, (_, i) => ({
+    slug: `kiem-tra-cuoi-thang-${i + 1}`,
+    type: "test" as const,
+    title: `Đề kiểm tra cuối tháng ${month} – Đề ${i + 1}`,
+    level: "co-ban" as const,
+    durationMinutes: 40,
+  }));
 }
 
 /** Phiếu tương tác có thật do chủ dự án cung cấp (Toán 4, tuần 8). */
@@ -91,7 +100,7 @@ function teachingItems(grade: Grade, b: TeachingBlock, monthEnd: number | undefi
   for (const w of REAL_WORKSHEETS[grade]?.[n] ?? []) {
     push({ slug: w.slug, type: "worksheet", title: w.title, level: "co-ban", isFree: w.isFree, url: w.url });
   }
-  if (monthEnd) push({ ...monthlyTestItem(monthEnd), isFree: free });
+  if (monthEnd) for (const t of monthlyTestItems(monthEnd)) push({ ...t, isFree: free });
   (b.thuVi ?? []).forEach((t, i) =>
     push({ slug: `thu-vi-${i + 1}`, type: "video", title: `[Toán học thú vị] ${t}`, level: "nang-cao", isFree: free, isExtension: true, videoProvider: "youtube" }),
   );

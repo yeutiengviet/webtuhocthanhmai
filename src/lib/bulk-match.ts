@@ -38,6 +38,56 @@ function normalize(name: string): string {
     .trim();
 }
 
+/** Tiền tố mã các ô đề kiểm tra cuối tháng ("kiem-tra-cuoi-thang-1" … "-5"). */
+export const MONTHLY = "kiem-tra-cuoi-thang";
+export const isMonthlySlug = (slug: string) => slug.startsWith(`${MONTHLY}-`);
+
+/** "cuối tháng 9" trong tên file → 9 (tháng 1–12); không có thì null. */
+export function guessMonth(fileName: string): number | null {
+  const m = / cuoi thang 0*(\d{1,2})(?= )/.exec(` ${normalize(fileName)} `);
+  const n = m ? Number(m[1]) : 0;
+  return n >= 1 && n <= 12 ? n : null;
+}
+
+/** Tuần có đề cuối tháng M (đọc từ tên ô "Đề kiểm tra cuối tháng M – Đề k"). */
+function weekOfMonth(month: number, slots: SlotInfo[]): number | null {
+  const re = new RegExp(`cuối tháng ${month} –`);
+  return slots.find((x) => isMonthlySlug(x.slug) && re.test(x.title))?.week ?? null;
+}
+
+/**
+ * Xếp nhiều file vào các đề cuối tháng của MỘT tháng (trang "chọn nhiều file" của tháng đó).
+ * File .html và .pdf cùng tên là một đề. Tên có "đề N" thì vào Đề N; còn lại vào đề còn trống (chưa có file, chưa có trong danh sách).
+ * `filled`: mã các ô đã có file trên website.
+ */
+export function routeMonthly(files: { name: string }[], slots: SlotInfo[], taken: Iterable<string> = [], filled: Iterable<string> = []): (string | null)[] {
+  const monthly = slots.filter((x) => isMonthlySlug(x.slug)).sort((a, b) => a.slug.localeCompare(b.slug, "vi", { numeric: true }));
+  const out: (string | null)[] = files.map(() => null);
+  const used = new Set(taken);
+  const busy = new Set([...filled, ...[...used].map((k) => k.split("|")[0])]);
+  const groups = new Map<string, number[]>();
+  files.forEach((f, i) => {
+    const key = normalize(f.name);
+    groups.set(key, [...(groups.get(key) ?? []), i]);
+  });
+  const pending: number[][] = [];
+  for (const idx of groups.values()) {
+    const de = / de ?0*([1-9])(?= )/.exec(` ${normalize(files[idx[0]].name)} `);
+    const slot = de ? monthly.find((x) => x.slug === `${MONTHLY}-${de[1]}`) : undefined;
+    if (slot) {
+      for (const i of idx) out[i] = slot.id;
+      busy.add(slot.id);
+    } else pending.push(idx);
+  }
+  for (const idx of pending) {
+    const slot = monthly.find((x) => !busy.has(x.id));
+    if (!slot) break;
+    for (const i of idx) out[i] = slot.id;
+    busy.add(slot.id);
+  }
+  return out;
+}
+
 /** Đoán số tuần và loại mục từ tên file. */
 export function guessFromFileName(fileName: string): Guess {
   let s = ` ${normalize(fileName)} `;
@@ -59,7 +109,11 @@ export function guessFromFileName(fileName: string): Guess {
   else if (/ (nang ?cao|nc)(?= )/.test(s)) slug = "luyen-tap-nang-cao";
   else if (/ (co ?ban|cb)(?= )/.test(s)) slug = "luyen-tap-co-ban";
   else if (/ (tong ?hop|th)(?= )/.test(s)) slug = "luyen-tap-tong-hop";
-  else if (/ (kiem ?tra|kt|cuoi thang)(?= )/.test(s)) slug = "kiem-tra-cuoi-thang";
+  else if (/ (kiem ?tra|kt|cuoi thang)(?= )/.test(s)) {
+    // Đề kiểm tra cuối tháng: có "đề N" thì vào Đề N, không thì vào đề còn trống đầu tiên của tháng
+    const de = / de ?0*([1-9])(?= )/.exec(s);
+    slug = de ? `${MONTHLY}-${de[1]}` : MONTHLY;
+  }
   else if (/ (de cuong)(?= )/.test(s)) slug = "de-cuong";
   else if (/ (tai lieu|tl)(?= )/.test(s)) slug = "tai-lieu-tuan";
   else {
@@ -227,10 +281,17 @@ export function routeBatch(files: { name: string }[], slots: SlotInfo[], taken: 
   const out: (string | null)[] = files.map(() => null);
   const used = new Set(taken);
   const reserve = (id: string, name: string) => used.add(`${id}|${kindFromFileName(name) ?? "?"}`);
-  const pending: { i: number; weeks: number[] }[] = [];
+  const pending: { i: number; weeks: number[]; monthly: boolean }[] = [];
 
   files.forEach((f, i) => {
-    const { weeks, keyword } = guessWeeks(f.name);
+    let { weeks, keyword } = guessWeeks(f.name);
+    // "Đề kiểm tra cuối tháng 9 – đề 2.html" (không ghi tuần) → tuần có đề cuối tháng 9
+    const month = keyword ? null : guessMonth(f.name);
+    const mw = month ? weekOfMonth(month, slots) : null;
+    if (mw) {
+      weeks = [mw];
+      keyword = true;
+    }
     const exam = guessExamFromFileName(f.name);
     if (!keyword && exam.isExam) {
       out[i] = exam.category ? examTarget(exam.category) : null;
@@ -246,11 +307,11 @@ export function routeBatch(files: { name: string }[], slots: SlotInfo[], taken: 
         return;
       }
     }
-    pending.push({ i, weeks });
+    pending.push({ i, weeks, monthly: slug === MONTHLY });
   });
 
   // Chưa rõ mục: gom file cùng tên (.html + .pdf) rồi tìm mục còn trống trong tuần
-  const groups = new Map<string, { i: number; weeks: number[] }[]>();
+  const groups = new Map<string, { i: number; weeks: number[]; monthly: boolean }[]>();
   for (const p of pending) {
     const key = examGroupKey(files[p.i].name);
     groups.set(key, [...(groups.get(key) ?? []), p]);
@@ -262,7 +323,8 @@ export function routeBatch(files: { name: string }[], slots: SlotInfo[], taken: 
     weeks.sort((a, b) => Number(slots.some((s) => s.week === b && s.slug === "luyen-tap-tong-hop")) - Number(slots.some((s) => s.week === a && s.slug === "luyen-tap-tong-hop")) || b - a);
     const kinds = g.map((p) => kindFromFileName(files[p.i].name));
     const fits = (s: SlotInfo) => kinds.every((k) => (k === null || s[k]) && !used.has(`${s.id}|${k ?? "?"}`));
-    const cand = weeks.flatMap((w) => slots.filter((s) => s.week === w));
+    // Đề cuối tháng chưa ghi số đề: chỉ xếp vào các ô đề cuối tháng của tuần đó
+    const cand = weeks.flatMap((w) => slots.filter((s) => s.week === w && (!g[0].monthly || isMonthlySlug(s.slug))));
     // "Tuần 17, 18" là phiếu chung của nhiều tuần → mục "tổng hợp" trước
     if (weeks.length > 1) cand.sort((a, b) => Number(b.slug === "luyen-tap-tong-hop") - Number(a.slug === "luyen-tap-tong-hop"));
     const slot = cand.find((s) => !SPECIAL.has(s.slug) && fits(s)) ?? cand.find((s) => fits(s));

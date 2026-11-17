@@ -138,6 +138,23 @@ export function itemAcceptsFiles(item: Item): { html: boolean; pdf: boolean; ima
   return { html: false, pdf: false, images: false };
 }
 
+/**
+ * Mục chỉ hiện cho phụ huynh khi đã có file: Đề 2…Đề 5 của đề kiểm tra cuối tháng
+ * (Đề 1 luôn hiện để phụ huynh biết tuần đó có đề cuối tháng).
+ */
+export function hiddenUntilUploaded(item: Item): boolean {
+  return /^kiem-tra-cuoi-thang-([2-9]|\d{2,})$/.test(item.slug);
+}
+
+/** Lọc các mục hiện cho phụ huynh theo danh sách file đã tải. */
+export function visibleItems(items: Item[], files: Map<string, { hasHtml: boolean; hasPdf: boolean }>): Item[] {
+  return items.filter((it) => {
+    if (!hiddenUntilUploaded(it)) return true;
+    const f = files.get(it.id);
+    return Boolean(f && (f.hasHtml || f.hasPdf));
+  });
+}
+
 /** Mục có nhận file tải lên không (trang quản trị). */
 export function itemTakesUploads(item: Item): boolean {
   const a = itemAcceptsFiles(item);
