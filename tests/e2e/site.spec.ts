@@ -160,16 +160,16 @@ test("đường dẫn đoán bừa trả về 404, tiêu đề tab không gây h
   await expect(page).toHaveTitle(/Không tìm thấy trang/);
   await page.goto("/toan/lop-6");
   await expect(page).toHaveTitle(/Không tìm thấy trang/);
-  for (const p of ["/toan/lop-4/constructor", "/toan/lop-4/__proto__", "/toan/lop-6", "/tieng-viet/lop-1", "/toan/lop-4/theo-tuan/tuan-36/video-bai-giang-1", "/toan/lop-4/theo-tuan/tuan-1/khong-co", "/van/lop-4", "/toan/lop-4/ky-thi", "/toan/lop-4/on-tap-he/de-nang-cao/de-21"]) {
+  for (const p of ["/toan/lop-4/constructor", "/toan/lop-4/__proto__", "/toan/lop-6", "/tieng-viet/lop-0", "/tai-lieu/lop-6", "/toan/lop-4/theo-tuan/tuan-36/video-bai-giang-1", "/toan/lop-4/theo-tuan/tuan-1/khong-co", "/van/lop-4", "/toan/lop-4/ky-thi", "/toan/lop-4/on-tap-he/de-nang-cao/de-21"]) {
     expect((await request.get(p)).status(), p).toBe(404);
   }
 });
 
-test("tất cả trang bài học của cả 8 khóa theo tuần (Toán, Tiếng Việt lớp 2–5) đều mở được", async ({ page, request }) => {
+test("tất cả trang bài học của cả 10 khóa theo tuần (Toán, Tiếng Việt lớp 1–5) đều mở được", async ({ page, request }) => {
   test.setTimeout(600_000);
   let total = 0;
   for (const mon of ["toan", "tieng-viet"]) {
-    for (const lop of [2, 3, 4, 5]) {
+    for (const lop of [1, 2, 3, 4, 5]) {
       const course = `/${mon}/lop-${lop}/theo-tuan`;
       await page.goto(course);
       // Toán lớp 2–5 theo mathx: 35 tuần (lớp 5: 34 tuần) + 4 khối ôn tập; Tiếng Việt: 35 tuần
@@ -199,7 +199,7 @@ test("tất cả trang bài học của cả 8 khóa theo tuần (Toán, Tiếng
 test("khách chưa đăng nhập: không có đường dẫn tải thẳng, mở thẳng file PDF bị chặn", async ({ page, request }) => {
   await page.goto("/toan/lop-4/on-tap-he");
   await expect(page.locator("a[href*='/pdf'], a[download]")).toHaveCount(0);
-  for (const p of ["/phieu/bai/t4-w1-luyen-tap-co-ban/pdf", "/phieu/00000000-0000-0000-0000-000000000000/pdf"]) {
+  for (const p of ["/phieu/bai/t4-w1-luyen-tap-co-ban/pdf", "/phieu/00000000-0000-0000-0000-000000000000/pdf", "/phieu/tai-lieu/00000000-0000-0000-0000-000000000000"]) {
     expect((await request.get(p)).status(), p).toBe(404);
     // giả làm khung xem nhưng mở như một trang → vẫn chặn
     expect((await request.get(p, { headers: { "x-xem-pdf": "1", "sec-fetch-dest": "document" } })).status(), p).toBe(404);
@@ -207,6 +207,18 @@ test("khách chưa đăng nhập: không có đường dẫn tải thẳng, mở
   // Mục "Tài liệu in (PDF) của tuần" vẫn hiện ở trang công khai
   await page.goto("/toan/lop-4/theo-tuan");
   await expect(page.getByText("Tài liệu in (PDF) của tuần").first()).toBeAttached();
+});
+
+test("mục Tài liệu: chọn lớp 1–5 → Toán và Tiếng Việt (4 nhóm)", async ({ page, request }) => {
+  await page.goto("/tai-lieu");
+  for (const g of [1, 2, 3, 4, 5]) await expect(page.getByRole("link", { name: new RegExp(`Lớp ${g}`) }).first()).toBeVisible();
+  await page.getByRole("link", { name: /Lớp 1/ }).first().click();
+  await expect(page).toHaveURL(/\/tai-lieu\/lop-1$/);
+  await expect(page.getByRole("heading", { level: 1 })).toHaveText("Tài liệu lớp 1");
+  await expect(page.getByRole("heading", { name: /Tài liệu Toán lớp 1/ })).toBeVisible();
+  await expect(page.getByRole("heading", { name: /Tài liệu Tiếng Việt lớp 1/ })).toBeVisible();
+  for (const n of ["Đọc hiểu", "Luyện từ và câu", "Chính tả", "Tập làm văn / Viết"]) await expect(page.getByRole("heading", { name: new RegExp(n) })).toBeVisible();
+  expect((await request.get("/tai-lieu/lop-1/00000000-0000-0000-0000-000000000000")).status()).toBe(404);
 });
 
 test("các trang phụ mở được, không lỗi console", async ({ page }) => {
@@ -269,7 +281,7 @@ test("khu Đề thi: theo môn → lớp → làm đề Free trong khung cách l
   await page.goto("/de-thi");
   await page.getByRole("link", { name: /Đề thi Toán/ }).click();
   await expect(page).toHaveURL(/\/de-thi\/toan$/);
-  for (const g of [2, 3, 4, 5]) await expect(page.getByRole("heading", { name: `Lớp ${g}` })).toBeVisible();
+  for (const g of [1, 2, 3, 4, 5]) await expect(page.getByRole("heading", { name: `Lớp ${g}` })).toBeVisible();
   // Lớp chưa có đề hiện thông báo, không bịa đề
   await expect(page.getByText("Cô Thanh Mai đang cập nhật đề cho lớp này.").first()).toBeVisible();
   await page.getByRole("link", { name: "Toán lớp 4 – Đánh giá năng lực tháng 10" }).first().click();

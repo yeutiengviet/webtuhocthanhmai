@@ -6,7 +6,7 @@ import { site } from "@/data/site";
 
 export const metadata: Metadata = {
   title: { default: site.name, template: `%s | ${site.name}` },
-  description: "Học online Toán và Tiếng Việt lớp 2–5 theo sách Kết nối tri thức với cuộc sống.",
+  description: "Học online Toán và Tiếng Việt lớp 1–5 theo sách Kết nối tri thức với cuộc sống.",
   // Chưa gắn tên miền chính thức: tạm không cho công cụ tìm kiếm lập chỉ mục (bỏ dòng dưới khi có tên miền)
   robots: { index: false, follow: false },
 };

@@ -2,15 +2,15 @@ import { describe, expect, it } from "vitest";
 import { allCourses, courseHref, freeItems, getCourse, itemHref, publishedWeeks } from "@/lib/content";
 import { weekday } from "@/lib/dates";
 
-describe("đủ 8 khóa: Toán và Tiếng Việt lớp 2–5", () => {
-  it("mỗi môn có đủ lớp 2, 3, 4, 5 (học theo tuần)", () => {
+describe("đủ 10 khóa: Toán và Tiếng Việt lớp 1–5", () => {
+  it("mỗi môn có đủ lớp 1, 2, 3, 4, 5 (học theo tuần)", () => {
     for (const subject of ["toan", "tieng-viet"]) {
-      for (const grade of [2, 3, 4, 5]) {
+      for (const grade of [1, 2, 3, 4, 5]) {
         expect(getCourse(subject, grade, "theo-tuan"), `${subject} ${grade}`).toBeDefined();
       }
     }
-    // 8 khóa học theo tuần + 4 khóa Toán nâng cao theo chuyên đề + 8 khóa Đề ôn tập hè
-    expect(allCourses()).toHaveLength(20);
+    // 10 khóa học theo tuần + 4 khóa Toán nâng cao theo chuyên đề (lớp 2–5) + 10 khóa Đề ôn tập hè
+    expect(allCourses()).toHaveLength(24);
     for (const grade of [2, 3, 4, 5]) expect(getCourse("toan", grade, "nang-cao"), `nâng cao ${grade}`).toBeDefined();
   });
 
@@ -37,7 +37,7 @@ describe("đủ 8 khóa: Toán và Tiếng Việt lớp 2–5", () => {
         }
     expect(new Set(ids).size).toBe(ids.length);
     expect(new Set(hrefs).size).toBe(hrefs.length);
-    expect(new Set(allCourses().map(courseHref)).size).toBe(20);
+    expect(new Set(allCourses().map(courseHref)).size).toBe(24);
   });
 
   it("Toán 2–5 theo tuần: tên tuần là tên bài, không còn 'đang cập nhật'", () => {
@@ -77,7 +77,9 @@ describe("đủ 8 khóa: Toán và Tiếng Việt lớp 2–5", () => {
     expect(allCourses().filter((c) => c.track === "theo-tuan" && !c.isSkeleton).map((c) => c.id).sort()).toEqual([
       "toan-2-theo-tuan", "toan-3-theo-tuan", "toan-4-theo-tuan", "toan-5-theo-tuan",
     ]);
-    expect(allCourses().filter((c) => c.isSkeleton).every((c) => c.subject === "tieng-viet")).toBe(true);
+    // Khung trống: Tiếng Việt các lớp và Toán lớp 1
+    expect(allCourses().filter((c) => c.isSkeleton).every((c) => c.subject === "tieng-viet" || c.grade === 1)).toBe(true);
+    expect(getCourse("toan", 1, "theo-tuan")?.isSkeleton).toBe(true);
   });
 
   it("tuần 1–2 của mọi khóa được học thử; tuần khác thì không (trừ phiếu tháng 10 Toán 4)", () => {
@@ -90,9 +92,9 @@ describe("đủ 8 khóa: Toán và Tiếng Việt lớp 2–5", () => {
     }
   });
 
-  it("Đề ôn tập hè: Toán và Tiếng Việt lớp 2–5, mỗi khóa 40 đề (20 cơ bản + 20 nâng cao) nhận cả phiếu tương tác và PDF, ai cũng xem được", () => {
+  it("Đề ôn tập hè: Toán và Tiếng Việt lớp 1–5, mỗi khóa 40 đề (20 cơ bản + 20 nâng cao) nhận cả phiếu tương tác và PDF, ai cũng xem được", () => {
     for (const subject of ["toan", "tieng-viet"]) {
-      for (const grade of [2, 3, 4, 5]) {
+      for (const grade of [1, 2, 3, 4, 5]) {
         const c = getCourse(subject, grade, "on-tap-he");
         expect(c, `${subject} ${grade}`).toBeDefined();
         expect(c!.weeks.map((w) => w.slug)).toEqual(["de-co-ban", "de-nang-cao"]);

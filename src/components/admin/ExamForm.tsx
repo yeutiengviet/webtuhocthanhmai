@@ -116,7 +116,7 @@ export function ExamForm({ initial }: { initial?: ExamFormInitial }) {
         <label className={label}>
           Lớp
           <select name="grade" className={`${field} ${border("grade")}`} defaultValue={String(initial?.grade ?? 4)}>
-            {[2, 3, 4, 5].map((g) => <option key={g} value={g}>Lớp {g}</option>)}
+            {[1, 2, 3, 4, 5].map((g) => <option key={g} value={g}>Lớp {g}</option>)}
           </select>
           {err("grade")}
         </label>

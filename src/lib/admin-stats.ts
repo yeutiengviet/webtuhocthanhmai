@@ -37,7 +37,7 @@ export async function listParents(supabase: Supa): Promise<{ parents: ParentRow[
         email: phoneFromAccountEmail(r.email) ? null : r.email,
         fullName: r.full_name,
         phone: r.phone || phoneFromAccountEmail(r.email),
-        grade: [2, 3, 4, 5].includes(g) ? g : null,
+        grade: [1, 2, 3, 4, 5].includes(g) ? g : null,
         role: r.role,
         createdAt: r.created_at,
         lastSignInAt: r.last_sign_in_at,

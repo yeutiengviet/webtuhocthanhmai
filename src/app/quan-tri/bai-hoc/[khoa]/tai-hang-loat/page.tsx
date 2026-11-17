@@ -38,7 +38,7 @@ export default async function BulkUploadPage({ params, searchParams }: { params:
       <PageHero badge="Trang quản trị" title={monthlySlots.length ? `${monthLabel?.replace(/^đ/, "Đ")} – ${name}` : `Tải hàng loạt – ${name}`} subtitle={monthlySlots.length ? `Tuần ${monthWeek}. Chọn nhiều file một lần, website tự xếp vào Đề 1, Đề 2…; cô xem lại rồi bấm Lưu.` : course.track === "on-tap-he" ? "Chọn nhiều file một lần; website tự xếp vào đề theo số đề trong tên file, cô xem lại rồi bấm Lưu." : "Chọn nhiều file một lần; website đọc tên file: có “tuần N” thì xếp vào tuần N, có “giữa kì / cuối kì / ôn tập học kì” thì xếp vào mục Đề thi. Cô xem lại rồi bấm Lưu."} />
       <Container className="max-w-3xl space-y-4 py-8">
         <Link href={`/quan-tri/bai-hoc/${course.id}`} className="inline-block py-2 font-extrabold text-brand-700 underline">← {name}</Link>
-        <BulkUploadForm courseId={course.id} slots={slots} existing={existing} summer={course.track === "on-tap-he"} course={{ subject: course.subject, grade: course.grade as 2 | 3 | 4 | 5 }} existingExams={(examRows ?? []) as { title: string; category: string }[]} monthly={monthlySlots.length ? { label: monthLabel ?? "" } : null} />
+        <BulkUploadForm courseId={course.id} slots={slots} existing={existing} summer={course.track === "on-tap-he"} course={{ subject: course.subject, grade: course.grade }} existingExams={(examRows ?? []) as { title: string; category: string }[]} monthly={monthlySlots.length ? { label: monthLabel ?? "" } : null} />
       </Container>
     </>
   );

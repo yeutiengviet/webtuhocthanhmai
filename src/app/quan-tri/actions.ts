@@ -15,7 +15,9 @@ import {
   validateExamInput,
   type FileKind,
   type StorageFolder,
+  STORAGE_FOLDERS,
 } from "@/lib/exam-meta";
+import { validateDocumentInput } from "@/lib/document-meta";
 import { EXTEND_MONTHS } from "@/lib/download-access";
 import { imagePathsOf, LESSON_FILE_COLUMNS, type LessonFileRow } from "@/lib/lesson-files";
 import { STORAGE_BUCKET } from "@/lib/supabase/env";
@@ -185,8 +187,14 @@ export async function deleteExam(id: string): Promise<ActionResult> {
 /** Xóa file đã tải lên kho nhưng chưa gắn vào đề / bài nào (khi cô hủy giữa chừng hoặc lưu bị lỗi). */
 export async function discardUpload(fileId: string, kind: string, folder: string = "exams"): Promise<void> {
   const { ctx } = await adminOrError();
-  if (!ctx || !isUuid(fileId) || (kind !== "html" && kind !== "pdf" && !isImageExt(kind)) || (folder !== "exams" && folder !== "lessons")) return;
-  const path = storagePath(fileId, kind, folder);
+  if (!ctx || !isUuid(fileId) || (kind !== "html" && kind !== "pdf" && !isImageExt(kind)) || !(STORAGE_FOLDERS as readonly string[]).includes(folder)) return;
+  const path = storagePath(fileId, kind, folder as StorageFolder);
+  if (folder === "documents") {
+    if (kind !== "pdf") return;
+    const { data: d, error } = await ctx.supabase.from("documents").select("id").eq("pdf_path", path).limit(1);
+    if (!error && !d?.length) await ctx.supabase.storage.from(STORAGE_BUCKET).remove([path]);
+    return;
+  }
   if (isImageExt(kind)) {
     if (folder !== "lessons") return;
     const { data: l, error } = await ctx.supabase.from("lesson_files").select("item_id").contains("image_paths", [path]).limit(1);
@@ -339,6 +347,99 @@ function downloadRpcError(e: { code?: string; message?: string }): string {
 
 function formatVnDate(iso: string): string {
   return new Intl.DateTimeFormat("vi-VN", { timeZone: "Asia/Ho_Chi_Minh", day: "2-digit", month: "2-digit", year: "numeric" }).format(new Date(iso));
+}
+
+// ===== Mục "Tài liệu" (bảng documents, migration 0008) =====
+
+function revalidateDocumentPages() {
+  revalidatePath("/tai-lieu", "layout");
+  revalidatePath("/quan-tri", "layout");
+}
+
+const MISSING_DOCUMENTS = "Chưa bật mục Tài liệu trong cơ sở dữ liệu: cần chạy file supabase/migrations/0008_lop_1_va_tai_lieu.sql.";
+const isMissingDocuments = (e: { code?: string; message?: string } | null) =>
+  Boolean(e && (e.code === "42P01" || e.code === "PGRST205" || /relation .*documents.* does not exist|could not find the table/i.test(e.message ?? "")));
+
+/** Thêm một tài liệu: file PDF đã tải lên kho (thư mục documents/) + tên, lớp, môn, nhóm. */
+export async function createDocument(input: Record<string, unknown>): Promise<ActionResult> {
+  const { ctx, err } = await adminOrError();
+  if (!ctx) return err!;
+  const v = validateDocumentInput(input);
+  if (!v.ok) return { ok: false, message: "Cô kiểm tra lại các ô được đánh dấu.", errors: v.errors };
+  if (!input.pdfFileId) return { ok: false, message: "Cô chọn file PDF của tài liệu." };
+  const pdf = await verifyUploadedFile(ctx.supabase, input.pdfFileId, "pdf", "documents");
+  if ("error" in pdf) return { ok: false, message: pdf.error };
+  const { error } = await ctx.supabase.from("documents").insert({
+    subject: v.data.subject,
+    grade: v.data.grade,
+    category: v.data.category,
+    title: v.data.title,
+    is_free: v.data.isFree,
+    published: v.data.published,
+    pdf_path: pdf.path,
+  });
+  if (error) {
+    await ctx.supabase.storage.from(STORAGE_BUCKET).remove([pdf.path]);
+    return { ok: false, message: isMissingDocuments(error) ? MISSING_DOCUMENTS : "Chưa lưu được tài liệu. Cô thử lại sau ít phút." };
+  }
+  revalidateDocumentPages();
+  return { ok: true, message: `Đã tải lên “${v.data.title}”.`, href: `/tai-lieu/lop-${v.data.grade}` };
+}
+
+/** Sửa tên / lớp / môn / nhóm của tài liệu; có thể thay file PDF. */
+export async function updateDocument(id: string, input: Record<string, unknown>): Promise<ActionResult> {
+  const { ctx, err } = await adminOrError();
+  if (!ctx) return err!;
+  if (!isUuid(id)) return { ok: false, message: "Mã tài liệu không hợp lệ." };
+  const v = validateDocumentInput(input);
+  if (!v.ok) return { ok: false, message: "Cô kiểm tra lại các ô được đánh dấu.", errors: v.errors };
+  const { data: current } = await ctx.supabase.from("documents").select("pdf_path").eq("id", id).maybeSingle();
+  if (!current) return { ok: false, message: "Không tìm thấy tài liệu." };
+  const pdf = input.pdfFileId ? await verifyUploadedFile(ctx.supabase, input.pdfFileId, "pdf", "documents") : null;
+  if (pdf && "error" in pdf) return { ok: false, message: pdf.error };
+  const patch: Record<string, unknown> = {
+    subject: v.data.subject,
+    grade: v.data.grade,
+    category: v.data.category,
+    title: v.data.title,
+    is_free: v.data.isFree,
+    published: v.data.published,
+  };
+  if (pdf) patch.pdf_path = pdf.path;
+  const { error } = await ctx.supabase.from("documents").update(patch).eq("id", id);
+  if (error) {
+    if (pdf) await ctx.supabase.storage.from(STORAGE_BUCKET).remove([pdf.path]);
+    return { ok: false, message: "Chưa lưu được thay đổi. Cô thử lại sau ít phút." };
+  }
+  if (pdf && current.pdf_path) await ctx.supabase.storage.from(STORAGE_BUCKET).remove([current.pdf_path]);
+  revalidateDocumentPages();
+  return { ok: true, message: "Đã lưu thay đổi.", href: `/tai-lieu/lop-${v.data.grade}/${id}` };
+}
+
+export async function setDocumentFlags(id: string, flags: { published?: boolean; isFree?: boolean }): Promise<ActionResult> {
+  const { ctx, err } = await adminOrError();
+  if (!ctx) return err!;
+  if (!isUuid(id)) return { ok: false, message: "Mã tài liệu không hợp lệ." };
+  const patch: Record<string, boolean> = {};
+  if (typeof flags.published === "boolean") patch.published = flags.published;
+  if (typeof flags.isFree === "boolean") patch.is_free = flags.isFree;
+  const { error } = await ctx.supabase.from("documents").update(patch).eq("id", id);
+  if (error) return { ok: false, message: "Chưa đổi được. Cô thử lại." };
+  revalidateDocumentPages();
+  return { ok: true, message: "Đã cập nhật." };
+}
+
+export async function deleteDocument(id: string): Promise<ActionResult> {
+  const { ctx, err } = await adminOrError();
+  if (!ctx) return err!;
+  if (!isUuid(id)) return { ok: false, message: "Mã tài liệu không hợp lệ." };
+  const { data: current } = await ctx.supabase.from("documents").select("pdf_path, title").eq("id", id).maybeSingle();
+  if (!current) return { ok: false, message: "Không tìm thấy tài liệu." };
+  const { error } = await ctx.supabase.from("documents").delete().eq("id", id);
+  if (error) return { ok: false, message: "Chưa xóa được. Cô thử lại." };
+  if (current.pdf_path) await ctx.supabase.storage.from(STORAGE_BUCKET).remove([current.pdf_path]);
+  revalidateDocumentPages();
+  return { ok: true, message: `Đã xóa “${current.title}”.` };
 }
 
 export async function signOut(): Promise<void> {

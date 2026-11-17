@@ -189,7 +189,7 @@ export function ParentAuthForm({ initialMode = "login", next, linkError = false 
             Con đang học lớp <span className="font-semibold text-gray-500">(không bắt buộc)</span>
             <select className={field} value={grade} onChange={(e) => setGrade(e.target.value)}>
               <option value="">— Chọn lớp —</option>
-              {[2, 3, 4, 5].map((g) => (
+              {[1, 2, 3, 4, 5].map((g) => (
                 <option key={g} value={String(g)}>Lớp {g}</option>
               ))}
             </select>

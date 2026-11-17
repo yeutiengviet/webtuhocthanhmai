@@ -1,7 +1,7 @@
 import "server-only";
 import { cache } from "react";
 import { findItemById } from "@/lib/content";
-import { decideDownload, parentAccess, type DateRange, type DownloadAccess, type DownloadDecision } from "@/lib/download-access";
+import { ALWAYS_RANGE, decideDownload, parentAccess, type DateRange, type DownloadAccess, type DownloadDecision } from "@/lib/download-access";
 import { createSupabaseServer } from "@/lib/supabase/server";
 
 type Server = Awaited<ReturnType<typeof createSupabaseServer>>;
@@ -59,4 +59,9 @@ export async function examDecision(id: string): Promise<DownloadDecision> {
   const access = await getDownloadAccess();
   if (access.kind !== "parent") return decideDownload(access, null);
   return decideDownload(access, await examRange(await createSupabaseServer(), id));
+}
+
+/** Tài liệu trong mục "Tài liệu": tải được khi tài khoản chưa hết hạn tải. */
+export async function documentDecision(): Promise<DownloadDecision> {
+  return decideDownload(await getDownloadAccess(), ALWAYS_RANGE);
 }

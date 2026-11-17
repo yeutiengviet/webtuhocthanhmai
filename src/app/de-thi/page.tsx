@@ -25,7 +25,7 @@ export default async function ExamsHome() {
             >
               <span className="min-w-0 flex-1">
                 <span className="block font-display text-3xl font-extrabold">Đề thi {s.name}</span>
-                <span className="mt-1 block font-semibold">{n > 0 ? `${n} đề` : "Đang cập nhật"} · lớp 2–5</span>
+                <span className="mt-1 block font-semibold">{n > 0 ? `${n} đề` : "Đang cập nhật"} · lớp 1–5</span>
                 <span className={`mt-3 inline-block rounded-full bg-white px-4 py-1.5 text-sm font-extrabold ${isMath ? "text-brand-700" : "text-accent-700"}`}>Xem đề →</span>
               </span>
               {isMath ? <MathArt className="h-24 w-24 shrink-0" /> : <VietArt className="h-24 w-24 shrink-0" />}

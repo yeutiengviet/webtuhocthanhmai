@@ -6,7 +6,7 @@
 import "server-only";
 import { HOLIDAY_MONDAYS, SCHOOL_YEAR_START, monthEndWeeks, monthlyTestItems } from "@/data/toan-theo-tuan";
 import { buildWeekCalendar } from "@/lib/dates";
-import type { Course, Item, SubjectSlug, Week, WeekKind } from "@/lib/types";
+import type { Course, Grade, Item, SubjectSlug, Week, WeekKind } from "@/lib/types";
 
 const TOTAL_WEEKS = 35;
 /** Tuần ôn tập (dự kiến): giữa kì I, cuối kì I, giữa kì II, cuối năm. */
@@ -69,7 +69,7 @@ function buildItems(subject: SubjectSlug, grade: number, n: number, monthEnd: nu
   return items;
 }
 
-export function buildSkeletonCourse(subject: SubjectSlug, grade: 2 | 3 | 4 | 5): Course {
+export function buildSkeletonCourse(subject: SubjectSlug, grade: Grade): Course {
   const calendar = buildWeekCalendar(SCHOOL_YEAR_START, TOTAL_WEEKS, HOLIDAY_MONDAYS);
   const monthEnds = monthEndWeeks(calendar);
   const subjectName = subject === "toan" ? "Toán" : "Tiếng Việt";
@@ -100,6 +100,9 @@ export function buildSkeletonCourse(subject: SubjectSlug, grade: 2 | 3 | 4 | 5):
 }
 
 export const SKELETON_COURSES: Course[] = [
+  // Lớp 1: khung trống cho cả Toán và Tiếng Việt (chưa có mục lục chi tiết).
+  buildSkeletonCourse("toan", 1),
+  buildSkeletonCourse("tieng-viet", 1),
   buildSkeletonCourse("tieng-viet", 2),
   buildSkeletonCourse("tieng-viet", 3),
   buildSkeletonCourse("tieng-viet", 4),

@@ -24,7 +24,7 @@ export default async function SubjectPage({ params }: { params: Promise<{ mon: s
       <PageHero badge="Sách Kết nối tri thức với cuộc sống" title={`Môn ${subject.name}`} subtitle={subject.shortDescription + "."} />
       <Container className="py-8">
         <h2 className="mb-4 text-2xl text-gray-900">Chọn lớp của con</h2>
-        <div className="grid grid-cols-2 gap-3 sm:grid-cols-4 sm:gap-4">
+        <div className="grid grid-cols-2 gap-3 sm:grid-cols-5 sm:gap-4">
           {GRADES.map((g) => {
             const has = getCourses(subject.slug, g).length > 0;
             const card = (

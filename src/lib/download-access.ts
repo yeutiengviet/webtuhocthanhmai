@@ -47,6 +47,12 @@ export const DEFAULT_EXAM_RANGES: Partial<Record<ExamCategory, DateRange>> = {
   "cuoi-nam": { from: "2027-04-26", to: "2027-05-21" },
 };
 
+/**
+ * Thời gian của tài liệu trong mục "Tài liệu" (không gắn với tuần học nào): coi như luôn nằm trong khoảng tải,
+ * nên phụ huynh tải được khi tài khoản CHƯA hết hạn tải (dùng thử hoặc đã được gia hạn).
+ */
+export const ALWAYS_RANGE: DateRange = { from: "2000-01-01", to: "2999-12-31" };
+
 /** Ngày (YYYY-MM-DD) theo giờ Việt Nam của một thời điểm. */
 export function vnDate(at: Date | string): string {
   return new Intl.DateTimeFormat("en-CA", { timeZone: "Asia/Ho_Chi_Minh", year: "numeric", month: "2-digit", day: "2-digit" }).format(new Date(at));
