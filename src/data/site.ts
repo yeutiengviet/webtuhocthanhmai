@@ -3,8 +3,9 @@
 
 /**
  * Công tắc tính năng (đổi true/false rồi đẩy mã lên là website đổi theo).
- * - allowPdfDownload: false = học sinh CHỈ làm bài trực tiếp trên web; ẩn mọi nút tải/xem PDF, nút "In bài",
- *   và máy chủ chặn đường dẫn file PDF (chỉ quản trị mở được để kiểm tra).
+ * - allowPdfDownload: false = PDF vẫn hiện, phụ huynh bấm "Xem PDF" để xem ngay trên web (khung "chỉ xem",
+ *   không có nút tải/in của trình duyệt); nút "Tải phiếu PDF" và "In bài" vẫn hiện nhưng XÁM, bấm không được;
+ *   máy chủ không trả file khi bấm/mở thẳng đường dẫn PDF (chỉ khung xem trên trang và quản trị lấy được).
  * - openToanNangCao: false = mục "Toán nâng cao theo chuyên đề" vẫn hiện ô nhưng KHÔNG bấm vào được
  *   (áp dụng cho mọi tài khoản miễn phí và khách; quản trị vẫn tải phiếu trong trang quản trị như cũ).
  */

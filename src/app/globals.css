@@ -134,7 +134,8 @@ details[open] .chevron {
 }
 
 @media print {
-  .no-print {
+  .no-print,
+  .pdf-view-only {
     display: none !important;
   }
   body {

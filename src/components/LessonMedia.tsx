@@ -1,3 +1,5 @@
+import { PdfActions, PdfViewer } from "@/components/PdfViewer";
+import { features } from "@/data/site";
 import { isOwnFileHref } from "@/lib/exam-meta";
 import { safeWorksheetUrl, youtubeId } from "@/lib/urls";
 
@@ -108,21 +110,31 @@ export function UploadedWorksheetFrame({ src, title }: { src: string; title: str
   );
 }
 
-/** PDF do cô tải lên, xem ngay trong trang (khi chưa có phiếu tương tác). */
+/**
+ * PDF do cô tải lên, xem ngay trong trang (khi chưa có phiếu tương tác).
+ * Đang tắt tải PDF: dùng khung "chỉ xem" (vẽ trang bằng pdf.js, không có nút tải/in của trình duyệt).
+ */
 export function UploadedPdf({ src, title }: { src: string; title: string }) {
   if (!isOwnFileHref(src)) return null;
+  if (!features.allowPdfDownload) return <PdfViewer src={src} title={title} />;
   return <iframe src={src} title={title} className="h-[80vh] min-h-[520px] w-full rounded-2xl border border-gray-200 bg-white" loading="lazy" />;
 }
 
-/** Nút tải phiếu PDF về máy để in. */
-export function PdfDownloadButton({ src, fileName, label = "Tải phiếu PDF" }: { src: string; fileName: string; label?: string }) {
+/** Nút tải phiếu PDF về máy để in. Đang tắt tải PDF: nút vẫn hiện nhưng xám, bấm không được; vẫn "Xem PDF" được. */
+export function PdfDownloadButton({
+  src,
+  fileName,
+  label = "Tải phiếu PDF",
+  title = "Phiếu PDF",
+  viewHref,
+}: {
+  src: string;
+  fileName: string;
+  label?: string;
+  title?: string;
+  /** Trang đã hiện sẵn PDF bên dưới (vd. "#bai-lam"): "Xem PDF" chỉ cuộn tới đó. */
+  viewHref?: string;
+}) {
   if (!isOwnFileHref(src)) return null;
-  return (
-    <span className="no-print inline-flex flex-wrap items-center gap-2">
-      <a href={src} download={fileName} className="btn-toy inline-flex items-center gap-2 rounded-full bg-accent-600 px-6 py-3 font-extrabold text-white">
-        <span aria-hidden>⬇️</span> {label}
-      </a>
-      <a href={src} target="_blank" rel="noopener noreferrer" className="py-2 text-sm font-semibold text-brand-700 underline">Xem PDF</a>
-    </span>
-  );
+  return <PdfActions src={src} fileName={fileName} label={label} title={title} viewHref={viewHref} allowDownload={features.allowPdfDownload} />;
 }
