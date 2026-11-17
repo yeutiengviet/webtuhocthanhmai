@@ -3,7 +3,6 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { PdfDownloadButton, UploadedPdf, UploadedWorksheetFrame, WorksheetFrame } from "@/components/LessonMedia";
 import { PrintButton } from "@/components/PrintButton";
-import { features } from "@/data/site";
 import { Breadcrumbs, Container, FreeBadge, ItemIcon, LockBadge } from "@/components/ui";
 import { getSubject, gradeSlug, parseGradeSlug } from "@/lib/content";
 import { EXAM_CATEGORY_LABELS, examHref, examMedia } from "@/lib/exam-meta";
@@ -65,8 +64,8 @@ export default async function ExamPage({ params }: { params: Params }) {
               {media.kind === "open" && media.main && media.main.type !== "pdf" && (
                 <a href="#bai-lam" className="btn-toy inline-flex items-center gap-2 rounded-full bg-brand-600 px-6 py-3 font-extrabold text-white"><span aria-hidden>✏️</span> Làm bài trực tuyến</a>
               )}
-              {media.kind === "open" && media.pdf && <PdfDownloadButton src={media.pdf} fileName={`${exam.slug}.pdf`} />}
-              {features.allowPdfDownload && !(media.kind === "open" && media.pdf) && <PrintButton />}
+              {media.kind === "open" && media.pdf && <PdfDownloadButton src={media.pdf} fileName={`${exam.slug}.pdf`} title={exam.title} viewHref={media.main?.type === "pdf" ? "#bai-lam" : undefined} />}
+              {!(media.kind === "open" && media.pdf) && <PrintButton />}
             </div>
           </header>
 

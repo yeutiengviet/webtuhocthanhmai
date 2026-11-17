@@ -107,10 +107,15 @@ export default async function LessonPage({ params }: { params: Params }) {
                 </a>
               ) : null}
               {(media.kind === "worksheet" || media.kind === "document") && media.pdf ? (
-                <PdfDownloadButton src={media.pdf} fileName={`${item.id}.pdf`} />
-              ) : features.allowPdfDownload ? (
+                <PdfDownloadButton
+                  src={media.pdf}
+                  fileName={`${item.id}.pdf`}
+                  title={item.title}
+                  viewHref={media.kind === "document" || (!media.htmlSrc && !media.url) ? "#bai-lam" : undefined}
+                />
+              ) : (
                 <PrintButton />
-              ) : null}
+              )}
             </div>
           </header>
 
@@ -187,7 +192,7 @@ function PracticeBlock({ item, file, canView }: { item: Item; file?: LessonFileI
   return (
     <div className="space-y-3">
       <WorksheetView media={m} title={item.title} />
-      {m.pdf && (m.htmlSrc || m.url) && <PdfDownloadButton src={m.pdf} fileName={`${item.id}.pdf`} />}
+      {m.pdf && (m.htmlSrc || m.url) && <PdfDownloadButton src={m.pdf} fileName={`${item.id}.pdf`} title={item.title} />}
     </div>
   );
 }
@@ -244,6 +249,10 @@ function DocumentBox({ url: raw, pdf }: { url: string | null; pdf?: string }) {
         <a href={url} target="_blank" rel="noopener noreferrer" className="mt-3 inline-block rounded-full bg-brand-600 px-5 py-2.5 font-semibold text-white">
           Tải tài liệu
         </a>
+      ) : url ? (
+        <button type="button" disabled aria-disabled="true" title="Tài liệu chỉ xem trên web, không tải về được" className="mt-3 inline-block cursor-not-allowed rounded-full bg-gray-300 px-5 py-2.5 font-semibold text-gray-600">
+          Tải tài liệu
+        </button>
       ) : (
         <p className="mt-2 font-semibold text-gray-700">Tài liệu đang được cô cập nhật.</p>
       )}

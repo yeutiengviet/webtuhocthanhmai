@@ -75,7 +75,7 @@ export default async function CoursePage({ params }: { params: Params }) {
     const items = weeks.flatMap((w) => w.items.map((it) => ({ w, it })));
     const readyCount = items.filter(({ it }) => {
       const f = files.get(it.id);
-      return Boolean(f && (f.hasHtml || (features.allowPdfDownload && f.hasPdf)));
+      return Boolean(f && (f.hasHtml || f.hasPdf));
     }).length;
     const other = subject.slug === "toan" ? { slug: "tieng-viet", name: "Tiếng Việt" } : { slug: "toan", name: "Toán" };
     return (
@@ -91,7 +91,7 @@ export default async function CoursePage({ params }: { params: Params }) {
               <h2 className="text-lg font-extrabold text-gray-900">Cách ôn hè hiệu quả</h2>
               <ul className="mt-2 space-y-1.5 text-sm text-gray-800">
                 <li><span aria-hidden>✏️</span> <strong>Làm trên web:</strong> con làm bài, nộp là có điểm ngay.</li>
-                {features.allowPdfDownload && <li><span aria-hidden>⬇️</span> <strong>Tải PDF:</strong> phụ huynh in ra cho con làm trên giấy.</li>}
+                {features.allowPdfDownload ? <li><span aria-hidden>⬇️</span> <strong>Tải PDF:</strong> phụ huynh in ra cho con làm trên giấy.</li> : <li><span aria-hidden>📄</span> <strong>Xem PDF:</strong> phụ huynh xem phiếu ngay trên web (không tải về).</li>}
                 <li><span aria-hidden>📅</span> Mỗi tuần 2–3 đề: làm đề cơ bản trước, vững rồi chuyển sang đề nâng cao.</li>
               </ul>
             </div>
@@ -122,7 +122,7 @@ export default async function CoursePage({ params }: { params: Params }) {
                   {w.items.map((it) => {
                     const f = files.get(it.id);
                     const hasHtml = Boolean(f?.hasHtml);
-                    const hasPdf = features.allowPdfDownload && Boolean(f?.hasPdf);
+                    const hasPdf = Boolean(f?.hasPdf);
                     return (
                       <li key={it.id} className={`flex flex-col rounded-3xl bg-white p-4 shadow-sm ring-1 ${advanced ? "ring-brand-200" : "ring-amber-200"}`}>
                         <p className="flex items-center gap-2">
@@ -138,7 +138,12 @@ export default async function CoursePage({ params }: { params: Params }) {
                               <span aria-hidden>✏️</span> Làm trên web
                             </Link>
                           )}
-                          {hasPdf && (
+                          {hasPdf && !features.allowPdfDownload && (
+                            <Link href={`${itemHref(course, w, it)}#phieu-pdf`} className="inline-flex min-h-11 items-center gap-1.5 rounded-full bg-white px-4 font-extrabold text-brand-700 ring-2 ring-brand-200">
+                              <span aria-hidden>📄</span> Xem PDF
+                            </Link>
+                          )}
+                          {hasPdf && features.allowPdfDownload && (
                             <a href={lessonFileHref(it.id, "pdf")} target="_blank" rel="noopener" className="inline-flex min-h-11 items-center gap-1.5 rounded-full bg-white px-4 font-extrabold text-brand-700 ring-2 ring-brand-200">
                               <span aria-hidden>⬇️</span> Tải PDF
                             </a>
