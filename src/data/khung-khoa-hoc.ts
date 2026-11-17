@@ -27,9 +27,8 @@ const VIDEO_SLOTS: Record<SubjectSlug, { slug: string; title: string }[]> = {
     { slug: "video-bai-giang-2", title: "Video bài giảng 2" },
   ],
   "tieng-viet": [
-    { slug: "video-doc", title: "Video: Đọc" },
-    { slug: "video-luyen-tu-va-cau", title: "Video: Luyện từ và câu" },
-    { slug: "video-viet", title: "Video: Viết" },
+    { slug: "video-buoi-1", title: "Video buổi 1" },
+    { slug: "video-buoi-2", title: "Video buổi 2" },
   ],
 };
 
@@ -51,11 +50,19 @@ function buildItems(subject: SubjectSlug, grade: number, n: number): Item[] {
     return items;
   }
 
+  const tv = subject === "tieng-viet";
   for (const v of VIDEO_SLOTS[subject]) {
-    push({ slug: v.slug, type: "video", title: v.title, level: "co-ban", isFree: free, videoProvider: "youtube" });
+    push({ slug: v.slug, type: "video", title: v.title, level: tv ? null : "co-ban", isFree: free, videoProvider: "youtube" });
   }
-  push({ slug: "luyen-tap-co-ban", type: "worksheet", title: "Bài tập luyện tập cơ bản", level: "co-ban", isFree: free });
-  push({ slug: "luyen-tap-nang-cao", type: "worksheet", title: "Bài tập luyện tập nâng cao", level: "nang-cao", isFree: free });
+  if (tv) {
+    // Tiếng Việt: không chia cơ bản / nâng cao — phiếu tuần, phiếu từ và câu, sơ đồ tư duy nội dung tuần học
+    push({ slug: "phieu-tuan", type: "worksheet", title: `Phiếu tuần ${n}`, level: null, isFree: free });
+    push({ slug: "phieu-tu-va-cau", type: "worksheet", title: "Phiếu từ và câu", level: null, isFree: free });
+    push({ slug: "so-do-tu-duy", type: "worksheet", title: "Sơ đồ tư duy nội dung tuần học", level: null, isFree: free });
+  } else {
+    push({ slug: "luyen-tap-co-ban", type: "worksheet", title: "Bài tập luyện tập cơ bản", level: "co-ban", isFree: free });
+    push({ slug: "luyen-tap-nang-cao", type: "worksheet", title: "Bài tập luyện tập nâng cao", level: "nang-cao", isFree: free });
+  }
   if (n % 2 === 0) {
     push({ slug: "kiem-tra-15-phut", type: "test", title: "Đề kiểm tra 15 phút", level: "co-ban", isFree: free, durationMinutes: 15 });
   }

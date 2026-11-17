@@ -257,7 +257,7 @@ export default async function CoursePage({ params }: { params: Params }) {
               <li key={id}><a href={`#${id}`} className="inline-flex min-h-11 items-center rounded-full bg-brand-50 px-4 text-brand-800 ring-1 ring-brand-200 hover:bg-brand-100">{label}</a></li>
             ))}
           </ul>
-          <p className="mt-2 text-sm text-gray-700">Mỗi tuần gồm: bài giảng theo sách giáo khoa, đề luyện tập cơ bản và nâng cao.</p>
+          <p className="mt-2 text-sm text-gray-700">{subject.slug === "tieng-viet" ? "Mỗi tuần gồm: video buổi 1, video buổi 2, phiếu tuần, phiếu từ và câu, sơ đồ tư duy nội dung tuần học." : "Mỗi tuần gồm: bài giảng theo sách giáo khoa, đề luyện tập cơ bản và nâng cao."}</p>
         </div>
         <div className="mb-5 flex flex-wrap items-center gap-3 rounded-3xl bg-white p-3 text-sm font-semibold shadow-sm ring-1 ring-brand-100">
           {!isTopics && <CurrentWeekButton weeks={weeks.filter((w) => w.kind === "hoc").map((w) => ({ number: w.number, startDate: w.startDate, endDate: w.endDate }))} />}
