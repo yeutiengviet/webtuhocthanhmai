@@ -170,7 +170,7 @@ export default async function CoursePage({ params }: { params: Params }) {
               <section className="rounded-3xl bg-white p-5 shadow-sm ring-1 ring-brand-100">
                 <h2 className="text-2xl font-extrabold uppercase text-brand-800">Toán nâng cao – Toán tư duy lớp {grade}</h2>
                 <p className="mt-2 text-gray-700">
-                  Các chuyên đề nâng cao toán lớp {grade}: từ bài giảng mở đầu đến từng dạng toán tư duy. Mỗi bài giảng là một video có hướng dẫn giải; học xong con làm thêm bài luyện tập để nhớ lâu.
+                  Các chuyên đề nâng cao toán lớp {grade}: từng dạng toán tư duy. Mỗi bài giảng là một video có hướng dẫn giải; học xong con làm thêm bài luyện tập để nhớ lâu.
                 </p>
                 <p className="mt-2 flex flex-wrap items-center gap-2 text-sm font-semibold"><FreeBadge /> ai cũng xem được <LockBadge /> đăng nhập (tài khoản miễn phí) để học</p>
               </section>
@@ -237,7 +237,7 @@ export default async function CoursePage({ params }: { params: Params }) {
               <li key={id}><a href={`#${id}`} className="inline-flex min-h-11 items-center rounded-full bg-brand-50 px-4 text-brand-800 ring-1 ring-brand-200 hover:bg-brand-100">{label}</a></li>
             ))}
           </ul>
-          <p className="mt-2 text-sm text-gray-700">Mỗi tuần gồm: bài giảng theo sách giáo khoa, đề luyện tập cơ bản và nâng cao, bài giảng toán tư duy.</p>
+          <p className="mt-2 text-sm text-gray-700">Mỗi tuần gồm: bài giảng theo sách giáo khoa, đề luyện tập cơ bản và nâng cao.</p>
         </div>
         <div className="mb-5 flex flex-wrap items-center gap-3 rounded-3xl bg-white p-3 text-sm font-semibold shadow-sm ring-1 ring-brand-100">
           {!isTopics && <CurrentWeekButton weeks={weeks.filter((w) => w.kind === "hoc").map((w) => ({ number: w.number, startDate: w.startDate, endDate: w.endDate }))} />}
