@@ -1,6 +1,7 @@
 // Thông tin chung và kiểm tra dữ liệu cho khu "Đề thi". File thuần (không truy cập mạng) — dùng được ở
 // cả trình duyệt (form tải đề) và máy chủ (kiểm tra lại trước khi ghi). Có kiểm thử đơn vị.
 
+import { parseDateField, type DateRange } from "@/lib/download-access";
 import type { ExamCategory, SubjectSlug } from "@/lib/types";
 
 export const EXAM_CATEGORY_LABELS: Record<ExamCategory, string> = {
@@ -120,6 +121,8 @@ export interface ExamInput {
   durationMinutes: number | null;
   isFree: boolean;
   published: boolean;
+  /** Thời gian áp dụng (so với khoảng tải của tài khoản). null = chưa gán: chỉ tài khoản đã được gia hạn mới tải. */
+  range: DateRange | null;
 }
 
 /** Kiểm tra dữ liệu form đề thi. Trả về lỗi tiếng Việt theo từng ô. */
@@ -142,8 +145,18 @@ export function validateExamInput(raw: Record<string, unknown>): { ok: true; dat
   }
   const isFree = raw.isFree === true || raw.isFree === "on" || raw.isFree === "true";
   const published = raw.published === true || raw.published === "on" || raw.published === "true";
+  const from = parseDateField(raw.apDungTu);
+  const to = parseDateField(raw.apDungDen);
+  let range: DateRange | null = null;
+  if (from === "invalid") errors.apDungTu = "Ngày không hợp lệ.";
+  if (to === "invalid") errors.apDungDen = "Ngày không hợp lệ.";
+  if (from !== "invalid" && to !== "invalid") {
+    if ((from === null) !== (to === null)) errors[from === null ? "apDungTu" : "apDungDen"] = "Điền đủ cả từ ngày và đến ngày (hoặc để trống cả hai).";
+    else if (from && to && from > to) errors.apDungDen = "Đến ngày phải sau hoặc bằng từ ngày.";
+    else if (from && to) range = { from, to };
+  }
   if (Object.keys(errors).length) return { ok: false, errors };
-  return { ok: true, data: { subject: subject as SubjectSlug, grade: grade as 2 | 3 | 4 | 5, category, title, durationMinutes, isFree, published } };
+  return { ok: true, data: { subject: subject as SubjectSlug, grade: grade as 2 | 3 | 4 | 5, category, title, durationMinutes, isFree, published, range } };
 }
 
 export function examHref(e: { subject: SubjectSlug; grade: number; slug: string }): string {
@@ -181,7 +194,7 @@ export function examMedia(
   e: { id: string; isFree: boolean; externalUrl: string | null; hasFile: boolean; fileKind: FileKind | null; hasPdf: boolean },
 ): ExamMedia {
   if (!e.isFree) return { kind: "locked" };
-  // Đang tắt tải PDF (features.allowPdfDownload = false): PDF vẫn đưa ra để XEM; nút tải hiện xám, máy chủ chỉ trả file cho khung xem.
+  // PDF luôn đưa ra để XEM; tải về thì máy chủ kiểm tra quyền tải của từng tài khoản (lib/download-access.ts).
   // PDF tải về: ô PDF riêng; đề cũ chỉ có 1 file PDF thì dùng luôn file đó.
   const pdf = e.hasPdf ? examFileHref(e.id, "pdf") : e.hasFile && e.fileKind === "pdf" ? examFileHref(e.id) : null;
   let main: MainMedia = null;

@@ -77,13 +77,17 @@ test("tải phiếu HTML lên → hiện ở trang công khai → phiếu bị c
   await expect(result).toContainText("origin:null");
   // localStorage thật bị chặn; phiếu dùng bộ nhớ tạm nên không bị dừng
   await expect(result).toContainText("storage:ok");
-  // Nút tải phiếu PDF
-  const dl = g.getByRole("link", { name: "Tải phiếu PDF" });
-  pdfHref = (await dl.getAttribute("href")) ?? "";
-  expect(pdfHref).toBe(`${fileHref}/pdf`);
-  expect(await dl.getAttribute("download")).toMatch(/\.pdf$/);
+  // Nút tải phiếu PDF: khách thấy nút XÁM (bấm hiện lời nhắn đăng nhập), không có đường dẫn tải
+  const dl = g.getByRole("button", { name: "Tải phiếu PDF" });
+  await expect(dl).toHaveAttribute("data-khoa", "true");
+  await dl.click();
+  await expect(g.getByText("đăng nhập (tài khoản miễn phí) để tải phiếu PDF")).toBeVisible();
+  await expect(g.locator("a[download]")).toHaveCount(0);
   await guest.close();
-  const pdfRes = await request.get(pdfHref);
+  pdfHref = `${fileHref}/pdf`;
+  // Khách mở thẳng file PDF bị chặn; khung "chỉ xem" trên trang vẫn lấy được
+  expect((await request.get(pdfHref)).status()).toBe(404);
+  const pdfRes = await request.get(pdfHref, { headers: { "x-xem-pdf": "1" } });
   expect(pdfRes.status()).toBe(200);
   expect(pdfRes.headers()["content-type"]).toBe("application/pdf");
 
@@ -159,9 +163,10 @@ test("phiếu bài học theo tuần: tải phiếu tương tác + PDF cho mục
   expect(await frame.getAttribute("src")).toBe(`/phieu/bai/${ITEM}`);
   expect(await frame.getAttribute("sandbox")).not.toContain("allow-same-origin");
   await expect(g.frameLocator("iframe[src^='/phieu/bai/']").locator("#ket-qua")).toContainText("origin:null");
-  await expect(g.getByRole("link", { name: "Tải phiếu PDF" })).toHaveAttribute("href", `/phieu/bai/${ITEM}/pdf`);
+  await expect(g.getByRole("button", { name: "Tải phiếu PDF" })).toHaveAttribute("data-khoa", "true");
   await guest.close();
-  expect((await request.get(`/phieu/bai/${ITEM}/pdf`)).headers()["content-type"]).toBe("application/pdf");
+  expect((await request.get(`/phieu/bai/${ITEM}/pdf`)).status()).toBe(404);
+  expect((await request.get(`/phieu/bai/${ITEM}/pdf`, { headers: { "x-xem-pdf": "1" } })).headers()["content-type"]).toBe("application/pdf");
 
   // Gỡ cả 2 file → mục khóa lại, file biến mất
   await page.reload();

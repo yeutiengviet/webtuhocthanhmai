@@ -17,6 +17,8 @@ export default async function EditExamPage({ params }: { params: Promise<{ id: s
   const { data } = await supabase.from("exams").select(EXAM_COLUMNS).eq("id", id).maybeSingle();
   if (!data) notFound();
   const e = toExam(data as ExamRow);
+  // Cột thời gian áp dụng (migration 0007) đọc riêng: chưa chạy migration thì vẫn mở được trang sửa.
+  const { data: r } = await supabase.from("exams").select("ap_dung_tu, ap_dung_den").eq("id", id).maybeSingle();
   return (
     <>
       <PageHero badge="Trang quản trị" title="Sửa đề" subtitle={e.title} />
@@ -35,6 +37,8 @@ export default async function EditExamPage({ params }: { params: Promise<{ id: s
             hasHtml: e.hasFile && e.fileKind === "html",
             hasPdf: e.hasPdf || (e.hasFile && e.fileKind === "pdf"),
             externalUrl: e.externalUrl,
+            apDungTu: (r?.ap_dung_tu as string | null) ?? null,
+            apDungDen: (r?.ap_dung_den as string | null) ?? null,
           }}
         />
       </Container>

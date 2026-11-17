@@ -6,16 +6,11 @@ import { PrintButton } from "@/components/PrintButton";
 import { Breadcrumbs, Container, FreeBadge, ItemIcon, LockBadge } from "@/components/ui";
 import { getSubject, gradeSlug, parseGradeSlug } from "@/lib/content";
 import { EXAM_CATEGORY_LABELS, examHref, examMedia } from "@/lib/exam-meta";
+import { examDecision } from "@/lib/download-access-server";
 import { findPublishedExam, listPublishedExams } from "@/lib/exams";
 
-// Nếu sau này kiểm tra quyền theo người đăng nhập, trang này phải chuyển về render động + Cache-Control: private.
-// Lưu sẵn trang, tự làm mới mỗi 60 giây; quản trị thêm/sửa/xóa đề thì làm mới ngay (revalidatePath).
-export const revalidate = 60;
-
-// Không dựng sẵn lúc build: mỗi đề được dựng ở lần mở đầu tiên rồi lưu sẵn.
-export function generateStaticParams() {
-  return [];
-}
+// Nút tải xanh/xám tùy quyền tải của người đang xem → BẮT BUỘC render động, không lưu đệm chung giữa người xem.
+export const dynamic = "force-dynamic";
 
 type Params = Promise<{ mon: string; lop: string; de: string }>;
 
@@ -37,7 +32,8 @@ export default async function ExamPage({ params }: { params: Params }) {
   if (!d) notFound();
   const { subject, grade, exam } = d;
   const media = examMedia(exam);
-  const others = (await listPublishedExams(subject.slug, grade)).exams.filter((e) => e.id !== exam.id);
+  const [list, dl] = await Promise.all([listPublishedExams(subject.slug, grade), examDecision(exam.id)]);
+  const others = list.exams.filter((e) => e.id !== exam.id);
 
   return (
     <Container className="py-5">
@@ -64,8 +60,8 @@ export default async function ExamPage({ params }: { params: Params }) {
               {media.kind === "open" && media.main && media.main.type !== "pdf" && (
                 <a href="#bai-lam" className="btn-toy inline-flex items-center gap-2 rounded-full bg-brand-600 px-6 py-3 font-extrabold text-white"><span aria-hidden>✏️</span> Làm bài trực tuyến</a>
               )}
-              {media.kind === "open" && media.pdf && <PdfDownloadButton src={media.pdf} fileName={`${exam.slug}.pdf`} title={exam.title} viewHref={media.main?.type === "pdf" ? "#bai-lam" : undefined} />}
-              {!(media.kind === "open" && media.pdf) && <PrintButton />}
+              {media.kind === "open" && media.pdf && <PdfDownloadButton src={media.pdf} fileName={`${exam.slug}.pdf`} title={exam.title} viewHref={media.main?.type === "pdf" ? "#bai-lam" : undefined} decision={dl} />}
+              {!(media.kind === "open" && media.pdf) && <PrintButton decision={dl} />}
             </div>
           </header>
 

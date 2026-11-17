@@ -3,14 +3,14 @@
 
 /**
  * Công tắc tính năng (đổi true/false rồi đẩy mã lên là website đổi theo).
- * - allowPdfDownload: false = PDF vẫn hiện, phụ huynh bấm "Xem PDF" để xem ngay trên web (khung "chỉ xem",
- *   không có nút tải/in của trình duyệt); nút "Tải phiếu PDF" và "In bài" vẫn hiện nhưng XÁM, bấm không được;
- *   máy chủ không trả file khi bấm/mở thẳng đường dẫn PDF (chỉ khung xem trên trang và quản trị lấy được).
+ * - showDownloadInfo: true = hiện các nội dung nói về tải PDF (menu "Tài liệu", nhãn "Tải PDF", lời giới thiệu).
+ *   Việc TẢI thật do quyền từng tài khoản quyết định (lib/download-access.ts, migration 0007): nút tải luôn hiện,
+ *   XANH khi được tải, XÁM khi chưa (bấm vào sẽ hiện lời nhắn). Xem PDF trên web và làm phiếu tương tác ai cũng dùng được.
  * - openToanNangCao: false = mục "Toán nâng cao theo chuyên đề" vẫn hiện ô nhưng KHÔNG bấm vào được
  *   (áp dụng cho mọi tài khoản miễn phí và khách; quản trị vẫn tải phiếu trong trang quản trị như cũ).
  */
 export const features = {
-  allowPdfDownload: false,
+  showDownloadInfo: true,
   openToanNangCao: false,
 };
 

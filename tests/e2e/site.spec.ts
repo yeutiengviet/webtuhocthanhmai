@@ -36,8 +36,8 @@ test("menu điện thoại mở được và đủ mục theo 5.1", async ({ pag
   for (const label of ["Giới thiệu", "Toán", "Tiếng Việt", "Đề thi", "Đăng nhập"]) {
     await expect(menu.getByRole("link", { name: label, exact: true })).toBeVisible();
   }
-  // Đang tắt tải tài liệu: không có mục "Tài liệu"
-  await expect(menu.getByRole("link", { name: "Tài liệu", exact: true })).toHaveCount(0);
+  // Nội dung về tải tài liệu hiện bình thường: có mục "Tài liệu"
+  await expect(menu.getByRole("link", { name: "Tài liệu", exact: true })).toBeVisible();
   await expect(page.getByRole("link", { name: "Hướng dẫn", exact: true })).toBeVisible();
   await expect(page.getByRole("link", { name: "Tạo tài khoản", exact: true })).toBeVisible();
 });
@@ -87,8 +87,11 @@ test("bài Free: phiếu tương tác nhúng trong iframe sandbox an toàn", asy
   // Phiếu phải ở tên miền KHÁC website
   const src = new URL((await frame.getAttribute("src")) ?? "");
   expect(src.origin).not.toBe(new URL(page.url()).origin);
-  // Đang tắt tải PDF: nút "In bài" vẫn hiện nhưng xám, bấm không được
-  await expect(page.getByRole("button", { name: "In bài" })).toBeDisabled();
+  // Khách chưa đăng nhập: nút "In bài" vẫn hiện nhưng xám; bấm vào chỉ hiện lời nhắn đăng nhập
+  const print = page.getByRole("button", { name: "In bài" });
+  await expect(print).toHaveAttribute("data-khoa", "true");
+  await print.click();
+  await expect(page.getByText("đăng nhập (tài khoản miễn phí) để tải phiếu PDF")).toBeVisible();
   await expect(page.getByRole("link", { name: "Luyện tập", exact: true })).toBeVisible();
   await expect(page.getByRole("heading", { name: "Cùng bài học" })).toBeVisible();
   await expect(page.getByRole("heading", { name: "Cùng lớp học" })).toBeVisible();
@@ -193,9 +196,8 @@ test("tất cả trang bài học của cả 8 khóa theo tuần (Toán, Tiếng
   }
 });
 
-test("PDF chỉ xem, không tải: không có đường dẫn tải thẳng, mở thẳng file PDF bị chặn", async ({ page, request }) => {
+test("khách chưa đăng nhập: không có đường dẫn tải thẳng, mở thẳng file PDF bị chặn", async ({ page, request }) => {
   await page.goto("/toan/lop-4/on-tap-he");
-  await expect(page.getByText("Tải PDF")).toHaveCount(0);
   await expect(page.locator("a[href*='/pdf'], a[download]")).toHaveCount(0);
   for (const p of ["/phieu/bai/t4-w1-luyen-tap-co-ban/pdf", "/phieu/00000000-0000-0000-0000-000000000000/pdf"]) {
     expect((await request.get(p)).status(), p).toBe(404);

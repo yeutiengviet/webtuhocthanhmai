@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { createExam, updateExam, type ActionResult } from "@/app/quan-tri/actions";
 import { discardPair, FileSlot, uploadPair, useFilePair, type UploadedIds } from "@/components/admin/FileSlot";
+import { DEFAULT_EXAM_RANGES } from "@/lib/download-access";
 import { EXAM_CATEGORIES, EXAM_CATEGORY_LABELS, validateExamInput } from "@/lib/exam-meta";
 import type { ExamCategory, SubjectSlug } from "@/lib/types";
 
@@ -22,6 +23,9 @@ export interface ExamFormInitial {
   /** Đã có phiếu PDF (ô riêng, hoặc đề cũ chỉ có 1 file PDF) */
   hasPdf: boolean;
   externalUrl: string | null;
+  /** Thời gian áp dụng (YYYY-MM-DD) — null = chưa gán. */
+  apDungTu: string | null;
+  apDungDen: string | null;
 }
 
 const field = "mt-1 block w-full rounded-2xl border-2 bg-white px-4 py-3 font-semibold text-gray-900 focus:border-brand-500";
@@ -34,6 +38,15 @@ export function ExamForm({ initial }: { initial?: ExamFormInitial }) {
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [busy, setBusy] = useState<string | null>(null);
   const [result, setResult] = useState<ActionResult | null>(null);
+  // Thời gian áp dụng: đổi loại đề thì tự điền theo bảng mặc định; cô sửa tay được.
+  const startCategory = initial?.category ?? "giua-ki-1";
+  const [range, setRange] = useState(() =>
+    initial ? { from: initial.apDungTu ?? "", to: initial.apDungDen ?? "" } : { from: DEFAULT_EXAM_RANGES[startCategory]?.from ?? "", to: DEFAULT_EXAM_RANGES[startCategory]?.to ?? "" },
+  );
+  function onCategory(c: ExamCategory) {
+    const d = DEFAULT_EXAM_RANGES[c];
+    setRange({ from: d?.from ?? "", to: d?.to ?? "" });
+  }
 
   async function submit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -73,7 +86,10 @@ export function ExamForm({ initial }: { initial?: ExamFormInitial }) {
         return;
       }
       pair.clear();
-      if (!editing) form.reset();
+      if (!editing) {
+        form.reset();
+        onCategory("giua-ki-1");
+      }
       router.refresh();
     } catch {
       setResult({ ok: false, message: "Có lỗi khi gửi. Cô thử lại sau ít phút." });
@@ -115,7 +131,7 @@ export function ExamForm({ initial }: { initial?: ExamFormInitial }) {
       <div className="grid gap-4 sm:grid-cols-2">
         <label className={label}>
           Loại đề
-          <select name="category" className={`${field} ${border("category")}`} defaultValue={initial?.category ?? "giua-ki-1"}>
+          <select name="category" className={`${field} ${border("category")}`} defaultValue={startCategory} onChange={(e) => onCategory(e.target.value as ExamCategory)}>
             {EXAM_CATEGORIES.map((c) => <option key={c} value={c}>{EXAM_CATEGORY_LABELS[c]}</option>)}
           </select>
           {err("category")}
@@ -126,6 +142,26 @@ export function ExamForm({ initial }: { initial?: ExamFormInitial }) {
           {err("durationMinutes")}
         </label>
       </div>
+
+      <fieldset className="space-y-2 rounded-2xl bg-sky-50 p-4">
+        <legend className={label}>Thời gian áp dụng (để tính quyền tải PDF)</legend>
+        <div className="grid gap-4 sm:grid-cols-2">
+          <label className={label}>
+            Từ ngày
+            <input name="apDungTu" type="date" value={range.from} onChange={(e) => setRange((r) => ({ ...r, from: e.target.value }))} className={`${field} ${border("apDungTu")}`} />
+            {err("apDungTu")}
+          </label>
+          <label className={label}>
+            Đến ngày
+            <input name="apDungDen" type="date" value={range.to} onChange={(e) => setRange((r) => ({ ...r, to: e.target.value }))} className={`${field} ${border("apDungDen")}`} />
+            {err("apDungDen")}
+          </label>
+        </div>
+        <p className="text-sm text-gray-700">
+          Phụ huynh tải được đề khi khoảng này chạm vào thời gian tải của tài khoản (từ ngày đăng ký đến hạn tải). Đổi loại đề sẽ tự điền theo lịch năm học;
+          để trống cả hai thì chỉ tài khoản đã được cô gia hạn mới tải được. Xem PDF và làm bài trên web không bị ảnh hưởng.
+        </p>
+      </fieldset>
 
       <fieldset className="space-y-3">
         <legend className={label}>File đề {editing ? "(chọn file mới để thay)" : "(chọn 1 hoặc cả 2)"}</legend>

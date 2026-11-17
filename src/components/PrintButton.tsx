@@ -1,20 +1,26 @@
 "use client";
 
-import { features } from "@/data/site";
+import { useState } from "react";
+import { blockedMessage, type DownloadDecision } from "@/lib/download-access";
 
-/** Nút "In bài". Đang tắt tải PDF thì nút vẫn hiện nhưng xám, bấm không được. */
-export function PrintButton() {
-  if (!features.allowPdfDownload) {
+/** Nút "In bài": xanh khi tài khoản được tải/in tài liệu này; xám (bấm hiện lời nhắn) khi chưa. */
+export function PrintButton({ decision }: { decision: DownloadDecision }) {
+  const [notice, setNotice] = useState(false);
+  if (!decision.ok) {
     return (
-      <button
-        type="button"
-        disabled
-        aria-disabled="true"
-        title="Bài chỉ làm trên web, không in được"
-        className="cursor-not-allowed rounded-full border-2 border-gray-300 bg-gray-100 px-5 py-2.5 font-semibold text-gray-500"
-      >
-        In bài
-      </button>
+      <span className="inline-flex flex-col gap-2">
+        <button
+          type="button"
+          data-khoa="true"
+          aria-expanded={notice}
+          onClick={() => setNotice((v) => !v)}
+          title={blockedMessage(decision.reason)}
+          className="rounded-full border-2 border-gray-300 bg-gray-100 px-5 py-2.5 font-semibold text-gray-700"
+        >
+          In bài
+        </button>
+        {notice && <span role="status" className="max-w-xs text-sm font-bold text-amber-900">🔒 {blockedMessage(decision.reason)}</span>}
+      </span>
     );
   }
   return (

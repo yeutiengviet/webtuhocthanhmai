@@ -22,7 +22,7 @@ export const TRACK_LABELS: Record<Track, { name: string; description: string }> 
   "theo-tuan": { name: "Học theo tuần", description: "Bám sát sách Kết nối tri thức, khoảng 35 tuần" },
   "on-tap-he": {
     name: "Đề ôn tập hè",
-    description: features.allowPdfDownload ? "Đề làm trên web và phiếu PDF tải về in — củng cố kiến thức, chuẩn bị lên lớp" : "Đề làm trực tiếp trên web, chấm điểm ngay — củng cố kiến thức, chuẩn bị lên lớp",
+    description: features.showDownloadInfo ? "Đề làm trên web và phiếu PDF tải về in — củng cố kiến thức, chuẩn bị lên lớp" : "Đề làm trực tiếp trên web, chấm điểm ngay — củng cố kiến thức, chuẩn bị lên lớp",
   },
   "nang-cao": { name: "Nâng cao theo chuyên đề", description: "Chuyên đề nâng cao, toán tư duy" },
   "ky-thi": { name: "Kỳ thi", description: "Bài giảng chữa đề và đề thi thử" },

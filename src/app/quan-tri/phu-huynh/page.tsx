@@ -1,9 +1,11 @@
 import Link from "next/link";
+import { DownloadAccessControls } from "@/components/admin/DownloadAccessControls";
 import { MissingMigration } from "@/components/admin/MissingMigration";
 import { NotAdmin } from "@/components/admin/NotAdmin";
 import { Container, PageHero } from "@/components/ui";
 import { requireAdminPage } from "@/lib/admin";
 import { countRecent, formatVnDateTime, listParents } from "@/lib/admin-stats";
+import { downloadStatus } from "@/lib/download-access";
 
 export const metadata = { title: "Phụ huynh đăng ký" };
 
@@ -89,12 +91,21 @@ export default async function AdminParents({ searchParams }: { searchParams: Pro
               })}
             </nav>
 
+            <div className="rounded-3xl bg-emerald-50 p-4 text-sm text-emerald-950 ring-1 ring-emerald-200">
+              <p className="font-extrabold">⬇️ Quyền tải PDF</p>
+              <ul className="mt-1 list-disc space-y-0.5 pl-5">
+                <li>Tài khoản mới được <strong>dùng thử 30 ngày</strong>: tải được tài liệu có thời gian nằm trong khoảng từ ngày đăng ký đến hết 30 ngày.</li>
+                <li>Bấm <strong>+1 / +3 / +6 tháng</strong> để gia hạn: cộng dồn vào hạn hiện tại (đã hết hạn thì tính từ hôm nay). Khoảng tài liệu được tải kéo dài từ ngày đăng ký đến hạn mới.</li>
+                <li>Hết hạn: mọi nút tải của tài khoản chuyển xám. Xem PDF trên web và làm bài tương tác vẫn bình thường.</li>
+              </ul>
+            </div>
+
             <p className="font-bold text-gray-800">Đang hiện {shown.length} / {parents.length} phụ huynh</p>
             {shown.length === 0 ? (
               <p className="rounded-3xl border-2 border-dashed border-brand-200 bg-white p-5 text-center font-semibold text-gray-700">Chưa có phụ huynh nào.</p>
             ) : (
               <div className="overflow-x-auto rounded-3xl bg-white shadow-sm ring-1 ring-brand-100">
-                <table className="w-full min-w-[640px] text-left text-sm">
+                <table className="w-full min-w-[900px] text-left text-sm">
                   <thead className="bg-brand-600 text-white">
                     <tr>
                       <th scope="col" className="px-3 py-3 font-extrabold">#</th>
@@ -104,10 +115,13 @@ export default async function AdminParents({ searchParams }: { searchParams: Pro
                       <th scope="col" className="px-3 py-3 font-extrabold">Email</th>
                       <th scope="col" className="px-3 py-3 font-extrabold">Ngày đăng ký</th>
                       <th scope="col" className="px-3 py-3 font-extrabold">Đăng nhập gần nhất</th>
+                      <th scope="col" className="px-3 py-3 font-extrabold">Quyền tải PDF</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-brand-100">
-                    {shown.map((p, i) => (
+                    {shown.map((p, i) => {
+                      const st = downloadStatus(p.createdAt, p.taiDen);
+                      return (
                       <tr key={p.id} className="hover:bg-brand-50">
                         <td className="px-3 py-2 text-gray-600">{i + 1}</td>
                         <td className="px-3 py-2 font-bold text-gray-900">{p.fullName ?? <span className="text-gray-500">—</span>}</td>
@@ -116,8 +130,15 @@ export default async function AdminParents({ searchParams }: { searchParams: Pro
                         <td className="px-3 py-2 text-gray-700">{p.email ?? "—"}</td>
                         <td className="px-3 py-2 whitespace-nowrap">{formatVnDateTime(p.createdAt)}</td>
                         <td className="px-3 py-2 whitespace-nowrap text-gray-700">{formatVnDateTime(p.lastSignInAt)}</td>
+                        <td className="min-w-[220px] px-3 py-2">
+                          <p className={`mb-1 inline-block rounded-full px-2.5 py-0.5 text-xs font-extrabold ring-1 ${st.tone === "expired" ? "bg-gray-100 text-gray-700 ring-gray-300" : st.tone === "trial" ? "bg-amber-50 text-amber-900 ring-amber-200" : "bg-emerald-50 text-emerald-800 ring-emerald-200"}`}>
+                            {st.label}
+                          </p>
+                          <DownloadAccessControls userId={p.id} name={p.fullName ?? p.phone ?? p.email ?? "tài khoản này"} active={st.active} />
+                        </td>
                       </tr>
-                    ))}
+                      );
+                    })}
                   </tbody>
                 </table>
               </div>

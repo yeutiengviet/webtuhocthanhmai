@@ -1,5 +1,6 @@
 import "server-only";
-import { features } from "@/data/site";
+import { decideDownload, type DateRange } from "@/lib/download-access";
+import { readDownloadAccess } from "@/lib/download-access-server";
 import { IMAGE_MIME, isImageExt, PDF_VIEW_HEADER } from "@/lib/exam-meta";
 import { STORAGE_BUCKET } from "@/lib/supabase/env";
 import type { createSupabaseServer } from "@/lib/supabase/server";
@@ -81,15 +82,16 @@ export async function viewerIsAdmin(supabase: Server): Promise<boolean> {
 
 /**
  * Được trả file PDF không.
- * - Cho phép tải PDF (features.allowPdfDownload): luôn được (quyền xem vẫn do Row Level Security quyết định).
- * - Đang tắt tải: chỉ khung "chỉ xem" trên trang (gửi header riêng, không phải mở trang/tải file) — hoặc quản trị.
- *   Bấm hay dán thẳng đường dẫn file vào trình duyệt sẽ không tải được.
+ * - Khung "chỉ xem" trên trang (gửi header riêng, không phải mở trang/tải file): luôn được — ai cũng XEM được PDF.
+ * - Bấm tải / dán thẳng đường dẫn: chỉ khi tài khoản đang có quyền tải tài liệu này (xem lib/download-access.ts);
+ *   quản trị luôn được. Quyền xem file vẫn do Row Level Security quyết định.
  */
-export async function pdfRequestAllowed(req: Request, supabase: Server): Promise<boolean> {
-  if (features.allowPdfDownload) return true;
+export async function pdfRequestAllowed(req: Request, supabase: Server, range: () => Promise<DateRange | null> | DateRange | null): Promise<boolean> {
   const dest = req.headers.get("sec-fetch-dest");
   if (req.headers.get(PDF_VIEW_HEADER) === "1" && (!dest || dest === "empty")) return true;
-  return viewerIsAdmin(supabase);
+  const access = await readDownloadAccess(supabase);
+  if (access.kind !== "parent") return decideDownload(access, null).ok;
+  return decideDownload(access, await range()).ok;
 }
 
 /**

@@ -1,5 +1,6 @@
 import "server-only";
 import { phoneFromAccountEmail } from "@/lib/account-id";
+import { TRIAL_DAYS } from "@/lib/download-access";
 import type { getAdmin } from "@/lib/supabase/server";
 
 // Thống kê cho trang quản trị (migration 0005). Hàm trong cơ sở dữ liệu tự kiểm tra người gọi là quản trị.
@@ -16,6 +17,8 @@ export interface ParentRow {
   role: string;
   createdAt: string;
   lastSignInAt: string | null;
+  /** Hạn tải PDF (migration 0007). Chưa chạy migration → tính như dùng thử 30 ngày. */
+  taiDen: string;
 }
 
 const isMissingFn = (e: { code?: string; message?: string } | null) => Boolean(e && (e.code === "PGRST202" || e.code === "42883" || /could not find the function/i.test(e.message ?? "")));
@@ -24,7 +27,7 @@ const isMissingFn = (e: { code?: string; message?: string } | null) => Boolean(e
 export async function listParents(supabase: Supa): Promise<{ parents: ParentRow[]; error: boolean; missing: boolean }> {
   const { data, error } = await supabase.rpc("quan_tri_ds_phu_huynh");
   if (error) return { parents: [], error: true, missing: isMissingFn(error) };
-  type Raw = { id: string; email: string | null; full_name: string | null; phone: string | null; grade: string | null; role: string; created_at: string; last_sign_in_at: string | null };
+  type Raw = { id: string; email: string | null; full_name: string | null; phone: string | null; grade: string | null; role: string; created_at: string; last_sign_in_at: string | null; tai_den?: string | null };
   const parents = ((data ?? []) as Raw[])
     .filter((r) => r.role !== "admin")
     .map((r) => {
@@ -38,6 +41,7 @@ export async function listParents(supabase: Supa): Promise<{ parents: ParentRow[
         role: r.role,
         createdAt: r.created_at,
         lastSignInAt: r.last_sign_in_at,
+        taiDen: r.tai_den ?? new Date(new Date(r.created_at).getTime() + TRIAL_DAYS * 864e5).toISOString(),
       };
     });
   return { parents, error: false, missing: false };

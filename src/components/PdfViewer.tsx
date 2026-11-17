@@ -1,6 +1,8 @@
 "use client";
 
+import Link from "next/link";
 import { useEffect, useRef, useState, useSyncExternalStore } from "react";
+import { blockedMessage, type DownloadDecision } from "@/lib/download-access";
 import { PDF_VIEW_HEADER } from "@/lib/exam-meta";
 
 /**
@@ -72,21 +74,23 @@ export function PdfViewer({ src, title }: { src: string; title: string }) {
 
 /**
  * Nút tải PDF và nút xem PDF.
- * - Cho phép tải: nút tải như thường + "Xem PDF".
- * - Đang tắt tải: nút tải vẫn hiện nhưng XÁM, bấm không được; "Xem PDF" mở khung xem ngay bên dưới.
+ * - Được tải (decision.ok): nút tải XANH, bấm là tải về.
+ * - Chưa được tải: nút tải vẫn hiện nhưng XÁM; bấm vào hiện lời nhắn (đăng nhập / liên hệ cô để gia hạn).
+ * - "Xem PDF" luôn có: mở khung "chỉ xem" ngay bên dưới (hoặc cuộn tới khung đã có sẵn trên trang).
+ * Máy chủ kiểm tra lại quyền khi tải (route /phieu/.../pdf) — nút chỉ để hiển thị.
  */
 export function PdfActions({
   src,
   fileName,
   label,
-  allowDownload,
+  decision,
   title,
   viewHref,
 }: {
   src: string;
   fileName: string;
   label: string;
-  allowDownload: boolean;
+  decision: DownloadDecision;
   title: string;
   /** Trang đã hiện sẵn khung xem PDF ở chỗ khác (vd. "#bai-lam"): "Xem PDF" chỉ cuộn tới đó. */
   viewHref?: string;
@@ -94,29 +98,27 @@ export function PdfActions({
   // Mở sẵn khung xem khi đến từ nút "Xem PDF" ở trang danh sách (đường dẫn có #phieu-pdf).
   const hashOpen = useSyncExternalStore(subscribeHash, () => window.location.hash === "#phieu-pdf", () => false);
   const [toggled, setToggled] = useState<boolean | null>(null);
+  const [notice, setNotice] = useState(false);
   const open = toggled ?? hashOpen;
 
-  if (allowDownload) {
-    return (
-      <span className="no-print inline-flex flex-wrap items-center gap-2">
+  return (
+    <div id="phieu-pdf" className="no-print flex w-full flex-wrap items-center gap-2 scroll-mt-28">
+      {decision.ok ? (
         <a href={src} download={fileName} className="btn-toy inline-flex items-center gap-2 rounded-full bg-accent-600 px-6 py-3 font-extrabold text-white">
           <span aria-hidden>⬇️</span> {label}
         </a>
-        <a href={src} target="_blank" rel="noopener noreferrer" className="py-2 text-sm font-semibold text-brand-700 underline">Xem PDF</a>
-      </span>
-    );
-  }
-  return (
-    <div id="phieu-pdf" className="no-print flex w-full flex-wrap items-center gap-2 scroll-mt-28">
-      <button
-        type="button"
-        disabled
-        aria-disabled="true"
-        title="Phiếu chỉ xem trên web, không tải về được"
-        className="inline-flex cursor-not-allowed items-center gap-2 rounded-full bg-gray-300 px-6 py-3 font-extrabold text-gray-600"
-      >
-        <span aria-hidden>⬇️</span> {label}
-      </button>
+      ) : (
+        <button
+          type="button"
+          data-khoa="true"
+          aria-expanded={notice}
+          onClick={() => setNotice((v) => !v)}
+          title={blockedMessage(decision.reason)}
+          className="inline-flex items-center gap-2 rounded-full bg-gray-300 px-6 py-3 font-extrabold text-gray-700"
+        >
+          <span aria-hidden>⬇️</span> {label}
+        </button>
+      )}
       {viewHref ? (
         <a href={viewHref} className="inline-flex min-h-11 items-center gap-1.5 rounded-full bg-white px-4 font-extrabold text-brand-700 ring-2 ring-brand-200">
           <span aria-hidden>📄</span> Xem PDF
@@ -131,7 +133,14 @@ export function PdfActions({
           <span aria-hidden>📄</span> {open ? "Đóng PDF" : "Xem PDF"}
         </button>
       )}
-      <span className="w-full text-xs font-semibold text-gray-600">🔒 Phiếu chỉ xem trên web, không tải về.</span>
+      {!decision.ok && notice && (
+        <p role="status" className="w-full rounded-2xl bg-amber-50 px-4 py-2 text-sm font-bold text-amber-900 ring-1 ring-amber-200">
+          🔒 {blockedMessage(decision.reason)}
+          {decision.reason === "guest" && (
+            <Link href="/dang-nhap" className="ml-1 underline">Đăng nhập</Link>
+          )}
+        </p>
+      )}
       {open && !viewHref && (
         <div className="w-full">
           <PdfViewer src={src} title={title} />

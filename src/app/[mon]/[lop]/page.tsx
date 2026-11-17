@@ -54,7 +54,7 @@ export default async function GradePage({ params }: { params: Promise<{ mon: str
                     <>
                       <li className="rounded-full bg-amber-50 px-3 py-1 text-amber-900 ring-1 ring-amber-200">☀️ {s.tests} đề</li>
                       <li className="rounded-full bg-brand-50 px-3 py-1 text-brand-800 ring-1 ring-brand-200">✏️ Làm trên web</li>
-                      <li className="rounded-full bg-accent-50 px-3 py-1 text-accent-700 ring-1 ring-accent-200">{features.allowPdfDownload ? "⬇️ Tải PDF" : "📄 Xem PDF"}</li>
+                      <li className="rounded-full bg-accent-50 px-3 py-1 text-accent-700 ring-1 ring-accent-200">{features.showDownloadInfo ? "⬇️ Tải PDF" : "📄 Xem PDF"}</li>
                     </>
                   ) : (
                     <>
