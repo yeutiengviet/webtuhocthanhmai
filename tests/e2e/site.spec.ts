@@ -33,9 +33,11 @@ test("menu điện thoại mở được và đủ mục theo 5.1", async ({ pag
   await page.goto("/");
   await page.getByRole("button", { name: "Menu" }).click();
   const menu = page.locator("#mobile-menu");
-  for (const label of ["Giới thiệu", "Toán", "Tiếng Việt", "Đề thi", "Tài liệu", "Đăng nhập"]) {
+  for (const label of ["Giới thiệu", "Toán", "Tiếng Việt", "Đề thi", "Đăng nhập"]) {
     await expect(menu.getByRole("link", { name: label, exact: true })).toBeVisible();
   }
+  // Đang tắt tải tài liệu: không có mục "Tài liệu"
+  await expect(menu.getByRole("link", { name: "Tài liệu", exact: true })).toHaveCount(0);
   await expect(page.getByRole("link", { name: "Hướng dẫn", exact: true })).toBeVisible();
   await expect(page.getByRole("link", { name: "Tạo tài khoản", exact: true })).toBeVisible();
 });
@@ -51,6 +53,11 @@ test("đi từ trang chủ → Toán → Lớp 4 → Học theo tuần → 35 tu
   await expect(page.getByText("Học theo tuần")).toBeVisible();
   await expect(page.getByRole("link", { name: /Đề ôn tập hè/ })).toBeVisible();
   await expect(page.getByText(/Cánh diều|Chân trời sáng tạo/)).toHaveCount(0);
+  // Toán nâng cao: vẫn hiện ô nhưng không phải liên kết (tạm khóa)
+  const nc = page.locator("[aria-disabled=true]", { hasText: "Nâng cao theo chuyên đề" });
+  await expect(nc).toBeVisible();
+  await expect(nc).toContainText("Tạm khóa");
+  await expect(page.locator("a[href='/toan/lop-4/nang-cao']")).toHaveCount(0);
   await page.getByRole("link", { name: /Học theo tuần/ }).click();
   await expect(page).toHaveURL(/\/toan\/lop-4\/theo-tuan$/);
   await expect(page.locator("details[id^=tuan-]")).toHaveCount(35);
@@ -80,7 +87,9 @@ test("bài Free: phiếu tương tác nhúng trong iframe sandbox an toàn", asy
   // Phiếu phải ở tên miền KHÁC website
   const src = new URL((await frame.getAttribute("src")) ?? "");
   expect(src.origin).not.toBe(new URL(page.url()).origin);
-  await expect(page.getByRole("button", { name: "In bài" })).toBeVisible();
+  // Chỉ làm bài trên web: không có nút tải PDF / in bài
+  await expect(page.getByRole("button", { name: "In bài" })).toHaveCount(0);
+  await expect(page.getByText("Tải phiếu PDF")).toHaveCount(0);
   await expect(page.getByRole("link", { name: "Luyện tập", exact: true })).toBeVisible();
   await expect(page.getByRole("heading", { name: "Cùng bài học" })).toBeVisible();
   await expect(page.getByRole("heading", { name: "Cùng lớp học" })).toBeVisible();
@@ -175,18 +184,27 @@ test("tất cả trang bài học của cả 8 khóa theo tuần (Toán, Tiếng
       total += hrefs.length;
     }
   }
-  expect(total).toBeGreaterThan(1500);
-  // Toán nâng cao theo chuyên đề: mở được mọi bài
+  // (đang tắt tải PDF nên không còn mục "Tài liệu in (PDF) của tuần")
+  expect(total).toBeGreaterThan(1300);
+  // Toán nâng cao theo chuyên đề: đang tạm khóa — trang khóa học và trang bài chỉ báo khóa, không có danh sách bài
   for (const lop of [2, 3, 4, 5]) {
     const course = `/toan/lop-${lop}/nang-cao`;
     await page.goto(course);
-    const hrefs = await page.locator("details[id^=tuan-] a").evaluateAll((as) => as.map((a) => a.getAttribute("href") ?? ""));
-    expect(hrefs.length, course).toBeGreaterThan(50);
-    for (let i = 0; i < hrefs.length; i += 12) {
-      const codes = await Promise.all(hrefs.slice(i, i + 12).map(async (h) => [h, (await request.get(h)).status()] as const));
-      for (const [h, code] of codes) expect(code, h).toBe(200);
-    }
+    await expect(page.getByText("Mục nâng cao đang tạm khóa")).toBeVisible();
+    await expect(page.locator("details[id^=tuan-] a")).toHaveCount(0);
   }
+});
+
+test("chỉ làm bài trên web: không có nút/đường dẫn tải PDF, file PDF bị chặn", async ({ page, request }) => {
+  await page.goto("/toan/lop-4/on-tap-he");
+  await expect(page.getByText("Tải PDF")).toHaveCount(0);
+  await expect(page.locator("a[href*='/pdf']")).toHaveCount(0);
+  for (const p of ["/phieu/bai/t4-w1-luyen-tap-co-ban/pdf", "/phieu/00000000-0000-0000-0000-000000000000/pdf"]) {
+    expect((await request.get(p)).status(), p).toBe(404);
+  }
+  // Mục "Tài liệu in (PDF) của tuần" không còn ở trang công khai
+  await page.goto("/toan/lop-4/theo-tuan");
+  await expect(page.getByText("Tài liệu in (PDF) của tuần")).toHaveCount(0);
 });
 
 test("các trang phụ mở được, không lỗi console", async ({ page }) => {

@@ -4,6 +4,7 @@ import { NotAdmin } from "@/components/admin/NotAdmin";
 import { Container, ItemIcon, PageHero } from "@/components/ui";
 import { requireAdminPage } from "@/lib/admin";
 import { adminLessonFiles } from "@/lib/admin-lessons";
+import { attemptStats } from "@/lib/admin-stats";
 import { getCourseById, itemAcceptsFiles } from "@/lib/content";
 import { formatRange } from "@/lib/dates";
 
@@ -15,7 +16,7 @@ export default async function AdminCourseLessons({ params }: { params: Promise<{
   if (!isAdmin) return <NotAdmin email={user?.email} />;
   const course = /^[a-z0-9-]{1,60}$/.test(khoa) ? getCourseById(khoa) : undefined;
   if (!course) notFound();
-  const { rows, error } = await adminLessonFiles(supabase, course);
+  const [{ rows, error }, attempts] = await Promise.all([adminLessonFiles(supabase, course), attemptStats(supabase)]);
   const name = `${course.subject === "toan" ? "Toán" : "Tiếng Việt"} lớp ${course.grade}${course.track === "on-tap-he" ? " – Ôn tập hè" : ""}`;
 
   return (
@@ -50,7 +51,7 @@ export default async function AdminCourseLessons({ params }: { params: Promise<{
                         <span className="min-w-0 flex-1">
                           <span className="block font-bold text-gray-900">{it.title}</span>
                           <span className="text-xs font-semibold text-gray-700">
-                            {r ? [r.html_path ? "✏️ Tương tác" : null, r.pdf_path ? "⬇️ PDF" : null, r.published ? null : "đang ẩn"].filter(Boolean).join(" · ") : "Chưa có phiếu"}
+                            {r ? [r.html_path ? "✏️ Tương tác" : null, r.pdf_path ? "⬇️ PDF" : null, r.published ? null : "đang ẩn", r.html_path && !attempts.error ? `📊 ${attempts.stats.get(`bai:${it.id}`)?.total ?? 0} lượt làm` : null].filter(Boolean).join(" · ") : "Chưa có phiếu"}
                           </span>
                         </span>
                         <span className="rounded-full bg-brand-600 px-3 py-1 text-sm font-extrabold text-white">{r ? "Sửa" : "Tải lên"}</span>

@@ -6,6 +6,7 @@
 import "server-only";
 import { SKELETON_COURSES } from "@/data/khung-khoa-hoc";
 import { ON_TAP_HE } from "@/data/on-tap-he";
+import { features } from "@/data/site";
 import { TOAN_NANG_CAO, TOAN_THEO_TUAN } from "@/data/toan-theo-tuan";
 import { lessonFileHref } from "@/lib/exam-meta";
 import type { Course, Item, ItemType, Subject, SubjectSlug, Track, Week } from "@/lib/types";
@@ -19,7 +20,10 @@ export const GRADES = [2, 3, 4, 5] as const;
 
 export const TRACK_LABELS: Record<Track, { name: string; description: string }> = {
   "theo-tuan": { name: "Học theo tuần", description: "Bám sát sách Kết nối tri thức, khoảng 35 tuần" },
-  "on-tap-he": { name: "Đề ôn tập hè", description: "Đề làm trên web và phiếu PDF tải về in — củng cố kiến thức, chuẩn bị lên lớp" },
+  "on-tap-he": {
+    name: "Đề ôn tập hè",
+    description: features.allowPdfDownload ? "Đề làm trên web và phiếu PDF tải về in — củng cố kiến thức, chuẩn bị lên lớp" : "Đề làm trực tiếp trên web, chấm điểm ngay — củng cố kiến thức, chuẩn bị lên lớp",
+  },
   "nang-cao": { name: "Nâng cao theo chuyên đề", description: "Chuyên đề nâng cao, toán tư duy" },
   "ky-thi": { name: "Kỳ thi", description: "Bài giảng chữa đề và đề thi thử" },
   "tai-lieu": { name: "Tài liệu", description: "Phiếu, đề, tài liệu tải về" },
@@ -71,8 +75,14 @@ export function isTrack(value: string): value is Track {
   return Object.hasOwn(TRACK_LABELS, value);
 }
 
-export function publishedWeeks(course: Course): Week[] {
-  return course.weeks.filter((w) => w.published);
+/**
+ * Các tuần đã công khai, như trang công khai nhìn thấy.
+ * Đang tắt tải PDF (features.allowPdfDownload = false): bỏ các mục "Tài liệu" (chỉ là file PDF tải về) khỏi tuần.
+ * Trang quản trị đọc course.weeks trực tiếp nên vẫn thấy và tải phiếu cho các mục này như cũ.
+ */
+export function publishedWeeks(course: Course, allowPdf: boolean = features.allowPdfDownload): Week[] {
+  const weeks = course.weeks.filter((w) => w.published);
+  return allowPdf ? weeks : weeks.map((w) => (w.items.some((i) => i.type === "document") ? { ...w, items: w.items.filter((i) => i.type !== "document") } : w));
 }
 
 /** Tên đơn vị của một khóa: "Tuần", "Chuyên đề" (mục nâng cao) hoặc "Đề" (ôn tập hè). */
@@ -138,8 +148,14 @@ export type LessonMedia =
   | { kind: "worksheet"; url: string | null; htmlSrc?: string; pdf?: string }
   | { kind: "document"; url: string | null; pdf?: string };
 
-export function lessonMedia(item: Item, canView: (it: Item) => boolean = canViewItem, file?: LessonFileInfo | null): LessonMedia {
-  const accepts = itemAcceptsFiles(item);
+export function lessonMedia(
+  item: Item,
+  canView: (it: Item) => boolean = canViewItem,
+  file?: LessonFileInfo | null,
+  allowPdf: boolean = features.allowPdfDownload,
+): LessonMedia {
+  const accepts = { ...itemAcceptsFiles(item) };
+  if (!allowPdf) accepts.pdf = false;
   const uploaded = file && (file.hasHtml || file.hasPdf) ? file : null;
   if (!canView(item) && !uploaded?.isFree) return { kind: "locked" };
   const extra: { htmlSrc?: string; pdf?: string } = {};
@@ -169,6 +185,14 @@ export function getCourseById(id: string): Course | undefined {
 
 export function itemHref(course: Course, week: Week, item: Item): string {
   return `/${course.subject}/${gradeSlug(course.grade)}/${course.track}/${weekSlug(week)}/${item.slug}`;
+}
+
+/**
+ * Khóa đang bị khóa với người xem (vẫn hiện ô ở trang lớp nhưng không bấm vào được).
+ * Hiện tại: mục "Toán nâng cao theo chuyên đề" khi features.openToanNangCao = false.
+ */
+export function isCourseLocked(course: Pick<Course, "track">, open: boolean = features.openToanNangCao): boolean {
+  return course.track === "nang-cao" && !open;
 }
 
 export function courseHref(course: Course): string {

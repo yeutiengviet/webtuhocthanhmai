@@ -1,12 +1,13 @@
 import Link from "next/link";
 import { Container, PageHero } from "@/components/ui";
+import { features } from "@/data/site";
 
 export const metadata = {
   title: "Giới thiệu",
   description: "THANH MAI – website học tập và ôn luyện Toán, Tiếng Việt cho học sinh tiểu học, từ tâm huyết 15 năm của Thạc sĩ Thanh Mai.",
 };
 
-const SYSTEM = [
+const ALL_SYSTEM = [
   { title: "Bài tập hằng ngày – rèn luyện đều đặn, tiến bộ từng bước", text: "Hệ thống bài tập Toán và Tiếng Việt từ lớp 1 đến lớp 5 giúp học sinh ôn lại kiến thức, luyện các dạng bài và hình thành thói quen tự học. Nội dung có mức độ cơ bản và nâng cao, phù hợp để các con củng cố những điều đã học và từng bước thử sức với yêu cầu mới." },
   { title: "Bài tập hằng tuần – củng cố kiến thức, rèn chắc kĩ năng", text: "Các phiếu bài tập hằng tuần giúp học sinh hệ thống lại nội dung đã học, luyện tập những kĩ năng cần thiết và nhận ra phần kiến thức còn chưa vững. Phụ huynh có thể sử dụng để cùng con ôn tập cuối tuần, duy trì nhịp học vừa sức và đều đặn." },
   { title: "Bài tập tổng hợp cuối tháng – kết nối kiến thức, nâng cao khả năng vận dụng", text: "Bài tập tổng hợp cuối tháng tạo cơ hội để học sinh ôn luyện nhiều nội dung trong cùng một bài, biết kết nối kiến thức và lựa chọn cách giải quyết phù hợp. Qua bài làm, bố mẹ có thêm căn cứ để nhận biết sự tiến bộ và những nội dung con cần rèn luyện thêm." },
@@ -16,6 +17,8 @@ const SYSTEM = [
   { title: "Tải tài liệu về in – thuận tiện cho việc học tại nhà", text: "Bên cạnh hình thức luyện tập trực tuyến, phụ huynh có thể tải các tệp bài tập, phiếu ôn luyện và đề ôn tập về để in cho con làm trên giấy. Hệ thống tài liệu bao gồm bài tập hằng ngày, hằng tuần, bài tổng hợp cuối tháng, đề giữa kì, cuối kì và đề ôn hè của các khối lớp, thuận tiện để bố mẹ lựa chọn và sử dụng." },
   { title: "Nội dung cơ bản và nâng cao – phù hợp với từng học sinh", text: "Các nhóm tài liệu đều có nội dung cơ bản và nâng cao. Phần cơ bản giúp học sinh nắm chắc kiến thức, rèn kĩ năng thiết yếu; phần nâng cao khuyến khích các con suy nghĩ sâu hơn, vận dụng linh hoạt và thử sức với những yêu cầu mới. Bố mẹ có thể bắt đầu từ mức độ phù hợp với con, sau đó từng bước tăng yêu cầu khi con đã sẵn sàng." },
 ];
+// Đang tắt tải tài liệu: không giới thiệu mục "Tải tài liệu về in".
+const SYSTEM = features.allowPdfDownload ? ALL_SYSTEM : ALL_SYSTEM.filter((s) => !s.title.startsWith("Tải tài liệu"));
 
 export default function AboutPage() {
   return (
@@ -32,7 +35,7 @@ export default function AboutPage() {
           </p>
           <p className="mt-4 leading-relaxed text-gray-800">
             Với mong muốn giúp việc học tại nhà trở nên thuận tiện và hiệu quả hơn,{" "}
-            <strong>THANH MAI mang đến hệ thống bài tập từ cơ bản đến nâng cao, kết hợp luyện tập trực tuyến có chấm điểm tự động và tài liệu có thể tải về, in cho con làm.</strong>{" "}
+            <strong>THANH MAI mang đến hệ thống bài tập từ cơ bản đến nâng cao, kết hợp luyện tập trực tuyến có chấm điểm tự động{features.allowPdfDownload ? " và tài liệu có thể tải về, in cho con làm" : ""}.</strong>{" "}
             Đây là nơi học sinh rèn luyện kiến thức, đồng thời giúp phụ huynh dễ dàng lựa chọn nội dung phù hợp để đồng hành cùng con trong suốt năm học.
           </p>
         </section>

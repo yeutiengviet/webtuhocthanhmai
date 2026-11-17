@@ -12,6 +12,16 @@ Nội dung theo sách **Kết nối tri thức với cuộc sống**.
 - Cần làm trong Supabase: Authentication → URL Configuration → thêm `https://hocgioithanhmai.vercel.app/**` vào **Redirect URLs**; email miễn phí của Supabase chỉ gửi vài thư/giờ — nên gắn SMTP riêng hoặc tắt "Confirm email" khi mời nhiều phụ huynh.
 - Chạy `supabase/migrations/0003_phu_huynh_dang_nhap_xem_phieu.sql` để phụ huynh đã đăng nhập tải được cả phiếu cô bỏ nhãn Free.
 
+## Thống kê và công tắc tính năng (17/11/2026)
+
+- **Phụ huynh đăng ký**: `/quan-tri/phu-huynh` — tổng số, số theo lớp 2–5, mới 7 ngày qua; bảng họ tên, số điện thoại, lớp của con, email, ngày đăng ký, lần đăng nhập gần nhất; lọc theo lớp, tìm theo tên/SĐT; nút **Tải danh sách (Excel/CSV)**.
+- **Lượt làm bài**: `/quan-tri/luot-lam` — mỗi lần học sinh mở phiếu tương tác (.html) của một đề/phiếu là một lượt (cô mở để kiểm tra thì không tính). Có cột số tài khoản khác nhau đã làm và lần gần nhất. Số lượt cũng hiện ngay trong danh sách đề ở `/quan-tri` và danh sách phiếu bài học.
+  Lưu ý: đây là số lần **mở đề để làm**, chưa phải số bài đã nộp (điểm vẫn gửi về Google Sheet của phiếu); bấm tải lại trang cũng tính thêm một lượt.
+- **Cần chạy một lần**: `supabase/migrations/0005_thong_ke_phu_huynh_va_luot_lam.sql` trong Supabase → SQL Editor. Chưa chạy thì trang thống kê hiện hướng dẫn, website vẫn chạy bình thường. Lượt làm chỉ được đếm từ lúc chạy file này.
+- **Công tắc** trong `src/data/site.ts` → `features`:
+  - `allowPdfDownload: false` — học sinh chỉ làm bài trên web: ẩn mọi nút tải/xem PDF, nút "In bài", mục "Tài liệu in (PDF) của tuần" và menu "Tài liệu"; máy chủ chặn đường dẫn file PDF (chỉ quản trị mở được). Cô vẫn tải PDF lên được để dành. Đề chỉ có PDF (chưa có phiếu tương tác) hiện "đang cập nhật".
+  - `openToanNangCao: false` — ô "Nâng cao theo chuyên đề" của Toán vẫn hiện nhưng mờ, ghi "Tạm khóa", không bấm được; mở đường dẫn trực tiếp cũng chỉ thấy thông báo khóa.
+
 ## Trang quản trị — tải đề lên (Giai đoạn 2, đã chạy)
 
 Địa chỉ: **https://hocgioithanhmai.vercel.app/quan-tri**

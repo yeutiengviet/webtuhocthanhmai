@@ -3,7 +3,8 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { CurrentWeekButton, OpenWeekFromHash } from "@/components/CurrentWeekButton";
 import { Breadcrumbs, Container, FreeBadge, ItemIcon, LevelBadge, LockBadge, PageHero } from "@/components/ui";
-import { allCourses, canViewItem, getCourse, getSubject, gradeSlug, isReady, isTrack, itemHref, parseGradeSlug, publishedWeeks, TRACK_LABELS, unitName, weekSlug } from "@/lib/content";
+import { features } from "@/data/site";
+import { allCourses, canViewItem, getCourse, isCourseLocked, getSubject, gradeSlug, isReady, isTrack, itemHref, parseGradeSlug, publishedWeeks, TRACK_LABELS, unitName, weekSlug } from "@/lib/content";
 import { formatRange } from "@/lib/dates";
 import { getPublishedLessonFiles } from "@/lib/lesson-files";
 import { lessonFileHref } from "@/lib/exam-meta";
@@ -43,6 +44,25 @@ export default async function CoursePage({ params }: { params: Params }) {
   const d = load(mon, lop, track);
   if (!d) notFound();
   const { subject, grade, course } = d;
+  if (isCourseLocked(course)) {
+    return (
+      <>
+        <PageHero badge="🔒 Tạm khóa" title={`${subject.name} lớp ${grade} – ${TRACK_LABELS[course.track].name}`} subtitle="Mục nâng cao chưa mở cho tài khoản miễn phí.">
+          <div className="mb-2">
+            <Breadcrumbs items={[{ href: `/${subject.slug}`, label: subject.name }, { href: `/${subject.slug}/${lop}`, label: `Lớp ${grade}` }, { label: TRACK_LABELS[course.track].name }]} />
+          </div>
+        </PageHero>
+        <Container className="py-8">
+          <div className="rounded-[2rem] border-2 border-dashed border-brand-300 bg-white p-8 text-center">
+            <p className="mx-auto grid h-16 w-16 place-items-center rounded-full bg-brand-100 text-3xl" aria-hidden>🔒</p>
+            <p className="mt-3 font-display text-2xl font-extrabold text-brand-700">Mục nâng cao đang tạm khóa</p>
+            <p className="mt-1 text-gray-700">Con học các mục khác của {subject.name} lớp {grade} nhé.</p>
+            <Link href={`/${subject.slug}/${lop}`} className="btn-toy mt-4 inline-block rounded-full bg-brand-600 px-6 py-3 font-extrabold text-white">Về trang lớp {grade}</Link>
+          </div>
+        </Container>
+      </>
+    );
+  }
   const files = await getPublishedLessonFiles(publishedWeeks(course).flatMap((w) => w.items.map((i) => i.id)));
   const weeks = publishedWeeks(course);
   const unit = unitName(course);
@@ -55,12 +75,12 @@ export default async function CoursePage({ params }: { params: Params }) {
     const items = weeks.flatMap((w) => w.items.map((it) => ({ w, it })));
     const readyCount = items.filter(({ it }) => {
       const f = files.get(it.id);
-      return Boolean(f && (f.hasHtml || f.hasPdf));
+      return Boolean(f && (f.hasHtml || (features.allowPdfDownload && f.hasPdf)));
     }).length;
     const other = subject.slug === "toan" ? { slug: "tieng-viet", name: "Tiếng Việt" } : { slug: "toan", name: "Toán" };
     return (
       <>
-        <PageHero badge="☀️ Ôn tập hè" title={`Đề ôn tập hè ${subject.name} lớp ${grade}`} subtitle={`${items.length} đề: ${weeks.map((w) => `${w.items.length} ${w.label?.toLowerCase()}`).join(" và ")}. Mỗi đề có bài làm tương tác trên web và phiếu PDF tải về in.`}>
+        <PageHero badge="☀️ Ôn tập hè" title={`Đề ôn tập hè ${subject.name} lớp ${grade}`} subtitle={`${items.length} đề: ${weeks.map((w) => `${w.items.length} ${w.label?.toLowerCase()}`).join(" và ")}. ${features.allowPdfDownload ? "Mỗi đề có bài làm tương tác trên web và phiếu PDF tải về in." : "Con làm bài trực tiếp trên web, nộp là có điểm ngay."}`}>
           <div className="mb-2">
             <Breadcrumbs items={[{ href: `/${subject.slug}`, label: subject.name }, { href: `/${subject.slug}/${lop}`, label: `Lớp ${grade}` }, { label: TRACK_LABELS[course.track].name }]} />
           </div>
@@ -71,7 +91,7 @@ export default async function CoursePage({ params }: { params: Params }) {
               <h2 className="text-lg font-extrabold text-gray-900">Cách ôn hè hiệu quả</h2>
               <ul className="mt-2 space-y-1.5 text-sm text-gray-800">
                 <li><span aria-hidden>✏️</span> <strong>Làm trên web:</strong> con làm bài, nộp là có điểm ngay.</li>
-                <li><span aria-hidden>⬇️</span> <strong>Tải PDF:</strong> phụ huynh in ra cho con làm trên giấy.</li>
+                {features.allowPdfDownload && <li><span aria-hidden>⬇️</span> <strong>Tải PDF:</strong> phụ huynh in ra cho con làm trên giấy.</li>}
                 <li><span aria-hidden>📅</span> Mỗi tuần 2–3 đề: làm đề cơ bản trước, vững rồi chuyển sang đề nâng cao.</li>
               </ul>
             </div>
@@ -102,7 +122,7 @@ export default async function CoursePage({ params }: { params: Params }) {
                   {w.items.map((it) => {
                     const f = files.get(it.id);
                     const hasHtml = Boolean(f?.hasHtml);
-                    const hasPdf = Boolean(f?.hasPdf);
+                    const hasPdf = features.allowPdfDownload && Boolean(f?.hasPdf);
                     return (
                       <li key={it.id} className={`flex flex-col rounded-3xl bg-white p-4 shadow-sm ring-1 ${advanced ? "ring-brand-200" : "ring-amber-200"}`}>
                         <p className="flex items-center gap-2">

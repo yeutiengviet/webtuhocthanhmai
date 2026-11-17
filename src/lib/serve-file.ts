@@ -60,3 +60,25 @@ export async function serveStoredFile(
     },
   });
 }
+
+type Server = Awaited<ReturnType<typeof createSupabaseServer>>;
+
+/** Người đang xem có phải quản trị không (đọc hồ sơ của chính mình qua Row Level Security). */
+export async function viewerIsAdmin(supabase: Server): Promise<boolean> {
+  const { data } = await supabase.auth.getUser();
+  if (!data.user) return false;
+  const { data: p } = await supabase.from("profiles").select("role").eq("id", data.user.id).maybeSingle();
+  return p?.role === "admin";
+}
+
+/**
+ * Ghi một lượt làm khi phiếu tương tác được mở thành công (bảng luot_lam, migration 0005).
+ * Cơ sở dữ liệu tự bỏ qua lượt mở của quản trị và mã đề/phiếu không hợp lệ. Lỗi ghi không làm hỏng việc mở phiếu.
+ */
+export async function recordAttempt(supabase: Server, loai: "de" | "bai", ma: string): Promise<void> {
+  try {
+    await supabase.rpc("ghi_luot_lam", { p_loai: loai, p_ma: ma });
+  } catch {
+    // bỏ qua
+  }
+}

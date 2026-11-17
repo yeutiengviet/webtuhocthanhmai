@@ -1,6 +1,18 @@
 // Cấu hình chung của website. Sau này phần này sẽ sửa được trong trang quản trị.
 // QUY TẮC: không bịa số liệu. Ô nào để `null` thì website tự ẩn.
 
+/**
+ * Công tắc tính năng (đổi true/false rồi đẩy mã lên là website đổi theo).
+ * - allowPdfDownload: false = học sinh CHỈ làm bài trực tiếp trên web; ẩn mọi nút tải/xem PDF, nút "In bài",
+ *   và máy chủ chặn đường dẫn file PDF (chỉ quản trị mở được để kiểm tra).
+ * - openToanNangCao: false = mục "Toán nâng cao theo chuyên đề" vẫn hiện ô nhưng KHÔNG bấm vào được
+ *   (áp dụng cho mọi tài khoản miễn phí và khách; quản trị vẫn tải phiếu trong trang quản trị như cũ).
+ */
+export const features = {
+  allowPdfDownload: false,
+  openToanNangCao: false,
+};
+
 export const site = {
   name: "Học giỏi cùng cô Thanh Mai",
   shortName: "Cô Thanh Mai",
@@ -25,7 +37,7 @@ export const site = {
   testimonials: [] as { name: string; text: string }[],
   banners: [
     { title: "Toán lớp 4 theo tuần", text: "35 tuần bám sát sách Kết nối tri thức", href: "/toan/lop-4/theo-tuan" },
-    { title: "Toán nâng cao theo chuyên đề", text: "Toán tư duy từ lớp 2 đến lớp 5", href: "/toan/lop-4/nang-cao" },
+    { title: "Đề ôn tập hè", text: "Toán và Tiếng Việt lớp 2–5, làm bài và chấm điểm ngay trên web", href: "/toan/lop-4/on-tap-he" },
     { title: "Phiếu bài tập tương tác", text: "Làm thử Phiếu đánh giá tháng 10 – Toán lớp 4", href: "/toan/lop-4/theo-tuan/tuan-8/danh-gia-thang-10" },
   ],
   refundPolicy: "Không hoàn tiền sau khi gói học đã được kích hoạt.",

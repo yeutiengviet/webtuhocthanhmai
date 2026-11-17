@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { HOLIDAY_MONDAYS } from "@/data/toan-theo-tuan";
 import lop4Data from "@/data/mathx/toan-lop-4.json";
-import { canViewItem, courseStats, freeItems, getCourse, getCourses, isTrack, lessonMedia } from "@/lib/content";
+import { canViewItem, courseStats, freeItems, getCourse, getCourses, isCourseLocked, isTrack, lessonMedia, publishedWeeks } from "@/lib/content";
 import { safeDocumentUrl, safeWorksheetUrl, telHref, youtubeId } from "@/lib/urls";
 import type { Item } from "@/lib/types";
 import { weekday } from "@/lib/dates";
@@ -98,10 +98,22 @@ describe("Toán lớp 4 – 35 tuần", () => {
   it("thống kê khóa học đếm đúng", () => {
     const s = courseStats(toanLop4TheoTuan);
     expect(s.weeks).toBe(35);
-    expect(s.totalItems).toBe(weeks.reduce((a, w) => a + w.items.length, 0));
+    // Đang tắt tải PDF: mục "Tài liệu" (chỉ là file PDF) không hiện ở trang công khai
+    expect(s.totalItems).toBe(weeks.reduce((a, w) => a + w.items.filter((i) => i.type !== "document").length, 0));
+    expect(publishedWeeks(toanLop4TheoTuan, true).reduce((a, w) => a + w.items.length, 0)).toBe(weeks.reduce((a, w) => a + w.items.length, 0));
     expect(getCourses("toan", 4).map((c) => c.track)).toEqual(["theo-tuan", "on-tap-he", "nang-cao"]);
     expect(getCourses("tieng-viet")).toHaveLength(8);
     expect(getCourses("toan")).toHaveLength(12);
+  });
+});
+
+describe("Toán nâng cao đang tạm khóa", () => {
+  it("chỉ khóa hướng nâng cao; bật công tắc thì mở", () => {
+    const nc = getCourse("toan", 4, "nang-cao")!;
+    expect(isCourseLocked(nc)).toBe(true);
+    expect(isCourseLocked(nc, true)).toBe(false);
+    expect(isCourseLocked(getCourse("toan", 4, "theo-tuan")!)).toBe(false);
+    expect(isCourseLocked(getCourse("toan", 4, "on-tap-he")!)).toBe(false);
   });
 });
 
@@ -165,16 +177,23 @@ describe("phiếu cô tải lên cho bài học theo tuần", () => {
     expect(lessonMedia(sheet, canViewItem, null)).toEqual({ kind: "locked" });
     expect(lessonMedia(sheet, canViewItem, { hasHtml: true, hasPdf: true, isFree: false })).toEqual({ kind: "locked" });
     expect(lessonMedia(sheet, canViewItem, { hasHtml: false, hasPdf: false, isFree: true })).toEqual({ kind: "locked" });
-    expect(lessonMedia(sheet, canViewItem, { hasHtml: true, hasPdf: true, isFree: true })).toEqual({
+    expect(lessonMedia(sheet, canViewItem, { hasHtml: true, hasPdf: true, isFree: true }, true)).toEqual({
       kind: "worksheet",
       url: null,
       htmlSrc: "/phieu/bai/t4-w11-luyen-tap-co-ban",
       pdf: "/phieu/bai/t4-w11-luyen-tap-co-ban/pdf",
     });
+    // tắt tải PDF (mặc định hiện tại): chỉ còn phiếu làm trên web
+    expect(lessonMedia(sheet, canViewItem, { hasHtml: true, hasPdf: true, isFree: true })).toEqual({
+      kind: "worksheet",
+      url: null,
+      htmlSrc: "/phieu/bai/t4-w11-luyen-tap-co-ban",
+    });
   });
   it("tài liệu chỉ nhận PDF; video không nhận file", () => {
     const doc: Item = { ...weeks[0].items[0], id: "t4-w1-tai-lieu", type: "document", isFree: true, url: null };
-    expect(lessonMedia(doc, canViewItem, { hasHtml: true, hasPdf: true, isFree: true })).toEqual({ kind: "document", url: null, pdf: "/phieu/bai/t4-w1-tai-lieu/pdf" });
+    expect(lessonMedia(doc, canViewItem, { hasHtml: true, hasPdf: true, isFree: true }, true)).toEqual({ kind: "document", url: null, pdf: "/phieu/bai/t4-w1-tai-lieu/pdf" });
+    expect(lessonMedia(doc, canViewItem, { hasHtml: true, hasPdf: true, isFree: true }, false)).toEqual({ kind: "document", url: null });
     const vid: Item = { ...weeks[0].items[0], type: "video", isFree: true, videoRef: null };
     expect(lessonMedia(vid, canViewItem, { hasHtml: true, hasPdf: true, isFree: true })).toEqual({ kind: "video", videoRef: null });
   });
