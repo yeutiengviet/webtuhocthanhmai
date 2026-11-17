@@ -4,7 +4,7 @@
 // (nhập file CSV / trang quản trị ở Giai đoạn 2).
 
 import "server-only";
-import { HOLIDAY_MONDAYS, SCHOOL_YEAR_START } from "@/data/toan-theo-tuan";
+import { HOLIDAY_MONDAYS, SCHOOL_YEAR_START, monthlyTest } from "@/data/toan-theo-tuan";
 import { buildWeekCalendar } from "@/lib/dates";
 import type { Course, Item, SubjectSlug, Week, WeekKind } from "@/lib/types";
 
@@ -63,8 +63,9 @@ function buildItems(subject: SubjectSlug, grade: number, n: number): Item[] {
     push({ slug: "luyen-tap-co-ban", type: "worksheet", title: "Bài tập luyện tập cơ bản", level: "co-ban", isFree: free });
     push({ slug: "luyen-tap-nang-cao", type: "worksheet", title: "Bài tập luyện tập nâng cao", level: "nang-cao", isFree: free });
   }
-  if (n % 2 === 0) {
-    push({ slug: "kiem-tra-15-phut", type: "test", title: "Đề kiểm tra 15 phút", level: "co-ban", isFree: free, durationMinutes: 15 });
+  const mt = monthlyTest(n);
+  if (mt) {
+    push({ slug: "kiem-tra-cuoi-thang", type: "test", title: `Đề kiểm tra cuối tháng ${mt.month} (tuần ${mt.fromWeek}–${n})`, level: "co-ban", isFree: free, durationMinutes: 40 });
   }
   push({ slug: "tai-lieu-tuan", type: "document", title: "Tài liệu in (PDF) của tuần", level: null, isFree: free });
   return items;
