@@ -2,7 +2,7 @@
 //
 // Ví dụ tên file nhận được:
 //   "Tuan 5 - Co ban.html", "tuần 12 nâng cao.pdf", "L3_T07_NC.html", "Lop 3 tuan 9 de 2.html",
-//   "T4 kiem tra 15 phut.pdf", "Tuần 3 tài liệu.pdf", "W05-coban.html"
+//   "Tuan 8 kiem tra cuoi thang.pdf", "Tuần 3 tài liệu.pdf", "W05-coban.html"
 
 import type { FileKind } from "@/lib/exam-meta";
 import { EXAM_CATEGORIES, kindFromFileName } from "@/lib/exam-meta";
@@ -59,7 +59,7 @@ export function guessFromFileName(fileName: string): Guess {
   else if (/ (nang ?cao|nc)(?= )/.test(s)) slug = "luyen-tap-nang-cao";
   else if (/ (co ?ban|cb)(?= )/.test(s)) slug = "luyen-tap-co-ban";
   else if (/ (tong ?hop|th)(?= )/.test(s)) slug = "luyen-tap-tong-hop";
-  else if (/ (kiem ?tra|kt|15 ?(phut|p))(?= )/.test(s)) slug = "kiem-tra-15-phut";
+  else if (/ (kiem ?tra|kt|cuoi thang)(?= )/.test(s)) slug = "kiem-tra-cuoi-thang";
   else if (/ (de cuong)(?= )/.test(s)) slug = "de-cuong";
   else if (/ (tai lieu|tl)(?= )/.test(s)) slug = "tai-lieu-tuan";
   else {
@@ -216,7 +216,7 @@ export function guessWeeks(fileName: string): { weeks: number[]; keyword: boolea
 
 /**
  * Xếp cả loạt file một lượt. Thứ tự ưu tiên cho từng file:
- * 1. Tên có "tuần N" → vào tuần N (kể cả khi có chữ cuối kì/ôn tập). Ghi rõ loại phiếu (cơ bản, nâng cao, tổng hợp, kiểm tra 15 phút…)
+ * 1. Tên có "tuần N" → vào tuần N (kể cả khi có chữ cuối kì/ôn tập). Ghi rõ loại phiếu (cơ bản, nâng cao, tổng hợp, kiểm tra cuối tháng…)
  *    thì vào đúng mục; không ghi thì vào mục còn trống đầu tiên của tuần — nên một tuần nhận được nhiều file.
  *    File .html và .pdf cùng tên vào cùng một mục. "Tuần 17, 18": ưu tiên tuần có mục tổng hợp.
  * 2. Không có "tuần" mà là đề giữa/cuối kì, ôn tập học kì, HK1… → mục Đề thi ("exam:<nhóm>").

@@ -36,9 +36,10 @@ const DATA: Record<Grade, Block[]> = {
 /** Tuần 1–2 được học thử miễn phí toàn bộ. */
 const FREE_WEEKS = new Set([1, 2]);
 
-/** Đề kiểm tra 15 phút: lớp 2 theo mathx (tuần 1, 2, 3, 5); các lớp khác mathx chỉ ghi "một số tuần" → tạm các tuần chẵn. */
-function hasTest15(grade: Grade, n: number): boolean {
-  return grade === 2 ? [1, 2, 3, 5].includes(n) : n % 2 === 0;
+/** Kiểm tra cuối tháng: cứ 4 tuần học là 1 tháng, tuần cuối của tháng (tuần 4, 8, 12…) có đề kiểm tra cuối tháng. */
+export const WEEKS_PER_MONTH = 4;
+export function monthlyTest(n: number): { month: number; fromWeek: number } | null {
+  return n % WEEKS_PER_MONTH === 0 ? { month: n / WEEKS_PER_MONTH, fromWeek: n - WEEKS_PER_MONTH + 1 } : null;
 }
 
 /** Phiếu tương tác có thật do chủ dự án cung cấp (Toán 4, tuần 8). */
@@ -77,8 +78,9 @@ function teachingItems(grade: Grade, b: TeachingBlock): Item[] {
   for (const w of REAL_WORKSHEETS[grade]?.[n] ?? []) {
     push({ slug: w.slug, type: "worksheet", title: w.title, level: "co-ban", isFree: w.isFree, url: w.url });
   }
-  if (hasTest15(grade, n)) {
-    push({ slug: "kiem-tra-15-phut", type: "test", title: `Đề kiểm tra 15 phút Tuần ${n}`, level: "co-ban", isFree: free, durationMinutes: 15 });
+  const mt = monthlyTest(n);
+  if (mt) {
+    push({ slug: "kiem-tra-cuoi-thang", type: "test", title: `Đề kiểm tra cuối tháng ${mt.month} (tuần ${mt.fromWeek}–${n})`, level: "co-ban", isFree: free, durationMinutes: 40 });
   }
   (b.thuVi ?? []).forEach((t, i) =>
     push({ slug: `thu-vi-${i + 1}`, type: "video", title: `[Toán học thú vị] ${t}`, level: "nang-cao", isFree: free, isExtension: true, videoProvider: "youtube" }),
