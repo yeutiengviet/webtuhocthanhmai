@@ -1,6 +1,6 @@
 -- Mục ảnh trong bài học theo tuần (Tiếng Việt: "Sơ đồ tư duy nội dung tuần học"): mỗi mục nhận NHIỀU ảnh.
 -- Ảnh lưu trong kho "phieu" (thư mục lessons/, tên do hệ thống đặt), danh sách đường dẫn theo thứ tự ở cột lesson_files.image_paths.
--- Quyền xem ảnh giống phiếu: khách chỉ xem ảnh của mục đã công khai + Free; phụ huynh đăng nhập xem mọi mục đã công khai.
+-- Quyền xem ảnh giống phiếu: mục đã công khai + Free thì ai cũng xem; nếu đã chạy 0003 thì phụ huynh đăng nhập xem mọi mục đã công khai.
 -- Chỉ THÊM cột/quyền; không đổi dữ liệu cũ. Chạy trong SQL Editor của Supabase.
 -- Gỡ bỏ: xem cuối file.
 
@@ -31,13 +31,19 @@ create policy "tai_file_mien_phi" on storage.objects for select to anon, authent
                  and l.published and l.is_free)
   ));
 
-drop policy "phu_huynh_tai_phieu_bai_hoc" on storage.objects;
-create policy "phu_huynh_tai_phieu_bai_hoc" on storage.objects for select to authenticated
-  using (bucket_id = 'phieu' and exists (
-    select 1 from public.lesson_files l
-    where (l.html_path = storage.objects.name or l.pdf_path = storage.objects.name or storage.objects.name = any (l.image_paths))
-      and l.published
-  ));
+-- Chính sách của phụ huynh đăng nhập (0003): chỉ mở rộng thêm ảnh NẾU đã được chạy; chưa có thì không tự bật.
+do $$
+begin
+  if exists (select 1 from pg_policies where schemaname = 'storage' and tablename = 'objects' and policyname = 'phu_huynh_tai_phieu_bai_hoc') then
+    drop policy "phu_huynh_tai_phieu_bai_hoc" on storage.objects;
+    create policy "phu_huynh_tai_phieu_bai_hoc" on storage.objects for select to authenticated
+      using (bucket_id = 'phieu' and exists (
+        select 1 from public.lesson_files l
+        where (l.html_path = storage.objects.name or l.pdf_path = storage.objects.name or storage.objects.name = any (l.image_paths))
+          and l.published
+      ));
+  end if;
+end $$;
 
 -- Gỡ bỏ (chạy ngược):
 --   drop policy "phu_huynh_tai_phieu_bai_hoc" on storage.objects;
