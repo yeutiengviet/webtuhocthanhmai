@@ -44,7 +44,8 @@ export interface Week {
   items: Item[];
 }
 
-export type ItemType = "video" | "worksheet" | "document" | "test";
+/** "images": mục chỉ gồm ảnh cô tải lên (vd. sơ đồ tư duy nội dung tuần học, nhiều ảnh). */
+export type ItemType = "video" | "worksheet" | "document" | "test" | "images";
 export type Level = "co-ban" | "nang-cao";
 
 export interface Item {

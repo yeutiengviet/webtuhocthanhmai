@@ -58,7 +58,7 @@ function buildItems(subject: SubjectSlug, grade: number, n: number): Item[] {
     // Tiếng Việt: không chia cơ bản / nâng cao — phiếu tuần, phiếu từ và câu, sơ đồ tư duy nội dung tuần học
     push({ slug: "phieu-tuan", type: "worksheet", title: `Phiếu tuần ${n}`, level: null, isFree: free });
     push({ slug: "phieu-tu-va-cau", type: "worksheet", title: "Phiếu từ và câu", level: null, isFree: free });
-    push({ slug: "so-do-tu-duy", type: "worksheet", title: "Sơ đồ tư duy nội dung tuần học", level: null, isFree: free });
+    push({ slug: "so-do-tu-duy", type: "images", title: "Sơ đồ tư duy nội dung tuần học", level: null, isFree: free });
   } else {
     push({ slug: "luyen-tap-co-ban", type: "worksheet", title: "Bài tập luyện tập cơ bản", level: "co-ban", isFree: free });
     push({ slug: "luyen-tap-nang-cao", type: "worksheet", title: "Bài tập luyện tập nâng cao", level: "nang-cao", isFree: free });

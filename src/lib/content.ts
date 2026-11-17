@@ -8,7 +8,7 @@ import { SKELETON_COURSES } from "@/data/khung-khoa-hoc";
 import { ON_TAP_HE } from "@/data/on-tap-he";
 import { features } from "@/data/site";
 import { TOAN_NANG_CAO, TOAN_THEO_TUAN } from "@/data/toan-theo-tuan";
-import { lessonFileHref } from "@/lib/exam-meta";
+import { lessonFileHref, lessonImageHref } from "@/lib/exam-meta";
 import type { Course, Item, ItemType, Subject, SubjectSlug, Track, Week } from "@/lib/types";
 
 export const SUBJECTS: Subject[] = [
@@ -34,6 +34,7 @@ export const ITEM_TYPE_LABELS: Record<ItemType, string> = {
   worksheet: "Phiếu luyện tập",
   document: "Tài liệu",
   test: "Đề kiểm tra",
+  images: "Sơ đồ tư duy",
 };
 
 /** Thứ tự hướng học trong một lớp. */
@@ -127,13 +128,22 @@ export interface LessonFileInfo {
   hasHtml: boolean;
   hasPdf: boolean;
   isFree: boolean;
+  /** Số ảnh cô tải lên (mục "images", vd. sơ đồ tư duy). */
+  imageCount?: number;
 }
 
-/** Các loại mục được gắn file phiếu: phiếu luyện tập, đề kiểm tra (tương tác + PDF), tài liệu (chỉ PDF). */
-export function itemAcceptsFiles(item: Item): { html: boolean; pdf: boolean } {
-  if (item.type === "worksheet" || item.type === "test") return { html: true, pdf: true };
-  if (item.type === "document") return { html: false, pdf: true };
-  return { html: false, pdf: false };
+/** Các loại mục được gắn file: phiếu luyện tập, đề kiểm tra (tương tác + PDF), tài liệu (chỉ PDF), mục ảnh (nhiều ảnh). */
+export function itemAcceptsFiles(item: Item): { html: boolean; pdf: boolean; images: boolean } {
+  if (item.type === "worksheet" || item.type === "test") return { html: true, pdf: true, images: false };
+  if (item.type === "document") return { html: false, pdf: true, images: false };
+  if (item.type === "images") return { html: false, pdf: false, images: true };
+  return { html: false, pdf: false, images: false };
+}
+
+/** Mục có nhận file tải lên không (trang quản trị). */
+export function itemTakesUploads(item: Item): boolean {
+  const a = itemAcceptsFiles(item);
+  return a.pdf || a.images;
 }
 
 /**
@@ -146,7 +156,8 @@ export type LessonMedia =
   | { kind: "locked" }
   | { kind: "video"; videoRef: string | null }
   | { kind: "worksheet"; url: string | null; htmlSrc?: string; pdf?: string }
-  | { kind: "document"; url: string | null; pdf?: string };
+  | { kind: "document"; url: string | null; pdf?: string }
+  | { kind: "images"; images: string[] };
 
 export function lessonMedia(
   item: Item,
@@ -156,7 +167,8 @@ export function lessonMedia(
 ): LessonMedia {
   const accepts = { ...itemAcceptsFiles(item) };
   if (!allowPdf) accepts.pdf = false;
-  const uploaded = file && (file.hasHtml || file.hasPdf) ? file : null;
+  const imageCount = accepts.images ? (file?.imageCount ?? 0) : 0;
+  const uploaded = file && (file.hasHtml || file.hasPdf || imageCount > 0) ? file : null;
   if (!canView(item) && !uploaded?.isFree) return { kind: "locked" };
   const extra: { htmlSrc?: string; pdf?: string } = {};
   if (uploaded?.hasHtml && accepts.html) extra.htmlSrc = lessonFileHref(item.id, "html");
@@ -164,6 +176,8 @@ export function lessonMedia(
   switch (item.type) {
     case "video":
       return { kind: "video", videoRef: item.videoRef };
+    case "images":
+      return { kind: "images", images: Array.from({ length: imageCount }, (_, i) => lessonImageHref(item.id, i)) };
     case "document":
       return extra.pdf ? { kind: "document", url: item.url, pdf: extra.pdf } : { kind: "document", url: item.url };
     default:

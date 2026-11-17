@@ -46,6 +46,7 @@ const ITEM_ICON: Record<Item["type"], { icon: "play" | "pencil" | "doc" | "timer
   worksheet: { icon: "pencil", color: "bg-accent-600" },
   test: { icon: "timer", color: "bg-violet-700" },
   document: { icon: "doc", color: "bg-gray-600" },
+  images: { icon: "doc", color: "bg-emerald-600" },
 };
 
 export function ItemIcon({ type, size = "md" }: { type: Item["type"]; size?: "md" | "lg" }) {

@@ -54,8 +54,7 @@ export function guessFromFileName(fileName: string): Guess {
   if (week !== null && (week < 1 || week > 35)) week = null;
 
   let slug: string | null = null;
-  if (/ (so do( tu duy)?|sdtd)(?= )/.test(s)) slug = "so-do-tu-duy";
-  else if (/ (tu (va )?cau|ltvc)(?= )/.test(s)) slug = "phieu-tu-va-cau";
+  if (/ (tu (va )?cau|ltvc)(?= )/.test(s)) slug = "phieu-tu-va-cau";
   else if (/ phieu tuan(?= )/.test(s)) slug = "phieu-tuan";
   else if (/ (nang ?cao|nc)(?= )/.test(s)) slug = "luyen-tap-nang-cao";
   else if (/ (co ?ban|cb)(?= )/.test(s)) slug = "luyen-tap-co-ban";

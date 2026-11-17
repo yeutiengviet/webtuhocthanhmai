@@ -5,7 +5,8 @@ import { Container, ItemIcon, PageHero } from "@/components/ui";
 import { requireAdminPage } from "@/lib/admin";
 import { adminLessonFiles } from "@/lib/admin-lessons";
 import { attemptStats } from "@/lib/admin-stats";
-import { getCourseById, itemAcceptsFiles } from "@/lib/content";
+import { getCourseById, itemTakesUploads } from "@/lib/content";
+import { imagePathsOf } from "@/lib/lesson-files";
 import { formatRange } from "@/lib/dates";
 
 export const metadata = { title: "Phiếu theo tuần" };
@@ -21,7 +22,7 @@ export default async function AdminCourseLessons({ params }: { params: Promise<{
 
   return (
     <>
-      <PageHero badge="Trang quản trị" title={`Phiếu ${name}`} subtitle="Bấm vào một mục để tải phiếu tương tác (.html) và phiếu PDF." />
+      <PageHero badge="Trang quản trị" title={`Phiếu ${name}`} subtitle="Bấm vào một mục để tải phiếu tương tác (.html), phiếu PDF hoặc ảnh (sơ đồ tư duy)." />
       <Container className="max-w-3xl space-y-4 py-8">
         <div className="flex flex-wrap items-center gap-3">
           <Link href="/quan-tri/bai-hoc" className="inline-block py-2 font-extrabold text-brand-700 underline">← Chọn khóa khác</Link>
@@ -31,7 +32,7 @@ export default async function AdminCourseLessons({ params }: { params: Promise<{
         </div>
         {error && <p role="alert" className="rounded-2xl bg-red-50 p-3 font-bold text-red-800">Chưa tải được trạng thái phiếu. Cô tải lại trang sau ít phút.</p>}
         {course.weeks.map((w) => {
-          const items = w.items.filter((i) => itemAcceptsFiles(i).pdf);
+          const items = w.items.filter(itemTakesUploads);
           const done = items.filter((i) => rows.has(i.id)).length;
           return (
             <details key={w.id} className="rounded-3xl bg-white shadow-sm ring-1 ring-brand-100" open={w === course.weeks[0]}>
@@ -51,7 +52,7 @@ export default async function AdminCourseLessons({ params }: { params: Promise<{
                         <span className="min-w-0 flex-1">
                           <span className="block font-bold text-gray-900">{it.title}</span>
                           <span className="text-xs font-semibold text-gray-700">
-                            {r ? [r.html_path ? "✏️ Tương tác" : null, r.pdf_path ? "⬇️ PDF" : null, r.published ? null : "đang ẩn", r.html_path && !attempts.error ? `📊 ${attempts.stats.get(`bai:${it.id}`)?.total ?? 0} lượt làm` : null].filter(Boolean).join(" · ") : "Chưa có phiếu"}
+                            {r ? [r.html_path ? "✏️ Tương tác" : null, r.pdf_path ? "⬇️ PDF" : null, imagePathsOf(r).length ? `🖼️ ${imagePathsOf(r).length} ảnh` : null, r.published ? null : "đang ẩn", r.html_path && !attempts.error ? `📊 ${attempts.stats.get(`bai:${it.id}`)?.total ?? 0} lượt làm` : null].filter(Boolean).join(" · ") : "Chưa có phiếu"}
                           </span>
                         </span>
                         <span className="rounded-full bg-brand-600 px-3 py-1 text-sm font-extrabold text-white">{r ? "Sửa" : "Tải lên"}</span>
