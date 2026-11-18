@@ -3,10 +3,17 @@ import { HeroArt, Icon, MathArt, VietArt } from "@/components/art";
 import { BannerCarousel } from "@/components/BannerCarousel";
 import { Container, GRADE_THEME } from "@/components/ui";
 import { site } from "@/data/site";
-import { allCourses, courseStats, getCourses, GRADES, gradeSlug, SUBJECTS } from "@/lib/content";
+import { allCourses, getCourses, GRADES, gradeSlug, isReady, publishedWeeks, SUBJECTS } from "@/lib/content";
+import { countUploadedWorksheets } from "@/lib/lesson-files";
 
-const COMMIT_ICONS = ["📘", "👩‍🏫", "✅", "👨‍👩‍👧", "🎁"];
-const COMMIT_COLORS = ["bg-brand-50 ring-brand-200", "bg-accent-50 ring-accent-200", "bg-emerald-50 ring-emerald-200", "bg-violet-50 ring-violet-200", "bg-amber-50 ring-amber-200"];
+// Lưu sẵn trang, tự làm mới mỗi 60 giây để con số phiếu/đề luôn khớp với những gì cô đã tải lên.
+export const revalidate = 60;
+
+/** Số tuần học theo sách Kết nối tri thức trong một năm học. */
+const WEEKS_PER_YEAR = 35;
+
+const COMMIT_ICONS = ["📘", "✅", "👨‍👩‍👧", "🎁"];
+const COMMIT_COLORS = ["bg-brand-50 ring-brand-200", "bg-emerald-50 ring-emerald-200", "bg-violet-50 ring-violet-200", "bg-amber-50 ring-amber-200"];
 
 function SectionTitle({ kicker, title }: { kicker: string; title: string }) {
   return (
@@ -17,19 +24,16 @@ function SectionTitle({ kicker, title }: { kicker: string; title: string }) {
   );
 }
 
-export default function HomePage() {
-  // Con số tin cậy: chỉ dùng số đếm thật từ dữ liệu + số chủ dự án tự điền.
-  const totals = allCourses().reduce(
-    (acc, c) => {
-      const s = courseStats(c);
-      return { weeks: acc.weeks + s.weeks, videos: acc.videos + s.videos, worksheets: acc.worksheets + s.worksheets + s.tests };
-    },
-    { weeks: 0, videos: 0, worksheets: 0 },
-  );
+export default async function HomePage() {
+  // Con số thật: video đã gắn đường dẫn, phiếu & đề đã tải lên (đọc từ kho).
+  const videos = allCourses()
+    .flatMap((c) => publishedWeeks(c).flatMap((w) => w.items))
+    .filter((i) => i.type === "video" && isReady(i)).length;
+  const worksheets = await countUploadedWorksheets();
   const stats = [
-    { label: "tuần học theo sách", value: String(totals.weeks), icon: "📚" },
-    { label: "video bài giảng (dự kiến)", value: String(totals.videos), icon: "🎬" },
-    { label: "phiếu & đề luyện tập (dự kiến)", value: String(totals.worksheets), icon: "📝" },
+    { label: "tuần học theo sách", value: String(WEEKS_PER_YEAR), icon: "📚" },
+    { label: "video bài giảng", value: String(videos), icon: "🎬" },
+    { label: "phiếu & đề luyện tập", value: worksheets === null ? "—" : String(worksheets), icon: "📝" },
     ...site.extraStats.map((s) => ({ ...s, icon: "⭐" })),
   ];
 
@@ -158,7 +162,7 @@ export default function HomePage() {
       {/* 4. Các cam kết */}
       <Container className="pt-12">
         <SectionTitle kicker="Vì sao chọn cô Thanh Mai" title={`${site.commitments.length} cam kết với phụ huynh`} />
-        <ol className="grid gap-3 sm:grid-cols-2 lg:grid-cols-5">
+        <ol className="grid gap-3 sm:grid-cols-3">
           {site.commitments.map((c, i) => (
             <li key={c.title} className={`rounded-3xl p-5 ring-2 ${COMMIT_COLORS[i % COMMIT_COLORS.length]}`}>
               <span aria-hidden className="grid h-12 w-12 place-items-center rounded-2xl bg-white text-2xl shadow-sm">{COMMIT_ICONS[i % COMMIT_ICONS.length]}</span>
