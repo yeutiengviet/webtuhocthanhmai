@@ -49,3 +49,18 @@ export async function getPublishedLessonFiles(itemIds: string[]): Promise<Map<st
   }
   return out;
 }
+
+/** Số phiếu & đề cô đã tải lên và đang công khai: mục bài học có phiếu (HTML hoặc PDF) + đề thi. Lỗi → null. */
+export async function countUploadedWorksheets(): Promise<number | null> {
+  try {
+    const supabase = createSupabasePublic();
+    const [lessons, exams] = await Promise.all([
+      supabase.from("lesson_files").select("item_id", { count: "exact", head: true }).eq("published", true).or("html_path.not.is.null,pdf_path.not.is.null"),
+      supabase.from("exams").select("id", { count: "exact", head: true }).eq("published", true),
+    ]);
+    if (lessons.error || exams.error) return null;
+    return (lessons.count ?? 0) + (exams.count ?? 0);
+  } catch {
+    return null;
+  }
+}

@@ -30,7 +30,6 @@ export const site = {
   /** BẢN NHÁP — chủ dự án sửa lại lời cam kết. */
   commitments: [
     { title: "Bám sát sách Kết nối tri thức", text: "Bài học theo đúng từng tuần trên lớp." },
-    { title: "Cô giáo tự soạn, tự giảng", text: "Video và phiếu bài tập do cô Thanh Mai biên soạn." },
     { title: "Luyện tập có chấm điểm", text: "Phiếu tương tác chấm điểm ngay, con biết đúng sai." },
     { title: "Phụ huynh theo dõi được", text: "Xem điểm và số lần làm bài của con (sắp có)." },
   ],
