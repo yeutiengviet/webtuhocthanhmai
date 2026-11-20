@@ -268,16 +268,76 @@ export function guessWeeks(fileName: string): { weeks: number[]; keyword: boolea
   return { weeks: nums.length === 1 ? nums : [], keyword: false };
 }
 
+// ───── Nhận diện TÊN BÀI trong tên file ─────
+
+/** Tên một bài học và tuần của bài đó (lấy từ mục lục khóa học). */
+export interface LessonInfo {
+  week: number;
+  title: string;
+}
+
+/** Các chữ (không dấu) của một tên, có dấu cách hai đầu. Tên bài không có đuôi file nên thêm ".x" để normalize không cắt mất chữ cuối. */
+function words(text: string, isFileName = false): string {
+  const s = ` ${normalize(isFileName ? text : `${text}.x`).replace(/[^a-z0-9]+/g, " ")} `;
+  // Tên file: số lớp ("lớp 3", "L3") không phải con số trong tên bài
+  return isFileName ? s.replace(/ (lop|l) ?[1-5](?= )/g, " ") : s;
+}
+const toSet = (s: string) => new Set(s.split(" ").filter(Boolean));
+/** Chữ chỉ loại phiếu / tên môn trong tên file, không phải tên bài (trừ khi chính tên bài có chữ đó). */
+const NOISE = [/ (co ban|nang cao|cb|nc)(?= )/g, / (toan|tieng viet|tv)(?: [1-5])?(?= )/g];
+
+/**
+ * Tìm bài học có tên nằm trong tên file, vd "Bảng nhân 3, bảng chia 3 - cơ bản.html" → bài "Bảng nhân 3, bảng chia 3".
+ * Không phân biệt dấu, hoa/thường, dấu câu; tên file phải chứa gần đủ các chữ của tên bài (≥ 80%) và đủ MỌI con số
+ * trong tên bài (để "Bảng nhân 3" không khớp "Bảng nhân 4"). Nhiều bài cùng khớp thì lấy bài khớp đủ hơn, tên dài hơn,
+ * rồi bài ít chữ thừa hơn;
+ * hai bài khớp ngang nhau ở hai tuần khác nhau (vd "Luyện tập" có ở nhiều tuần) thì không đoán (null).
+ */
+export function guessLesson(fileName: string, lessons: LessonInfo[]): (LessonInfo & { score: number }) | null {
+  // vd "cơ" trong "cơ bản" không được tính là chữ "có" của bài "Phép cộng (có nhớ)…"; "Toán 3" không phải số 3 của bài
+  const raw = words(fileName, true);
+  const variants = new Map<number, Set<string>>();
+  const fileFor = (title: string) => {
+    const keep = NOISE.map((re) => new RegExp(re.source).test(title));
+    const k = keep.reduce((a, b, i) => a | (Number(b) << i), 0);
+    if (!variants.has(k)) variants.set(k, toSet(NOISE.reduce((s, re, i) => (keep[i] ? s : s.replace(re, " ")), raw)));
+    return variants.get(k)!;
+  };
+  let best: (LessonInfo & { score: number; hit: number; extra: number }) | null = null;
+  let tie = false;
+  for (const l of lessons) {
+    const title = words(l.title);
+    const want = toSet(title);
+    if (want.size === 0) continue;
+    const file = fileFor(title);
+    if ([...want].some((t) => /^\d+$/.test(t) && !file.has(t))) continue;
+    const hit = [...want].filter((t) => file.has(t)).length;
+    const score = hit / want.size;
+    // bài một chữ ("Lít", "Gam") phải khớp đủ; còn lại cần ≥ 2 chữ và ≥ 80% tên bài
+    if (hit < Math.min(2, want.size) || score < 0.8) continue;
+    // chữ trong tên file không thuộc tên bài: ít hơn = khớp sát hơn ("không nhớ" thắng "có nhớ")
+    const extra = [...file].filter((t) => !want.has(t)).length;
+    const cmp = best ? score - best.score || hit - best.hit || best.extra - extra : 1;
+    if (cmp > 0) {
+      best = { ...l, score, hit, extra };
+      tie = false;
+    } else if (cmp === 0 && best && l.week !== best.week) tie = true;
+  }
+  if (!best || tie) return null;
+  return { week: best.week, title: best.title, score: best.score };
+}
+
 /**
  * Xếp cả loạt file một lượt. Thứ tự ưu tiên cho từng file:
  * 1. Tên có "tuần N" → vào tuần N (kể cả khi có chữ cuối kì/ôn tập). Ghi rõ loại phiếu (cơ bản, nâng cao, tổng hợp, kiểm tra cuối tháng…)
  *    thì vào đúng mục; không ghi thì vào mục còn trống đầu tiên của tuần — nên một tuần nhận được nhiều file.
  *    File .html và .pdf cùng tên vào cùng một mục. "Tuần 17, 18": ưu tiên tuần có mục tổng hợp.
+ *    Không có "tuần N" mà tên file có TÊN BÀI của một tuần (xem guessLesson, cần truyền `lessons`) → vào tuần của bài đó.
  * 2. Không có "tuần" mà là đề giữa/cuối kì, ôn tập học kì, HK1… → mục Đề thi ("exam:<nhóm>").
  * 3. Còn lại: tên chỉ có một con số thì coi là số tuần (vd "phieu nang cao 14.html").
  * `taken`: các cặp "mãMục|loạiFile" đã có file khác trong danh sách (để không xếp trùng).
  */
-export function routeBatch(files: { name: string }[], slots: SlotInfo[], taken: Iterable<string> = []): (string | null)[] {
+export function routeBatch(files: { name: string }[], slots: SlotInfo[], taken: Iterable<string> = [], lessons: LessonInfo[] = []): (string | null)[] {
   const out: (string | null)[] = files.map(() => null);
   const used = new Set(taken);
   const reserve = (id: string, name: string) => used.add(`${id}|${kindFromFileName(name) ?? "?"}`);
@@ -293,6 +353,12 @@ export function routeBatch(files: { name: string }[], slots: SlotInfo[], taken: 
       keyword = true;
     }
     const exam = guessExamFromFileName(f.name);
+    // Tên file có tên bài của một tuần (vd "Bảng nhân 6, bảng chia 6 - cơ bản.pdf") → tuần của bài đó
+    const lesson = keyword || exam.isExam ? null : guessLesson(f.name, lessons);
+    if (lesson) {
+      weeks = [lesson.week];
+      keyword = true;
+    }
     if (!keyword && exam.isExam) {
       out[i] = exam.category ? examTarget(exam.category) : null;
       return;
@@ -338,8 +404,8 @@ export function routeBatch(files: { name: string }[], slots: SlotInfo[], taken: 
 }
 
 /** Xếp một file riêng lẻ (xem routeBatch). */
-export function routeFile(fileName: string, slots: SlotInfo[]): string | null {
-  return routeBatch([{ name: fileName }], slots)[0];
+export function routeFile(fileName: string, slots: SlotInfo[], lessons: LessonInfo[] = []): string | null {
+  return routeBatch([{ name: fileName }], slots, [], lessons)[0];
 }
 
 /** Tìm mục theo đoán; nếu tuần ôn tập không có "cơ bản" thì không tự xếp (để cô chọn). */

@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { useMemo, useState } from "react";
 import { createExam, saveLessonFiles } from "@/app/quan-tri/actions";
 import { discardPair, uploadPair, type UploadedIds } from "@/components/admin/FileSlot";
-import { courseMismatch, examGroupKey, examTarget, examTitleFromFileName, groupByExam, groupByItem, guessExamFromFileName, guessSummerLevel, guessSummerTestNumber, isMonthlySlug, matchSummerSlot, parseExamTarget, routeBatch, routeMonthly, validateTargets, type MatchProblem, type SlotInfo } from "@/lib/bulk-match";
+import { courseMismatch, examGroupKey, examTarget, examTitleFromFileName, groupByExam, groupByItem, guessExamFromFileName, guessLesson, guessSummerLevel, guessWeeks, guessSummerTestNumber, isMonthlySlug, matchSummerSlot, parseExamTarget, routeBatch, routeMonthly, validateTargets, type LessonInfo, type MatchProblem, type SlotInfo } from "@/lib/bulk-match";
 import { checkFileContent, EXAM_CATEGORIES, EXAM_CATEGORY_LABELS, kindFromFileName, MAX_FILE_BYTES } from "@/lib/exam-meta";
 import type { Grade, SubjectSlug } from "@/lib/types";
 
@@ -16,6 +16,8 @@ interface Row {
   itemId: string | null;
   /** lỗi nội dung file (rỗng, giả mạo, quá lớn) */
   contentError: string | null;
+  /** tên bài nhận ra trong tên file (khi tên file không ghi "tuần N") */
+  lesson: { week: number; title: string } | null;
 }
 
 const PROBLEM: Record<MatchProblem, string> = {
@@ -32,6 +34,7 @@ export function BulkUploadForm({
   course,
   existingExams = [],
   monthly = null,
+  lessons = [],
 }: {
   courseId: string;
   slots: SlotInfo[];
@@ -42,6 +45,8 @@ export function BulkUploadForm({
   existingExams?: { title: string; category: string }[];
   /** Trang "chọn nhiều file" của một tháng: chỉ có các ô Đề 1…Đề 5 của tháng đó */
   monthly?: { label: string } | null;
+  /** Tên các bài học của từng tuần: tên file có tên bài thì tự xếp vào tuần của bài đó */
+  lessons?: LessonInfo[];
 }) {
   const router = useRouter();
   const [rows, setRows] = useState<Row[]>([]);
@@ -86,8 +91,9 @@ export function BulkUploadForm({
       ? files.map((file) => matchSummerSlot(file.name, slots)?.id ?? null)
       : monthly
         ? routeMonthly(names, slots, taken, filledMonthly)
-        : routeBatch(names, slots, [...taken, ...filledMonthly.flatMap((id) => [`${id}|html`, `${id}|pdf`])]);
-    files.forEach((file, i) => added.push({ key: `${file.name}-${file.size}-${file.lastModified}-${Math.random()}`, file, itemId: targets[i], contentError: errors[i] }));
+        : routeBatch(names, slots, [...taken, ...filledMonthly.flatMap((id) => [`${id}|html`, `${id}|pdf`])], lessons);
+    const lessonOf = (name: string) => (summer || monthly || guessWeeks(name).keyword || guessExamFromFileName(name).isExam ? null : guessLesson(name, lessons));
+    files.forEach((file, i) => added.push({ key: `${file.name}-${file.size}-${file.lastModified}-${Math.random()}`, file, itemId: targets[i], contentError: errors[i], lesson: lessonOf(file.name) }));
     added.sort((a, b) => (byId.get(a.itemId ?? "")?.week ?? 99) - (byId.get(b.itemId ?? "")?.week ?? 99) || a.file.name.localeCompare(b.file.name, "vi", { numeric: true }));
     setRows((r) => [...r, ...added]);
   }
@@ -183,7 +189,9 @@ export function BulkUploadForm({
           ) : (
           <span className="mt-1 block text-sm text-gray-700">
             Đặt tên file có <strong>số tuần</strong> và <strong>loại phiếu</strong> (không ghi loại phiếu thì xếp vào mục còn trống của tuần, một tuần nhận nhiều file), ví dụ: <code>Tuan 5 - Co ban.html</code>, <code>Tuần 5 nâng cao.pdf</code>,{" "}
-            <code>Tuần 4 kiểm tra cuối tháng.html</code>, <code>Tuần 3 tài liệu.pdf</code>, <code>Tuần 9 đề 2.html</code>. Tiếng Việt: <code>Phiếu tuần 5.html</code>, <code>Tuần 5 từ và câu.pdf</code> (sơ đồ tư duy là ảnh: tải ở trang riêng của mục đó)
+            <code>Tuần 4 kiểm tra cuối tháng.html</code>, <code>Tuần 3 tài liệu.pdf</code>, <code>Tuần 9 đề 2.html</code>. {lessons.length > 0 && (
+              <span className="mt-2 block">Không ghi tuần cũng được: tên file có <strong>tên bài</strong> của tuần thì website tự tìm tuần, ví dụ <code>{lessons[Math.min(4, lessons.length - 1)].title} - cơ bản.html</code>.</span>
+            )} Tiếng Việt: <code>Phiếu tuần 5.html</code>, <code>Tuần 5 từ và câu.pdf</code> (sơ đồ tư duy là ảnh: tải ở trang riêng của mục đó)
             <span className="mt-2 block rounded-xl bg-white p-3 text-left ring-1 ring-brand-100">
               <strong>Đề thi</strong> (vào mục Đề thi): tên file <strong>không có chữ “tuần”</strong> mà có <strong>giữa kì / cuối kì / ôn tập học kì / HK1</strong> (HK1 = cuối học kì 1, HK2 = cuối học kì 2), ví dụ:{" "}
               <code>Đề giữa kì 1.html</code>, <code>Đề cuối học kỳ 1.pdf</code>, <code>Ôn tập cuối học kì 1.pdf</code>, <code>Đề cuối năm.pdf</code>. Cùng tên thì file .html và .pdf ghép thành một đề.
@@ -254,6 +262,9 @@ export function BulkUploadForm({
                         className="mt-1 block w-full rounded-xl border-2 border-gray-200 bg-white px-3 py-2 font-semibold"
                       />
                     </label>
+                  )}
+                  {r.lesson && byId.get(r.itemId ?? "")?.week === r.lesson.week && (
+                    <p className="mt-1 text-sm font-semibold text-brand-700">🔎 Nhận ra tên bài “{r.lesson.title}” → Tuần {r.lesson.week}</p>
                   )}
                   {err ? (
                     <p className="mt-1 text-sm font-bold text-red-700">{err}</p>

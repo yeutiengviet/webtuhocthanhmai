@@ -7,6 +7,7 @@ import {
   guessExamFromFileName,
   guessFromFileName,
   guessGradeSubject,
+  guessLesson,
   guessSummerLevel, guessSummerTestNumber,
   matchSlot,
   matchSummerSlot,
@@ -15,8 +16,11 @@ import {
   guessWeeks,
   validateMatches,
   validateTargets,
+  type LessonInfo,
   type SlotInfo,
 } from "@/lib/bulk-match";
+import lop2 from "@/data/mathx/toan-lop-2.json";
+import lop3 from "@/data/mathx/toan-lop-3.json";
 
 describe("đoán tuần và mục từ tên file", () => {
   const cases: [string, number | null, string | null][] = [
@@ -238,5 +242,54 @@ describe("tên file có 'tuần N' luôn vào tuần; một tuần nhận nhiề
     expect(r[1]).toBe("t3-w17-luyen-tap-nang-cao");
     expect(r[2]).toBeNull();
     expect(r[3]).toBe("t3-w17-luyen-tap-nang-cao");
+  });
+});
+
+describe("nhận ra tên bài trong tên file → tuần của bài đó", () => {
+  const fromJson = (d: { tuan: { tuan?: number; baiHoc?: string[] }[] }): LessonInfo[] =>
+    d.tuan.flatMap((b) => (b.tuan ? (b.baiHoc ?? []).map((title) => ({ week: b.tuan!, title })) : []));
+  const l3 = fromJson(lop3);
+  const l2 = fromJson(lop2);
+  const week = (name: string, l = l3) => guessLesson(name, l)?.week ?? null;
+
+  it("khớp tên bài không dấu, khác hoa/thường, khác dấu câu", () => {
+    expect(week("Bảng nhân 3, bảng chia 3 - cơ bản.html")).toBe(3);
+    expect(week("bang nhan 4 bang chia 4 NC.pdf")).toBe(3);
+    expect(week("BẢNG NHÂN 7_BẢNG CHIA 7.pdf")).toBe(5);
+    expect(week("Phiếu - Một phần mấy.html")).toBe(7);
+    expect(week("Lớp 3 - Hình tròn. Tâm, bán kính, đường kính của hình tròn.pdf")).toBe(8);
+    expect(week("Tim thanh phan trong phep nhan phep chia.html")).toBe(6);
+  });
+  it("số trong tên bài phải đúng: 'bảng nhân 6' không nhầm với tuần 6", () => {
+    expect(week("Bảng nhân 6, bảng chia 6 cơ bản.html")).toBe(4);
+    expect(week("Bảng nhân 5, bảng chia 5.html")).toBeNull();
+  });
+  it("bài gần giống nhau: chọn bài khớp sát hơn; bài một chữ cũng nhận", () => {
+    expect(week("Phép cộng (không nhớ) trong phạm vi 1000 - cơ bản.pdf", l2)).toBe(28);
+    expect(week("Phép trừ (không nhớ) trong phạm vi 1000 - cơ bản.pdf", l2)).toBe(29);
+    expect(week("Lít - nâng cao.html", l2)).toBe(9);
+    expect(week("Gam.pdf")).toBe(13);
+  });
+  it("tên bài có ở nhiều tuần (vd 'Luyện tập') hoặc không có tên bài thì không đoán", () => {
+    expect(week("Luyện tập - cơ bản.pdf", l2)).toBeNull();
+    expect(week("Ôn tập hình học và đo lường.pdf")).toBeNull();
+    expect(week("phiếu bài tập.pdf")).toBeNull();
+  });
+  it("routeBatch: tên bài → đúng mục của tuần; có 'tuần N' thì vẫn theo tuần N", () => {
+    const mk = (w: number, slug: string): SlotInfo => ({ id: `t3-w${w}-${slug}`, week: w, slug, title: slug, html: true, pdf: true });
+    const sl = [3, 4, 6].flatMap((w) => [mk(w, "luyen-tap-co-ban"), mk(w, "luyen-tap-nang-cao")]);
+    const r = routeBatch(
+      [
+        { name: "Bảng nhân 6, bảng chia 6 - nâng cao.html" },
+        { name: "Bảng nhân 3, bảng chia 3.html" },
+        { name: "Bảng nhân 3, bảng chia 3.pdf" },
+        { name: "Tuần 6 - Bảng nhân 3, bảng chia 3 - cơ bản.pdf" },
+      ],
+      sl,
+      [],
+      l3,
+    );
+    expect(r).toEqual(["t3-w4-luyen-tap-nang-cao", "t3-w3-luyen-tap-co-ban", "t3-w3-luyen-tap-co-ban", "t3-w6-luyen-tap-co-ban"]);
+    expect(routeFile("Bảng nhân 6, bảng chia 6 - nâng cao.html", sl)).toBeNull(); // không truyền tên bài: như cũ, chưa nhận ra
   });
 });
