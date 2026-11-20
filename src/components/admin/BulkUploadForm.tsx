@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { useMemo, useState } from "react";
 import { createExam, saveLessonFiles } from "@/app/quan-tri/actions";
 import { discardPair, uploadPair, type UploadedIds } from "@/components/admin/FileSlot";
-import { courseMismatch, examGroupKey, examTarget, examTitleFromFileName, groupByExam, groupByItem, guessExamFromFileName, guessLesson, guessSummerLevel, guessWeeks, guessSummerTestNumber, isMonthlySlug, matchSummerSlot, parseExamTarget, routeBatch, routeMonthly, validateTargets, type LessonInfo, type MatchProblem, type SlotInfo } from "@/lib/bulk-match";
+import { courseMismatch, examGroupKey, examTarget, examTitleFromFileName, groupByExam, groupByItem, guessExamFromFileName, guessLesson, guessSummerLevel, guessWeeks, guessSummerTestNumber, isSeriesSlug, matchSummerSlot, parseExamTarget, routeBatch, routeSeries, validateTargets, type LessonInfo, type MatchProblem, type SlotInfo } from "@/lib/bulk-match";
 import { checkFileContent, EXAM_CATEGORIES, EXAM_CATEGORY_LABELS, kindFromFileName, MAX_FILE_BYTES } from "@/lib/exam-meta";
 import type { Grade, SubjectSlug } from "@/lib/types";
 
@@ -43,8 +43,8 @@ export function BulkUploadForm({
   /** môn + lớp của khóa đang tải (dùng khi file thuộc khu Đề thi) */
   course: { subject: SubjectSlug; grade: Grade };
   existingExams?: { title: string; category: string }[];
-  /** Trang "chọn nhiều file" của một tháng: chỉ có các ô Đề 1…Đề 5 của tháng đó */
-  monthly?: { label: string } | null;
+  /** Trang "chọn nhiều file" của một tuần: chỉ có các ô Đề 1…Đề 5 cuối tháng, hoặc Phiếu 1…10 bài tập hàng ngày (daily) */
+  monthly?: { label: string; daily?: boolean } | null;
   /** Tên các bài học của từng tuần: tên file có tên bài thì tự xếp vào tuần của bài đó */
   lessons?: LessonInfo[];
 }) {
@@ -84,13 +84,13 @@ export function BulkUploadForm({
     }
     // Xếp cả loạt một lượt (một tuần có thể nhận nhiều file); tính cả các file đã có trong danh sách
     const taken = rows.flatMap((r) => (r.itemId && !parseExamTarget(r.itemId) ? [`${r.itemId}|${kindFromFileName(r.file.name) ?? "?"}`] : []));
-    // Ô đề cuối tháng đã có file trên website: không tự xếp đè (cô vẫn chọn tay được)
-    const filledMonthly = slots.filter((s) => isMonthlySlug(s.slug) && (existing[s.id]?.html || existing[s.id]?.pdf)).map((s) => s.id);
+    // Ô đề cuối tháng / bài tập hàng ngày đã có file trên website: không tự xếp đè (cô vẫn chọn tay được)
+    const filledMonthly = slots.filter((s) => isSeriesSlug(s.slug) && (existing[s.id]?.html || existing[s.id]?.pdf)).map((s) => s.id);
     const names = files.map((file) => ({ name: file.name }));
     const targets = summer
       ? files.map((file) => matchSummerSlot(file.name, slots)?.id ?? null)
       : monthly
-        ? routeMonthly(names, slots, taken, filledMonthly)
+        ? routeSeries(names, slots, taken, filledMonthly)
         : routeBatch(names, slots, [...taken, ...filledMonthly.flatMap((id) => [`${id}|html`, `${id}|pdf`])], lessons);
     const lessonOf = (name: string) => (summer || monthly || guessWeeks(name).keyword || guessExamFromFileName(name).isExam ? null : guessLesson(name, lessons));
     files.forEach((file, i) => added.push({ key: `${file.name}-${file.size}-${file.lastModified}-${Math.random()}`, file, itemId: targets[i], contentError: errors[i], lesson: lessonOf(file.name) }));
@@ -178,7 +178,11 @@ export function BulkUploadForm({
         <label className="block cursor-pointer rounded-2xl border-2 border-dashed border-brand-300 bg-brand-50 p-6 text-center">
           <span className="text-4xl" aria-hidden>📂</span>
           <span className="mt-2 block font-extrabold text-brand-700">Bấm để chọn nhiều file cùng lúc</span>
-          {monthly ? (
+          {monthly?.daily ? (
+            <span className="mt-1 block text-sm text-gray-700">
+              Chọn tối đa {slots.length} phiếu cho <strong>{monthly.label}</strong>. Mỗi phiếu nhận 1 file tương tác (.html) và 1 file PDF; file .html và .pdf <strong>cùng tên</strong> là một phiếu. Tên file có “phiếu 2”, “ngày 3”… thì vào đúng phiếu đó, không ghi thì xếp lần lượt vào các phiếu còn trống.
+            </span>
+          ) : monthly ? (
             <span className="mt-1 block text-sm text-gray-700">
               Chọn tối đa {slots.length} đề cho <strong>{monthly.label}</strong>. Mỗi đề nhận 1 file tương tác (.html) và 1 file PDF; file .html và .pdf <strong>cùng tên</strong> là một đề. Tên file có “đề 2”, “đề 3”… thì vào đúng đề đó, không ghi thì xếp lần lượt vào các đề còn trống.
             </span>
@@ -189,7 +193,7 @@ export function BulkUploadForm({
           ) : (
           <span className="mt-1 block text-sm text-gray-700">
             Đặt tên file có <strong>số tuần</strong> và <strong>loại phiếu</strong> (không ghi loại phiếu thì xếp vào mục còn trống của tuần, một tuần nhận nhiều file), ví dụ: <code>Tuan 5 - Co ban.html</code>, <code>Tuần 5 nâng cao.pdf</code>,{" "}
-            <code>Tuần 4 kiểm tra cuối tháng.html</code>, <code>Tuần 3 tài liệu.pdf</code>, <code>Tuần 9 đề 2.html</code>. {lessons.length > 0 && (
+            <code>Tuần 4 kiểm tra cuối tháng.html</code>, <code>Tuần 3 tài liệu.pdf</code>, <code>Tuần 9 đề 2.html</code>, <code>Tuần 5 bài tập hàng ngày phiếu 2.pdf</code> (bài tập hàng ngày: mỗi tuần nhận nhiều phiếu, không ghi số phiếu thì vào phiếu còn trống). {lessons.length > 0 && (
               <span className="mt-2 block">Không ghi tuần cũng được: tên file có <strong>tên bài</strong> của tuần thì website tự tìm tuần, ví dụ <code>{lessons[Math.min(4, lessons.length - 1)].title} - cơ bản.html</code>.</span>
             )} Tiếng Việt: <code>Phiếu tuần 5.html</code>, <code>Tuần 5 từ và câu.pdf</code> (sơ đồ tư duy là ảnh: tải ở trang riêng của mục đó)
             <span className="mt-2 block rounded-xl bg-white p-3 text-left ring-1 ring-brand-100">
@@ -226,7 +230,7 @@ export function BulkUploadForm({
                     onChange={(e) => setRows((x) => x.map((y) => (y.key === r.key ? { ...y, itemId: e.target.value || null } : y)))}
                     className="mt-2 block w-full rounded-xl border-2 border-gray-200 bg-white px-3 py-2 font-semibold"
                   >
-                    <option value="">{summer || monthly ? "— Chọn đề —" : "— Chọn tuần và mục, hoặc Đề thi —"}</option>
+                    <option value="">{monthly?.daily ? "— Chọn phiếu —" : summer || monthly ? "— Chọn đề —" : "— Chọn tuần và mục, hoặc Đề thi —"}</option>
                     {monthly ? slots.map((s) => (
                       <option key={s.id} value={s.id}>{s.title}{existing[s.id]?.html || existing[s.id]?.pdf ? " (đã có file)" : ""}</option>
                     )) : summer ? [1, 2].map((wk) => (

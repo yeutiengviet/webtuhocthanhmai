@@ -99,7 +99,8 @@ describe("Toán lớp 4 – 35 tuần", () => {
     const s = courseStats(toanLop4TheoTuan);
     expect(s.weeks).toBe(35);
     // Mục "Tài liệu" (PDF) vẫn hiện ở trang công khai (đang tắt tải thì chỉ xem trên web)
-    expect(s.totalItems).toBe(weeks.reduce((a, w) => a + w.items.length, 0));
+    // phiếu con trong mục "Phiếu bài tập hàng ngày" không tính riêng
+    expect(s.totalItems).toBe(weeks.reduce((a, w) => a + w.items.filter((i) => !i.partOf).length, 0));
     expect(publishedWeeks(toanLop4TheoTuan).reduce((a, w) => a + w.items.length, 0)).toBe(weeks.reduce((a, w) => a + w.items.length, 0));
     expect(getCourses("toan", 4).map((c) => c.track)).toEqual(["theo-tuan", "on-tap-he", "nang-cao"]);
     expect(getCourses("tieng-viet")).toHaveLength(10);

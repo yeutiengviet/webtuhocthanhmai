@@ -5,7 +5,7 @@ import { Container, ItemIcon, PageHero } from "@/components/ui";
 import { requireAdminPage } from "@/lib/admin";
 import { adminLessonFiles } from "@/lib/admin-lessons";
 import { attemptStats } from "@/lib/admin-stats";
-import { getCourseById, itemTakesUploads } from "@/lib/content";
+import { getCourseById, itemTakesUploads, subItems } from "@/lib/content";
 import { isMonthlySlug } from "@/lib/bulk-match";
 import { imagePathsOf } from "@/lib/lesson-files";
 import { formatRange } from "@/lib/dates";
@@ -76,8 +76,10 @@ export default async function AdminCourseLessons({ params }: { params: Promise<{
           </section>
         )}
         {course.weeks.map((w) => {
-          const items = w.items.filter(itemTakesUploads);
-          const done = items.filter((i) => rows.has(i.id)).length;
+          // phiếu con (vd. trong "Phiếu bài tập hàng ngày") quản lý ở trang của mục cha
+          const items = w.items.filter((i) => itemTakesUploads(i) && !i.partOf);
+          const has = (i: (typeof items)[number]) => rows.has(i.id) || subItems(w.items, i).some((c) => rows.has(c.id));
+          const done = items.filter(has).length;
           return (
             <details key={w.id} className="rounded-3xl bg-white shadow-sm ring-1 ring-brand-100" open={w === course.weeks[0]}>
               <summary className="flex cursor-pointer items-center gap-3 p-4">
@@ -89,6 +91,21 @@ export default async function AdminCourseLessons({ params }: { params: Promise<{
               <ul className="space-y-2 border-t-2 border-dashed border-brand-100 p-3">
                 {items.map((it) => {
                   const r = rows.get(it.id);
+                  if (it.multi) {
+                    const n = subItems(w.items, it).filter((c) => rows.has(c.id)).length;
+                    return (
+                      <li key={it.id}>
+                        <Link href={`/quan-tri/bai-hoc/${course.id}/${it.id}`} className="flex min-h-11 items-center gap-3 rounded-2xl p-2 hover:bg-brand-50">
+                          <ItemIcon type={it.type} />
+                          <span className="min-w-0 flex-1">
+                            <span className="block font-bold text-gray-900">{it.title}</span>
+                            <span className="text-xs font-semibold text-gray-700">{n ? `📚 Đã có ${n} phiếu` : "Chưa có phiếu"} · tải được nhiều phiếu</span>
+                          </span>
+                          <span className="rounded-full bg-brand-600 px-3 py-1 text-sm font-extrabold text-white">{n ? "Sửa / thêm" : "Tải lên"}</span>
+                        </Link>
+                      </li>
+                    );
+                  }
                   return (
                     <li key={it.id}>
                       <Link href={`/quan-tri/bai-hoc/${course.id}/${it.id}`} className="flex min-h-11 items-center gap-3 rounded-2xl p-2 hover:bg-brand-50">

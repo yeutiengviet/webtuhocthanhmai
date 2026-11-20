@@ -132,6 +132,7 @@ export interface LessonFileInfo {
 
 /** Các loại mục được gắn file: phiếu luyện tập, đề kiểm tra (tương tác + PDF), tài liệu (chỉ PDF), mục ảnh (nhiều ảnh). */
 export function itemAcceptsFiles(item: Item): { html: boolean; pdf: boolean; images: boolean } {
+  if (item.multi) return { html: false, pdf: false, images: false };
   if (item.type === "worksheet" || item.type === "test") return { html: true, pdf: true, images: false };
   if (item.type === "document") return { html: false, pdf: true, images: false };
   if (item.type === "images") return { html: false, pdf: false, images: true };
@@ -146,17 +147,29 @@ export function hiddenUntilUploaded(item: Item): boolean {
   return /^kiem-tra-cuoi-thang-([2-9]|\d{2,})$/.test(item.slug);
 }
 
-/** Lọc các mục hiện cho phụ huynh theo danh sách file đã tải. */
+/** Các phiếu bên trong một mục nhiều phiếu (vd. "Phiếu bài tập hàng ngày"), theo thứ tự Phiếu 1, 2… */
+export function subItems(items: Item[], parent: Item): Item[] {
+  return parent.multi ? items.filter((i) => i.partOf === parent.slug) : [];
+}
+
+/** Mục cha của một phiếu con (nếu có). */
+export function parentItem(items: Item[], child: Item): Item | undefined {
+  return child.partOf ? items.find((i) => i.slug === child.partOf && i.multi) : undefined;
+}
+
+/** Lọc các mục hiện cho phụ huynh theo danh sách file đã tải. Phiếu con không hiện riêng (nằm trong mục cha). */
 export function visibleItems(items: Item[], files: Map<string, { hasHtml: boolean; hasPdf: boolean }>): Item[] {
   return items.filter((it) => {
+    if (it.partOf) return false;
     if (!hiddenUntilUploaded(it)) return true;
     const f = files.get(it.id);
     return Boolean(f && (f.hasHtml || f.hasPdf));
   });
 }
 
-/** Mục có nhận file tải lên không (trang quản trị). */
+/** Mục có nhận file tải lên không (trang quản trị). Mục nhiều phiếu: tải vào các phiếu con qua trang của mục cha. */
 export function itemTakesUploads(item: Item): boolean {
+  if (item.multi) return true;
   const a = itemAcceptsFiles(item);
   return a.pdf || a.images;
 }
@@ -240,7 +253,8 @@ export function freeItems(): { course: Course; week: Week; item: Item }[] {
 
 export function courseStats(course: Course) {
   const weeks = publishedWeeks(course);
-  const items = weeks.flatMap((w) => w.items);
+  // phiếu con của mục nhiều phiếu không tính riêng (mục cha tính là 1)
+  const items = weeks.flatMap((w) => w.items).filter((i) => !i.partOf);
   return {
     weeks: course.track === "on-tap-he" ? 0 : weeks.filter((w) => w.kind === "hoc").length,
     videos: items.filter((i) => i.type === "video").length,

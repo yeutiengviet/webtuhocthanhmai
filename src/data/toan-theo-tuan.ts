@@ -64,6 +64,26 @@ export function monthlyTestItems(month: number) {
   }));
 }
 
+/** Số phiếu tối đa trong mục "Phiếu bài tập hàng ngày" của mỗi tuần. */
+export const SO_BAI_TAP_HANG_NGAY = 20;
+/** Mã mục "Phiếu bài tập hàng ngày"; các phiếu bên trong là "bai-tap-hang-ngay-1" … "-20". */
+export const DAILY = "bai-tap-hang-ngay";
+
+/** Một mục "Phiếu bài tập hàng ngày" (hiện cho phụ huynh) + các phiếu bên trong (mục con, cô tải file vào đây). */
+export function dailyItems() {
+  const title = "Phiếu bài tập hàng ngày";
+  return [
+    { slug: DAILY, type: "worksheet" as const, title, level: null, multi: true },
+    ...Array.from({ length: SO_BAI_TAP_HANG_NGAY }, (_, i) => ({
+      slug: `${DAILY}-${i + 1}`,
+      type: "worksheet" as const,
+      title: `${title} – Phiếu ${i + 1}`,
+      level: null,
+      partOf: DAILY,
+    })),
+  ];
+}
+
 /** Phiếu tương tác có thật do chủ dự án cung cấp (Toán 4, tuần 8). */
 const REAL_WORKSHEETS: Partial<Record<Grade, Record<number, { slug: string; title: string; url: string; isFree: boolean }[]>>> = {
   4: {
@@ -96,6 +116,7 @@ function teachingItems(grade: Grade, b: TeachingBlock, monthEnd: number | undefi
   // Tuần học nào cũng có đủ ô "cơ bản" và "nâng cao" để cô tải phiếu lên (kể cả Toán 4 từ tuần 29)
   push({ slug: "luyen-tap-co-ban", type: "worksheet", title: `Bài tập luyện tập Tuần ${n} – cơ bản`, level: "co-ban", isFree: free });
   push({ slug: "luyen-tap-nang-cao", type: "worksheet", title: `Bài tập luyện tập Tuần ${n} – nâng cao`, level: "nang-cao", isFree: free });
+  for (const t of dailyItems()) push({ ...t, isFree: free });
   if (b.tongHop) push({ slug: "luyen-tap-tong-hop", type: "worksheet", title: b.tongHop, level: "nang-cao", isFree: free });
   for (const w of REAL_WORKSHEETS[grade]?.[n] ?? []) {
     push({ slug: w.slug, type: "worksheet", title: w.title, level: "co-ban", isFree: w.isFree, url: w.url });

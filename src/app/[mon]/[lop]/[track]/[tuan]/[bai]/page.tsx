@@ -18,7 +18,9 @@ import {
   parseGradeSlug,
   isTrack,
   lessonMedia,
+  parentItem,
   publishedWeeks,
+  subItems,
   unitName,
   visibleItems,
   weekLabel,
@@ -30,7 +32,7 @@ import { lessonDecision } from "@/lib/download-access-server";
 import { getPublishedLessonFiles } from "@/lib/lesson-files";
 import { getViewer } from "@/lib/supabase/server";
 import type { LessonFileInfo, LessonMedia } from "@/lib/content";
-import type { Item } from "@/lib/types";
+import type { Course, Item, Week } from "@/lib/types";
 import { safeDocumentUrl } from "@/lib/urls";
 
 // Trang kiểm tra người xem đã đăng nhập chưa (phụ huynh có tài khoản miễn phí xem được mọi bài)
@@ -64,6 +66,9 @@ export default async function LessonPage({ params }: { params: Params }) {
   const loggedIn = Boolean(viewer);
   const canView = (it: Item) => canViewItem(it, loggedIn);
   const media = lessonMedia(item, canView, files.get(item.id));
+  // Mục nhiều phiếu: các phiếu đã có file; phiếu con: mục cha để quay lại
+  const kids = subItems(week.items, item).filter((k) => files.get(k.id)?.hasHtml || files.get(k.id)?.hasPdf);
+  const parent = parentItem(week.items, item);
 
   // Phiếu luyện tập gắn với bài giảng video: phiếu cơ bản của tuần
   const practice: Item | undefined =
@@ -80,6 +85,7 @@ export default async function LessonPage({ params }: { params: Params }) {
           { href: `/${subject.slug}`, label: subject.name },
           { href: `/${subject.slug}/${gradeSlug(grade)}`, label: `Lớp ${grade}` },
           { href: `${courseHref(course)}#${weekSlug(week)}`, label: weekLabel(course, week) },
+          ...(parent ? [{ href: itemHref(course, week, parent), label: parent.title }] : []),
         ]}
       />
 
@@ -98,7 +104,7 @@ export default async function LessonPage({ params }: { params: Params }) {
               {/* Lượt học sẽ đếm thật từ Giai đoạn 4 */}
               <span className="text-gray-600">· Lượt học: chưa thống kê</span>
             </div>
-            <div className="no-print relative mt-5 flex flex-wrap gap-3">
+            {!item.multi && <div className="no-print relative mt-5 flex flex-wrap gap-3">
               {practice ? (
                 <Link href={itemHref(course, week, practice)} className="btn-toy inline-flex items-center gap-2 rounded-full bg-brand-600 px-6 py-3 font-extrabold text-white">
                   <span aria-hidden>✏️</span> Luyện tập
@@ -119,11 +125,13 @@ export default async function LessonPage({ params }: { params: Params }) {
               ) : (
                 <PrintButton decision={dl} />
               )}
-            </div>
+            </div>}
           </header>
 
           <section id="bai-lam" className="mt-6 scroll-mt-28">
-            {media.kind === "locked" ? (
+            {item.multi ? (
+              <SheetList course={course} week={week} items={kids} open={(k) => canView(k) || Boolean(files.get(k.id)?.isFree)} title={item.title} />
+            ) : media.kind === "locked" ? (
               <LockedNotice />
             ) : media.kind === "video" ? (
               <VideoEmbed videoRef={media.videoRef} title={item.title} />
@@ -159,8 +167,8 @@ export default async function LessonPage({ params }: { params: Params }) {
                 <li key={it.id}>
                   <Link
                     href={itemHref(course, week, it)}
-                    aria-current={it.id === item.id ? "page" : undefined}
-                    className={`flex items-center gap-2 rounded-2xl p-2 text-sm font-semibold ${it.id === item.id ? "bg-brand-50 text-brand-800 ring-2 ring-brand-200" : "hover:bg-gray-50"}`}
+                    aria-current={it.id === item.id || it.id === parent?.id ? "page" : undefined}
+                    className={`flex items-center gap-2 rounded-2xl p-2 text-sm font-semibold ${it.id === item.id || it.id === parent?.id ? "bg-brand-50 text-brand-800 ring-2 ring-brand-200" : "hover:bg-gray-50"}`}
                   >
                     <ItemIcon type={it.type} />
                     <span className="min-w-0 flex-1">{it.title}</span>
@@ -188,6 +196,31 @@ export default async function LessonPage({ params }: { params: Params }) {
         </aside>
       </div>
     </Container>
+  );
+}
+
+/** Danh sách các phiếu trong một mục nhiều phiếu (vd. "Phiếu bài tập hàng ngày"). */
+function SheetList({ course, week, items, open, title }: { course: Course; week: Week; items: Item[]; open: (it: Item) => boolean; title: string }) {
+  if (items.length === 0) {
+    return (
+      <div className="rounded-[2rem] border-2 border-dashed border-brand-200 bg-white p-8 text-center">
+        <p className="text-3xl" aria-hidden>📚</p>
+        <p className="mt-2 font-extrabold text-brand-700">Cô Thanh Mai đang cập nhật {title.toLowerCase()} của tuần này.</p>
+      </div>
+    );
+  }
+  return (
+    <ul className="grid gap-2 sm:grid-cols-2">
+      {items.map((k) => (
+        <li key={k.id}>
+          <Link href={itemHref(course, week, k)} className="card-lift flex h-full items-center gap-3 rounded-2xl bg-white p-4 ring-1 ring-brand-100">
+            <ItemIcon type={k.type} />
+            <span className="min-w-0 flex-1 font-bold text-gray-900">{k.title.replace(/^.*– /, "")}</span>
+            {open(k) ? <FreeBadge /> : <LockBadge />}
+          </Link>
+        </li>
+      ))}
+    </ul>
   );
 }
 

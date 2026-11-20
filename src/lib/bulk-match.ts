@@ -42,6 +42,26 @@ function normalize(name: string): string {
 export const MONTHLY = "kiem-tra-cuoi-thang";
 export const isMonthlySlug = (slug: string) => slug.startsWith(`${MONTHLY}-`);
 
+/** Mục "Phiếu bài tập hàng ngày": các phiếu bên trong có mã "bai-tap-hang-ngay-1" … (một tuần nhận nhiều phiếu). */
+export const DAILY = "bai-tap-hang-ngay";
+export const isDailySlug = (slug: string) => slug.startsWith(`${DAILY}-`);
+/** Một loạt ô cùng loại trong tuần (nhiều đề cuối tháng, nhiều phiếu hàng ngày). */
+export const isSeriesSlug = (slug: string) => isMonthlySlug(slug) || isDailySlug(slug);
+const DAILY_RE = / (?:bai tap )?(?:hang ngay|bthn|btvn hang ngay)(?= )/;
+/** Số phiếu hàng ngày trong tên file: "phiếu 3", "ngày 3", "bài 3", "số 3", "P3". */
+const DAILY_NO = / (?:phieu|ngay|bai|so|p) ?0*(\d{1,2})(?= )/;
+/** Số phiếu hàng ngày từ tên file (đã normalize, có dấu cách hai đầu, đã bỏ "tuần N"): "phiếu 3", "bài 3" → 3. */
+function dailyNumber(s: string): number | null {
+  const n = DAILY_NO.exec(s);
+  return n ? Number(n[1]) || null : null;
+}
+const dropWeek = (s: string) => s.replace(/ (?:tuan|w|week) ?0*\d{1,2}(?= )/g, " ").replace(/ t ?0*\d{1,2}(?= )/g, " ");
+
+/** Bỏ số phiếu của bài tập hàng ngày ("phiếu 3") để không bị hiểu nhầm là số tuần. */
+function dropDailyNo(s: string): string {
+  return DAILY_RE.test(s) ? s.replace(new RegExp(DAILY_NO.source, "g"), " ") : s;
+}
+
 /** "cuối tháng 9" trong tên file → 9 (tháng 1–12); không có thì null. */
 export function guessMonth(fileName: string): number | null {
   const m = / cuoi thang 0*(\d{1,2})(?= )/.exec(` ${normalize(fileName)} `);
@@ -56,12 +76,15 @@ function weekOfMonth(month: number, slots: SlotInfo[]): number | null {
 }
 
 /**
- * Xếp nhiều file vào các đề cuối tháng của MỘT tháng (trang "chọn nhiều file" của tháng đó).
- * File .html và .pdf cùng tên là một đề. Tên có "đề N" thì vào Đề N; còn lại vào đề còn trống (chưa có file, chưa có trong danh sách).
+ * Xếp nhiều file vào một loạt ô của MỘT tuần (trang "chọn nhiều file": các đề cuối tháng, hoặc các phiếu bài tập hàng ngày).
+ * File .html và .pdf cùng tên là một phiếu/đề. Tên có số ("đề 2" với đề cuối tháng; "phiếu 2", "ngày 2" với bài tập hàng ngày)
+ * thì vào ô số đó; còn lại vào ô còn trống (chưa có file, chưa có trong danh sách).
  * `filled`: mã các ô đã có file trên website.
  */
-export function routeMonthly(files: { name: string }[], slots: SlotInfo[], taken: Iterable<string> = [], filled: Iterable<string> = []): (string | null)[] {
-  const monthly = slots.filter((x) => isMonthlySlug(x.slug)).sort((a, b) => a.slug.localeCompare(b.slug, "vi", { numeric: true }));
+export function routeSeries(files: { name: string }[], slots: SlotInfo[], taken: Iterable<string> = [], filled: Iterable<string> = []): (string | null)[] {
+  const daily = slots.some((x) => isDailySlug(x.slug));
+  const prefix = daily ? DAILY : MONTHLY;
+  const series = slots.filter((x) => x.slug.startsWith(`${prefix}-`)).sort((a, b) => a.slug.localeCompare(b.slug, "vi", { numeric: true }));
   const out: (string | null)[] = files.map(() => null);
   const used = new Set(taken);
   const busy = new Set([...filled, ...[...used].map((k) => k.split("|")[0])]);
@@ -72,21 +95,26 @@ export function routeMonthly(files: { name: string }[], slots: SlotInfo[], taken
   });
   const pending: number[][] = [];
   for (const idx of groups.values()) {
-    const de = / de ?0*([1-9])(?= )/.exec(` ${normalize(files[idx[0]].name)} `);
-    const slot = de ? monthly.find((x) => x.slug === `${MONTHLY}-${de[1]}`) : undefined;
+    const s = dropWeek(` ${normalize(files[idx[0]].name)} `);
+    const m = daily ? null : / de ?0*([1-9])(?= )/.exec(s);
+    const n = daily ? dailyNumber(s) : m ? Number(m[1]) : null;
+    const slot = n ? series.find((x) => x.slug === `${prefix}-${n}`) : undefined;
     if (slot) {
       for (const i of idx) out[i] = slot.id;
       busy.add(slot.id);
     } else pending.push(idx);
   }
   for (const idx of pending) {
-    const slot = monthly.find((x) => !busy.has(x.id));
+    const slot = series.find((x) => !busy.has(x.id));
     if (!slot) break;
     for (const i of idx) out[i] = slot.id;
     busy.add(slot.id);
   }
   return out;
 }
+
+/** Xếp nhiều file vào các đề cuối tháng của MỘT tháng (xem routeSeries). */
+export const routeMonthly = routeSeries;
 
 /** Đoán số tuần và loại mục từ tên file. */
 export function guessFromFileName(fileName: string): Guess {
@@ -98,13 +126,17 @@ export function guessFromFileName(fileName: string): Guess {
   const w = / (?:tuan|t|w|week) ?0*(\d{1,2})(?= )/.exec(s);
   if (w) week = Number(w[1]);
   else {
-    const nums = [...s.matchAll(/ 0*(\d{1,2})(?= )/g)].map((m) => Number(m[1])).filter((n) => n >= 1 && n <= 35);
+    const nums = [...dropDailyNo(s).matchAll(/ 0*(\d{1,2})(?= )/g)].map((m) => Number(m[1])).filter((n) => n >= 1 && n <= 35);
     if (nums.length === 1) week = nums[0];
   }
   if (week !== null && (week < 1 || week > 35)) week = null;
 
   let slug: string | null = null;
-  if (/ (tu (va )?cau|ltvc)(?= )/.test(s)) slug = "phieu-tu-va-cau";
+  if (DAILY_RE.test(s)) {
+    // Bài tập hàng ngày: có "phiếu N"/"ngày N" thì vào Phiếu N, không thì vào phiếu còn trống đầu tiên của tuần
+    const n = dailyNumber(dropWeek(s));
+    slug = n ? `${DAILY}-${n}` : DAILY;
+  } else if (/ (tu (va )?cau|ltvc)(?= )/.test(s)) slug = "phieu-tu-va-cau";
   else if (/ phieu tuan(?= )/.test(s)) slug = "phieu-tuan";
   else if (/ (nang ?cao|nc)(?= )/.test(s)) slug = "luyen-tap-nang-cao";
   else if (/ (co ?ban|cb)(?= )/.test(s)) slug = "luyen-tap-co-ban";
@@ -264,7 +296,7 @@ export function guessWeeks(fileName: string): { weeks: number[]; keyword: boolea
     }
     return { weeks: [...new Set(weeks)].filter((n) => n >= 1 && n <= 35), keyword: true };
   }
-  const nums = [...s.matchAll(/ 0*(\d{1,2})(?= )/g)].map((m) => Number(m[1])).filter((n) => n >= 1 && n <= 35);
+  const nums = [...dropDailyNo(s).matchAll(/ 0*(\d{1,2})(?= )/g)].map((m) => Number(m[1])).filter((n) => n >= 1 && n <= 35);
   return { weeks: nums.length === 1 ? nums : [], keyword: false };
 }
 
@@ -341,7 +373,7 @@ export function routeBatch(files: { name: string }[], slots: SlotInfo[], taken: 
   const out: (string | null)[] = files.map(() => null);
   const used = new Set(taken);
   const reserve = (id: string, name: string) => used.add(`${id}|${kindFromFileName(name) ?? "?"}`);
-  const pending: { i: number; weeks: number[]; monthly: boolean }[] = [];
+  const pending: { i: number; weeks: number[]; series: string | null }[] = [];
 
   files.forEach((f, i) => {
     let { weeks, keyword } = guessWeeks(f.name);
@@ -373,11 +405,11 @@ export function routeBatch(files: { name: string }[], slots: SlotInfo[], taken: 
         return;
       }
     }
-    pending.push({ i, weeks, monthly: slug === MONTHLY });
+    pending.push({ i, weeks, series: slug === MONTHLY || slug === DAILY ? slug : null });
   });
 
   // Chưa rõ mục: gom file cùng tên (.html + .pdf) rồi tìm mục còn trống trong tuần
-  const groups = new Map<string, { i: number; weeks: number[]; monthly: boolean }[]>();
+  const groups = new Map<string, { i: number; weeks: number[]; series: string | null }[]>();
   for (const p of pending) {
     const key = examGroupKey(files[p.i].name);
     groups.set(key, [...(groups.get(key) ?? []), p]);
@@ -389,8 +421,10 @@ export function routeBatch(files: { name: string }[], slots: SlotInfo[], taken: 
     weeks.sort((a, b) => Number(slots.some((s) => s.week === b && s.slug === "luyen-tap-tong-hop")) - Number(slots.some((s) => s.week === a && s.slug === "luyen-tap-tong-hop")) || b - a);
     const kinds = g.map((p) => kindFromFileName(files[p.i].name));
     const fits = (s: SlotInfo) => kinds.every((k) => (k === null || s[k]) && !used.has(`${s.id}|${k ?? "?"}`));
-    // Đề cuối tháng chưa ghi số đề: chỉ xếp vào các ô đề cuối tháng của tuần đó
-    const cand = weeks.flatMap((w) => slots.filter((s) => s.week === w && (!g[0].monthly || isMonthlySlug(s.slug))));
+    // Đề cuối tháng / bài tập hàng ngày chưa ghi số: chỉ xếp vào các ô cùng loại của tuần đó.
+    // File không ghi loại phiếu thì không tự vào ô bài tập hàng ngày.
+    const series = g[0].series;
+    const cand = weeks.flatMap((w) => slots.filter((s) => s.week === w && (series ? s.slug.startsWith(`${series}-`) : !isDailySlug(s.slug))));
     // "Tuần 17, 18" là phiếu chung của nhiều tuần → mục "tổng hợp" trước
     if (weeks.length > 1) cand.sort((a, b) => Number(b.slug === "luyen-tap-tong-hop") - Number(a.slug === "luyen-tap-tong-hop"));
     const slot = cand.find((s) => !SPECIAL.has(s.slug) && fits(s)) ?? cand.find((s) => fits(s));

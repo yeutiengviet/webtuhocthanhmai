@@ -68,6 +68,10 @@ export interface Item {
   url: string | null;
   /** Thời gian làm bài (phút) với đề kiểm tra. */
   durationMinutes?: number;
+  /** Mục gồm nhiều phiếu (vd. "Phiếu bài tập hàng ngày"): bản thân mục không nhận file, các phiếu là mục con. */
+  multi?: boolean;
+  /** Mục con của một mục nhiều phiếu (slug của mục cha). Không hiện riêng trong danh sách tuần. */
+  partOf?: string;
 }
 
 /** Nhóm đề thi (khu "Đề thi"). */

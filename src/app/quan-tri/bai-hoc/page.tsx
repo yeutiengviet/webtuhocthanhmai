@@ -3,7 +3,7 @@ import { NotAdmin } from "@/components/admin/NotAdmin";
 import { Container, PageHero } from "@/components/ui";
 import { requireAdminPage } from "@/lib/admin";
 import { adminLessonFiles } from "@/lib/admin-lessons";
-import { allCourses, itemTakesUploads } from "@/lib/content";
+import { allCourses, itemTakesUploads, subItems } from "@/lib/content";
 
 export const metadata = { title: "Phiếu bài học theo tuần" };
 
@@ -21,8 +21,9 @@ export default async function AdminLessonsHome() {
         {error && <p role="alert" className="rounded-2xl bg-red-50 p-3 font-bold text-red-800">Chưa tải được trạng thái phiếu. Cô tải lại trang sau ít phút.</p>}
         <ul className="grid gap-3 sm:grid-cols-2">
           {courses.map((c) => {
-            const slots = c.weeks.flatMap((w) => w.items).filter(itemTakesUploads);
-            const done = slots.filter((i) => rows.has(i.id)).length;
+            // mục nhiều phiếu tính là 1 mục (có file khi có ít nhất 1 phiếu)
+            const slots = c.weeks.flatMap((w) => w.items.filter((i) => itemTakesUploads(i) && !i.partOf).map((i) => ({ i, kids: subItems(w.items, i) })));
+            const done = slots.filter(({ i, kids }) => rows.has(i.id) || kids.some((k) => rows.has(k.id))).length;
             return (
               <li key={c.id}>
                 <Link href={`/quan-tri/bai-hoc/${c.id}`} className="card-lift block rounded-3xl bg-white p-4 shadow-sm ring-1 ring-brand-100">

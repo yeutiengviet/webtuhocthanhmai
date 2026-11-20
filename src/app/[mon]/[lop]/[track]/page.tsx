@@ -4,7 +4,7 @@ import { notFound } from "next/navigation";
 import { CurrentWeekButton, OpenWeekFromHash } from "@/components/CurrentWeekButton";
 import { Breadcrumbs, Container, FreeBadge, ItemIcon, LevelBadge, LockBadge, PageHero } from "@/components/ui";
 import { features } from "@/data/site";
-import { allCourses, canViewItem, getCourse, isCourseLocked, getSubject, gradeSlug, isReady, isTrack, itemHref, parseGradeSlug, publishedWeeks, TRACK_LABELS, unitName, visibleItems, weekSlug } from "@/lib/content";
+import { allCourses, canViewItem, getCourse, isCourseLocked, getSubject, gradeSlug, isReady, isTrack, itemHref, parseGradeSlug, publishedWeeks, subItems, TRACK_LABELS, unitName, visibleItems, weekSlug } from "@/lib/content";
 import { formatRange } from "@/lib/dates";
 import { getPublishedLessonFiles } from "@/lib/lesson-files";
 import { lessonFileHref } from "@/lib/exam-meta";
@@ -68,7 +68,7 @@ export default async function CoursePage({ params }: { params: Params }) {
   const unit = unitName(course);
   const teachingCount = weeks.filter((w) => w.kind === "hoc").length;
   const isTopics = course.track === "nang-cao";
-  const totalLessons = weeks.reduce((a, w) => a + w.items.length, 0);
+  const totalLessons = weeks.reduce((a, w) => a + w.items.filter((i) => !i.partOf).length, 0);
 
 
   if (course.track === "on-tap-he") {
@@ -289,10 +289,13 @@ export default async function CoursePage({ params }: { params: Params }) {
                 </summary>
                 <ul className="grid gap-2 border-t-2 border-dashed border-brand-100 bg-brand-50/40 p-3 sm:grid-cols-2">
                   {visibleItems(w.items, files).map((it) => {
-                    const scored = it.type === "worksheet" || it.type === "test";
+                    const scored = (it.type === "worksheet" || it.type === "test") && !it.multi;
                     const f = files.get(it.id);
                     const open = canViewItem(it) || Boolean(f?.isFree);
-                    const ready = isReady(it) || Boolean(f && (f.hasHtml || f.hasPdf));
+                    const has = (x: { hasHtml: boolean; hasPdf: boolean } | undefined) => Boolean(x && (x.hasHtml || x.hasPdf));
+                    // mục nhiều phiếu: sẵn sàng khi có ít nhất 1 phiếu
+                    const kids = subItems(w.items, it).filter((k) => has(files.get(k.id)));
+                    const ready = isReady(it) || has(f) || kids.length > 0;
                     return (
                       <li key={it.id}>
                         <Link href={itemHref(course, w, it)} className="card-lift flex h-full items-start gap-3 rounded-2xl bg-white p-3 ring-1 ring-gray-100">
@@ -304,6 +307,7 @@ export default async function CoursePage({ params }: { params: Params }) {
                               <LevelBadge level={it.level} />
                               {it.isExtension && <span className="rounded-full bg-violet-100 px-2.5 py-0.5 text-xs font-bold text-violet-800"><span aria-hidden>💡</span> Mở rộng</span>}
                               {it.durationMinutes && <span className="text-xs text-gray-600">{it.durationMinutes} phút</span>}
+                              {it.multi && kids.length > 0 && <span className="text-xs font-semibold text-gray-600">{kids.length} phiếu</span>}
                               {!ready && <span className="text-xs text-gray-500">· đang cập nhật</span>}
                             </span>
                             {scored && (

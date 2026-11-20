@@ -4,7 +4,7 @@
 // (nhập file CSV / trang quản trị ở Giai đoạn 2).
 
 import "server-only";
-import { HOLIDAY_MONDAYS, SCHOOL_YEAR_START, monthEndWeeks, monthlyTestItems } from "@/data/toan-theo-tuan";
+import { HOLIDAY_MONDAYS, SCHOOL_YEAR_START, dailyItems, monthEndWeeks, monthlyTestItems } from "@/data/toan-theo-tuan";
 import { buildWeekCalendar } from "@/lib/dates";
 import type { Course, Grade, Item, SubjectSlug, Week, WeekKind } from "@/lib/types";
 
@@ -46,6 +46,7 @@ function buildItems(subject: SubjectSlug, grade: number, n: number, monthEnd: nu
     for (let k = 1; k <= 3; k++) {
       push({ slug: `de-on-tap-${k}`, type: "test", title: `Đề ôn tập ${review.label} – Đề ${k}`, level: k === 3 ? "nang-cao" : "co-ban", isFree: free, durationMinutes: 40 });
     }
+    for (const t of dailyItems()) push({ ...t, isFree: free });
     push({ slug: "video-chua-de", type: "video", title: `Video chữa đề ${review.label}`, level: "nang-cao", isFree: free, videoProvider: "youtube" });
     if (monthEnd) for (const t of monthlyTestItems(monthEnd)) push({ ...t, isFree: free });
     return items;
@@ -64,6 +65,7 @@ function buildItems(subject: SubjectSlug, grade: number, n: number, monthEnd: nu
     push({ slug: "luyen-tap-co-ban", type: "worksheet", title: "Bài tập luyện tập cơ bản", level: "co-ban", isFree: free });
     push({ slug: "luyen-tap-nang-cao", type: "worksheet", title: "Bài tập luyện tập nâng cao", level: "nang-cao", isFree: free });
   }
+  for (const t of dailyItems()) push({ ...t, isFree: free });
   if (monthEnd) for (const t of monthlyTestItems(monthEnd)) push({ ...t, isFree: free });
   push({ slug: "tai-lieu-tuan", type: "document", title: "Tài liệu in (PDF) của tuần", level: null, isFree: free });
   return items;
